@@ -27,8 +27,8 @@ from sphragis.experiment.decomposition import (
     require_registered_source,
 )
 from sphragis.experiment.holdout import (
+    cleared_pool,
     equalize_training,
-    foreign_pool,
     holdout_by_change,
     pool_digest,
     verbatim_overlap,
@@ -130,8 +130,8 @@ parser.add_argument(
 parser.add_argument(
     "--foreign-pool",
     type=Path,
-    help="H2: a built corpus root holding --foreign-source's refined months, the pool each half's "
-    "matched foreign arm is drawn from (holdout.matched_foreign_draw)",
+    help="H2: --foreign-source's cleared pool (scripts/clear_foreign_pool.py's file), which each "
+    "half's matched foreign arm is drawn from (holdout.matched_foreign_draw)",
 )
 parser.add_argument("--foreign-source", choices=FOREIGN_SOURCES, help="with --foreign-pool")
 parser.add_argument(
@@ -207,7 +207,7 @@ if args.foreign_pool:
         raise SystemExit("foreign arms are added to a stored run: pass its --reuse-from")
     try:
         require_registered_source(args.foreign_source)
-        pool, pool_removed = foreign_pool(
+        pool = cleared_pool(
             args.foreign_pool, args.foreign_source, FOREIGN_SPANS[args.foreign_source]
         )
         # The pool the stop rule covered, cleared of Qt's copies, and no other.
@@ -235,7 +235,6 @@ if args.foreign_pool:
         "pool": str(args.foreign_pool),
         "pool_sha256": pool_digest(pool),
         "pool_examples": len(pool),
-        "pool_dedup_removed": pool_removed,
         "arms": {
             arm: {
                 "evaluated": foreign[arm],

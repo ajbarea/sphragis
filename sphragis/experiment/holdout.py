@@ -15,7 +15,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from sphragis.corpus.load import refined_examples
+from sphragis.corpus.load import derived_file_rows, refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.corpus.windows import TEST_WINDOW_START, WINDOWS
 
@@ -145,13 +145,26 @@ def foreign_pool(
     pool, removed = run_dedup(refined_examples(root, source))
     if not pool:
         raise ValueError(f"no refined examples for {source} under {root}")
+    return _in_span(pool, source, span), removed
+
+
+def cleared_pool(path: Path, source: str, span: tuple[str, str]) -> list[dict[str, Any]]:
+    """A foreign source's pool as `scripts/clear_foreign_pool.py` wrote it: the stop rule's
+    prefix pool, deduplicated and cleared of the other organization's copies. Refused as
+    `foreign_pool` refuses, and when the file is stale (`load.derived_file_rows`)."""
+    return _in_span(derived_file_rows(path), source, span)
+
+
+def _in_span(
+    pool: list[dict[str, Any]], source: str, span: tuple[str, str]
+) -> list[dict[str, Any]]:
     late = sum(1 for row in pool if str(row.get("created", ""))[:10] >= TEST_WINDOW_START)
     if late:
         raise ValueError(f"{source}'s pool holds {late} rows from the sealed window on")
     outside = sum(1 for row in pool if not span[0] <= str(row.get("created", ""))[:10] < span[1])
     if outside:
         raise ValueError(f"{source}'s pool holds {outside} rows outside its span {span}")
-    return pool, removed
+    return pool
 
 
 def pool_digest(pool: Sequence[Mapping[str, Any]]) -> str:

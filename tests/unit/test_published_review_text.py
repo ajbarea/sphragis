@@ -599,6 +599,7 @@ PRODUCED = {
         "stop_rule": {"pool": {"examples": 2}, "digest": SHA},
     },
     "scripts/label_audit_decision.py": {"model": "m", "digest": SHA, "items": 2},
+    "scripts/clear_foreign_pool.py": {"cleared_pool": {"examples": 2, "digest": SHA}},
 }
 
 
