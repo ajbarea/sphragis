@@ -10919,6 +10919,7 @@ Fuchsia's covering pool (2026-10-20) is not used. No H2 development contrast has
 commit sets `decomposition.FOREIGN_SOURCE = "chromium"`. The gates read it through
 `registered_design`. `partition_pilot.py`, `partition_sensitivity.py` and `rq1_pilot.py` refuse an
 H2 step against any other source, or while none is registered (`require_registered_source`). The
-foreign arms train on the pool the stop rule covered, cleared of Qt's copies, and `rq1_pilot.py`
-refuses any pool with another digest (`FOREIGN_POOL_SHA256`, 75d9f7f3). The pool as built holds
+foreign arms train on the pool the stop rule covered, cleared of Qt's copies: `rq1_pilot.py`
+refuses to draw them from a pool with another digest, and `partition_pilot.py` refuses an H2 read
+of arms recorded against one (`FOREIGN_POOL_SHA256`, 75d9f7f3). The pool as built holds
 14 examples more, so the clearing comes first (IMPL).

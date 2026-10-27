@@ -314,6 +314,11 @@ def main() -> None:
         }
     if h2 and (len(pools) != 1 or None in pools):
         raise SystemExit("an H2 cell's runs must all draw their arms from one recorded pool")
+    if h2 and pools != {decomposition.FOREIGN_POOL_SHA256}:
+        raise SystemExit(
+            f"an H2 cell's arms drew from {pools.pop()}, not the registered pool "
+            f"{decomposition.FOREIGN_POOL_SHA256}"
+        )
     if windows == {"train -> test"}:
         window = "test"
     elif windows == {"train -> dev"}:
