@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from sphragis.corpus.chains import chains_sha256
 from sphragis.experiment import decomposition, partitions
 from sphragis.experiment.cells import K_COVERAGE, REGISTERED_METRIC, REGISTERED_SENSITIVITIES
 from sphragis.experiment.grid import EvalRun, run_id
@@ -139,17 +140,26 @@ def _sizing(tmp_path: Path, org: str, **fields: object) -> list[str]:
 def _chains(tmp_path: Path, org: str) -> list[str]:
     """A relation-chain artifact putting each change in a chain of its own."""
     path = tmp_path / "chains.json"
-    path.write_text(
-        json.dumps({"org": org, "change_chain": {f"c{i}": f"chain-c{i}" for i in range(2 * N)}})
-    )
+    chains = {f"c{i}": f"chain-c{i}" for i in range(2 * N)}
+    train = {"clusters_by_change": 2 * N, "clusters_by_chain": 2 * N}
+    path.write_text(json.dumps({"org": org, "change_chain": chains, "windows": {"train": train}}))
     return ["--chains", str(path)]
 
 
 def _by_chain(path: Path, chains: str) -> None:
     """Mark an artifact as made under relation chains, as a chain simulation writes it."""
     artifact = json.loads(path.read_text())
-    artifact["cluster_unit"] = {"unit": "chain", "file": chains}
+    artifact["cluster_unit"] = _chain_unit(chains)
     path.write_text(json.dumps(artifact))
+
+
+def _chain_unit(chains: str) -> dict:
+    """The unit an artifact drawn from the chains file `chains` records."""
+    return {
+        "unit": "chain",
+        "file": chains,
+        "sha256": chains_sha256(json.loads(Path(chains).read_text())),
+    }
 
 
 def _main(monkeypatch: pytest.MonkeyPatch, argv: list[str]) -> None:
@@ -582,7 +592,7 @@ def test_a_chain_test_read_takes_the_k_artifact_k_coverage_writes(
     """The artifact is the script's own output and carries the pilot's unit."""
     argv = _gerrit_test_argv(tmp_path)
     chains = argv[argv.index("--chains") + 1]
-    unit = {"unit": "chain", "file": chains}
+    unit = _chain_unit(chains)
     pilot: dict = {"org": "openstack", "window": "development", "metric": REGISTERED_METRIC}
     pilot |= PILOT | {"levels": [0.95], "sizing": {**SIZING, "runs": 4}, "cluster_unit": unit}
     null = {"null_false_positive": {"0.95": 0.001}}
@@ -893,7 +903,7 @@ def test_a_test_read_takes_its_k_from_the_coverage_artifact(
         "metric": REGISTERED_METRIC,
         "runs": len(ADMISSIBLE),
         "spread_targets": spread_targets(PILOT),
-        "cluster_unit": {"unit": "chain"},
+        "cluster_unit": _chain_unit(argv[argv.index("--chains") + 1]),
     }
     (tmp_path / "sizing.json").write_text(json.dumps(coverage))
     _main(monkeypatch, argv)
@@ -1219,6 +1229,30 @@ def test_a_gerrit_test_read_without_chains_is_refused(
     at = argv.index("--chains")
     with pytest.raises(SystemExit, match="resamples relation chains: give --chains"):
         _main(monkeypatch, argv[:at] + argv[at + 2 :])
+
+
+def test_a_test_read_records_the_chains_its_k_and_bounds_were_drawn_from(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _gerrit_test_argv(tmp_path)
+    _main(monkeypatch, argv)
+    report = json.loads((tmp_path / "o.json").read_text())
+    unit = _chain_unit(argv[argv.index("--chains") + 1])
+    assert {key: report["cluster_unit"][key] for key in unit} == unit
+    assert report["k_from"]["cluster_unit"] == report["sensitivity"]["cluster_unit"] == unit
+
+
+@pytest.mark.parametrize("made", ["sizing.json", "sensitivity"])
+def test_a_k_or_bounds_drawn_from_a_since_regenerated_chains_file_is_not_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None, made: str
+) -> None:
+    argv = _gerrit_test_argv(tmp_path)
+    path = Path(argv[argv.index("--sensitivity") + 1]) if made == "sensitivity" else tmp_path / made
+    artifact = json.loads(path.read_text())
+    artifact["cluster_unit"]["sha256"] = "0" * 64
+    path.write_text(json.dumps(artifact))
+    with pytest.raises(SystemExit, match="was made from other chains than"):
+        _main(monkeypatch, argv)
 
 
 def test_a_k_made_by_change_is_not_read_by_chain(

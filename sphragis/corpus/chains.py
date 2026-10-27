@@ -12,6 +12,8 @@ cluster, so chains coarsen it strictly. A change with no link is a chain of one.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import subprocess
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -140,6 +142,24 @@ def chain_map(artifact: Mapping[str, Any], org: str) -> dict[str, str]:
     if artifact.get("org") != org:
         raise SystemExit(f"the chain artifact is {artifact.get('org')!r}'s, not {org!r}'s")
     return dict(artifact["change_chain"])
+
+
+def chains_sha256(artifact: Mapping[str, Any]) -> str:
+    """The digest of what a read takes from a chain artifact: its organization, its map from
+    Change-Id to chain, and the training window's cluster counts a simulation plans by.
+
+    The bytes would change with any field added on a rebuild that moves no chain (#190's
+    regeneration did), and would then refuse artifacts drawn from the same chains.
+    """
+    train = artifact["windows"]["train"]
+    read = {
+        "org": artifact["org"],
+        "change_chain": artifact["change_chain"],
+        "train": {key: train[key] for key in ("clusters_by_change", "clusters_by_chain")},
+    }
+    return hashlib.sha256(
+        json.dumps(read, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
 def relabel(rows: Iterable[dict[str, Any]], chain_of: Mapping[str, str]) -> set[str]:

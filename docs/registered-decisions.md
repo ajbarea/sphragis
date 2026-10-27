@@ -108,7 +108,11 @@ registration, never the command line: a Gerrit organization's from the design of
 organizations, frozen by one commit before any test window (the Holm levels of its confirmatory
 hypotheses, a simulation of its H1 cells), a GitHub member's from the replication family (97.5%
 alone, one cell), and for both the spread K was sized on ("Stated power"). The simulation must have
-been calibrated on the same development pilot K came from. A test window is read only after its
+been calibrated on the same development pilot K came from. The read, its K and its bounds resample
+the registered cluster unit (a Gerrit organization's relation chains, a GitHub member's changes),
+and by chain all three draw the same chains, which each records by a digest of what a read takes
+from the chains file: its chain map and training cluster counts (`chains.chains_sha256`,
+`cells.cluster_of`). A test window is read only after its
 organization is frozen as admitted or as a member. So nothing the reading depends on can be
 chosen, or redrawn, after its result is seen.
 

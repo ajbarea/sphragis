@@ -32,6 +32,7 @@ from sphragis.experiment.cells import (
     REGISTERED_METRIC,
     REGISTERED_SPREAD_TARGET,
     by_level,
+    cluster_of,
     is_count,
     is_real,
     level_key,
@@ -276,18 +277,20 @@ def confirmatory(spec: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def registered_read(org: str) -> dict[str, Any]:
-    """What `org`'s test-window read is registered at: its levels, cell count and spread target.
+    """What `org`'s test-window read is registered at: its levels, cell count, spread target,
+    metric and cluster unit.
 
     A Gerrit organization is read at the Holm levels of
     `registered_design(ADMITTED_ORGANIZATIONS)`, its bound from a simulation of that design's H1
-    cells; a GitHub member at `REPLICATION_CONFIDENCE` alone, as one cell. Both take the bound at
+    cells, resampling relation chains (research log, 2026-10-21); a GitHub member, which has no
+    chains, at `REPLICATION_CONFIDENCE` alone, as one cell, by change. Both take the bound at
     the registered spread target. Refused before the organizations are frozen, and for one
     outside them.
     """
     if org in REPLICATION_FAMILY:
         if REPLICATION_MEMBERS is None or org not in REPLICATION_MEMBERS:
             raise ValueError(f"{org} is not a frozen replication member")
-        return _read_at([REPLICATION_CONFIDENCE], cells=1)
+        return _read_at([REPLICATION_CONFIDENCE], cells=1, cluster_unit="change")
     if ADMITTED_ORGANIZATIONS is None or org not in ADMITTED_ORGANIZATIONS:
         raise ValueError(f"{org} is not among the frozen admitted organizations")
     return _gerrit_read(registered_design(ADMITTED_ORGANIZATIONS))
@@ -306,12 +309,13 @@ def registered_design(admitted: Iterable[str]) -> dict[str, Any]:
     return design(admitted, source, h2_withdrawn=H2_WITHDRAWN is not None)
 
 
-def _read_at(levels: list[float], *, cells: int) -> dict[str, Any]:
+def _read_at(levels: list[float], *, cells: int, cluster_unit: str) -> dict[str, Any]:
     return {
         "levels": levels,
         "cells": cells,
         "spread_target": REGISTERED_SPREAD_TARGET,
         "metric": REGISTERED_METRIC,
+        "cluster_unit": cluster_unit,
     }
 
 
@@ -325,7 +329,9 @@ def _sesoi_of(metric: str) -> float:
 
 def _gerrit_read(spec: Mapping[str, Any]) -> dict[str, Any]:
     """The registered read of every H1 cell in `spec`: its Holm levels and cell count."""
-    return _read_at(holm_levels(len(confirmatory(spec))), cells=len(spec["H1"]))
+    return _read_at(
+        holm_levels(len(confirmatory(spec))), cells=len(spec["H1"]), cluster_unit="chain"
+    )
 
 
 def _require_exactly(given: Any, orgs: Sequence[str], *, what: str) -> None:
@@ -437,17 +443,24 @@ def _registered_bounds(
 ) -> dict[float, float]:
     """`org`'s bound at each registered level, read from its simulation artifact.
 
-    `require_test_read` has checked the simulation the cell records against the organization, K
-    and the pilot's calibration; the artifact given must be that simulation, every bound a
-    detectable effect, and each the bound the cell was computed under.
+    `require_test_read` has checked the simulation the cell records against the organization, K,
+    the pilot's calibration and the chains file it drew from; the artifact given must be that
+    simulation, every bound a detectable effect, and each the bound the cell was computed under.
     """
     recorded = cell["sensitivity"]
+    drawn_as_recorded = False
+    if isinstance(simulation, Mapping):
+        try:
+            drawn_as_recorded = cluster_of(simulation) == cluster_of(recorded)
+        except ValueError as error:
+            raise ValueError(f"{org}: the simulation given was {error}") from error
     if not (
         isinstance(simulation, Mapping)
         and simulation.get("org") == recorded.get("org")
         and simulation.get("runs") == recorded.get("runs")
         and simulation.get("planned_changes") == recorded.get("planned_changes")
         and same_calibration(simulation.get("spread_targets"), recorded.get("spread_targets"))
+        and drawn_as_recorded
     ):
         raise ValueError(f"{org}: the simulation given is not the one its cell was read under")
     try:

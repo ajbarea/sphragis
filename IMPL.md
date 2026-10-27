@@ -16,12 +16,11 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   the deck (talks#34) read the chain K artifacts and simulations. The deck's split figure and team
   readings still read the by-change development pilots, since no chain split files exist; its
   `chains_hold` asserts the verdicts match under chains.
-  Open (review of #194): a chain simulation records its chains file's path, not its content, so a
-  grid drawn from a since-regenerated `relation-chains-<org>.json` would pass `coverage_runs` and
-  the test read's unit check. Record a digest of the chains file in the pilot and every
-  simulation, and compare it, before any chain artifact is regenerated. Also open:
-  `cells.require_test_read` checks no cluster unit (only `partition_pilot.py` does); record the
-  unit in `k_from` and check the read's, its K's and its bounds' units there.
+  Every pilot, K and simulation now records the chains it drew by a digest of what a read takes
+  from the chains file (`chains.chains_sha256`), and the coverage rule, the simulation, the test
+  read and both gates refuse chains that differ; the artifacts made before the digest resolve
+  through `cells.CHAINS_SHA256_BEFORE_RECORDED`. `require_test_read` checks the read's, its K's
+  and its bounds' cluster unit against `registered_read` (Gerrit by chain, GitHub by change).
 - **Qt's simulations** (IMPL 3d): the development pilot is read (H1 supported on likelihood), its
   planted check 5 passes (research log, 2026-10-18), and its K under the coverage rule and its
   simulation at that K are read by change (2026-10-18, 2026-10-19) and by chain, the Gerrit test
@@ -39,7 +38,11 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   the largest draw needs), so Fuchsia qualifies; AOSP's and V8's pools do not. Chromium, first in
   item 1's order, is being read under its rate grant (research log, 2026-10-19): ranking listings
   over every code project in two-day ranges (started 2026-10-20), then the covering prefix listed
-  by name into its own root, built and covered the same way. If it covers it is the source, else
+  by name into its own root, built and covered the same way. The pool build (`chromium/src`,
+  worktree chromium-data at 42c2f95) stopped at the 2026-10-23 08:35 shutdown with 2024-11 to
+  2025-07 built; restarted 2026-10-26 19:21 (unit `sphragis-chromium-pool`, coverage waiter
+  `sphragis-chromium-coverage`), it resumed 2025-08 from its checkpoint and built it by 19:34;
+  2025-09 and 2025-10 follow, then refine, dedup and coverage. If it covers it is the source, else
   Fuchsia; that commit sets `FOREIGN_SOURCE`, and no H2 development contrast is read before it.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->

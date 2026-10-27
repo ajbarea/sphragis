@@ -25,7 +25,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from sphragis.corpus.chains import chain_map, relabel
+from sphragis.corpus.chains import chain_map, chains_sha256, relabel
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
     K_COVERAGE,
@@ -34,6 +34,7 @@ from sphragis.experiment.cells import (
     TEST_BOOTSTRAP_SEED,
     TEST_RESAMPLES,
     cell_of,
+    cluster_of,
     require_resamples,
     require_test_read,
     sensitivity_bounds,
@@ -60,7 +61,6 @@ from sphragis.experiment.neutral import (
     recorded_battery,
 )
 from sphragis.experiment.partitions import (
-    cluster_unit_of,
     eval_ids,
     h1_over_partitions,
     h2_contrast,
@@ -203,6 +203,17 @@ def cluster_by_chain(runs: list[tuple[dict, int]], chains: dict, org: str) -> di
     return {"changes": len(seen), "chains": len({chain_of[c] for c in seen})}
 
 
+def recorded_cluster(artifact: dict, path: Path) -> dict | None:
+    """`artifact`'s cluster unit with the digest of its chains resolved (`cells.cluster_of`), so
+    the report checks it without the artifact."""
+    try:
+        _, digest = cluster_of(artifact)
+    except ValueError as error:
+        raise SystemExit(f"{path} was {error}") from error
+    recorded = artifact.get("cluster_unit")
+    return recorded if digest is None else {**recorded, "sha256": digest}
+
+
 def main() -> None:
     args = parser.parse_args()
     if args.lexer_sure and (args.sizing or args.sensitivity or args.planted or args.without):
@@ -288,8 +299,14 @@ def main() -> None:
         raise SystemExit(f"runs decoded differently, not one study: {sorted(decoders)}")
     cluster_unit: dict[str, Any] = {"unit": "change"}
     if args.chains:
-        chained = cluster_by_chain(runs, json.loads(args.chains.read_text()), args.org)
-        cluster_unit = {"unit": "chain", "file": str(args.chains), **chained}
+        chains = json.loads(args.chains.read_text())
+        chained = cluster_by_chain(runs, chains, args.org)
+        cluster_unit = {
+            "unit": "chain",
+            "file": str(args.chains),
+            "sha256": chains_sha256(chains),
+            **chained,
+        }
     if h2 and (len(pools) != 1 or None in pools):
         raise SystemExit("an H2 cell's runs must all draw their arms from one recorded pool")
     if windows == {"train -> test"}:
@@ -398,6 +415,7 @@ def main() -> None:
             "runs": runs_fixed,
             "metric": sizing_artifact.get("metric", "exact_match"),
             "kind": sizing_artifact.get("kind", "pilot"),
+            "cluster_unit": recorded_cluster(sizing_artifact, args.sizing),
         }
         # Only a test read is checked against its simulation's calibration.
         if window == "test":
@@ -442,6 +460,7 @@ def main() -> None:
             "spread_targets": sensitivity.get("spread_targets"),
             "planned_changes": sensitivity.get("planned_changes"),
             "metric": sensitivity.get("metric", "exact_match"),
+            "cluster_unit": recorded_cluster(sensitivity, args.sensitivity),
         }
     # Each sensitivity's listing checked against this read before any draw is taken: its window,
     # and the corpus it was made from, which must hold every example any run scored (the runs
@@ -466,12 +485,15 @@ def main() -> None:
     # bound carries the unit it was simulated in; the GitHub replication has no relation chains.
     if window == "test" and not args.replication and not args.chains:
         raise SystemExit("a test-window read resamples relation chains: give --chains")
-    for artifact in (args.sizing, args.sensitivity):
-        made_by = cluster_unit_of(json.loads(artifact.read_text())) if artifact else None
-        if made_by is not None and made_by != cluster_unit["unit"]:
-            raise SystemExit(
-                f"{artifact} was made by {made_by}, this read is by {cluster_unit['unit']}"
-            )
+    unit = cluster_unit["unit"]
+    for artifact, summary in ((args.sizing, k_from), (args.sensitivity, simulation)):
+        if summary is None:
+            continue
+        made_by, made_from = cluster_of(summary)
+        if made_by != unit:
+            raise SystemExit(f"{artifact} was made by {made_by}, this read is by {unit}")
+        if made_from != cluster_unit.get("sha256"):
+            raise SystemExit(f"{artifact} was made from other chains than {args.chains}")
     contrast = {"contrast": h2_contrast(args.foreign_source)} if h2 else {}
     cell = h1_over_partitions(
         runs,

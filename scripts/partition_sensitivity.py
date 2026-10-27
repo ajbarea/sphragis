@@ -55,13 +55,13 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from statistics import fmean, stdev
 
-from sphragis.corpus.chains import chain_map, relabel
+from sphragis.corpus.chains import chain_map, chains_sha256, relabel
 from sphragis.corpus.halves import assign, organization_train, project_counts, split_criteria
 from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.corpus.windows import WINDOWS
-from sphragis.experiment.cells import cell_of
+from sphragis.experiment.cells import cell_of, cluster_of
 from sphragis.experiment.decomposition import (
     FAMILY_ALPHA,
     FOREIGN_SOURCES,
@@ -73,7 +73,6 @@ from sphragis.experiment.decomposition import (
 from sphragis.experiment.partitions import (
     K_MAX,
     K_MIN,
-    cluster_unit_of,
     pilot_sizing,
     spread_targets,
 )
@@ -594,14 +593,21 @@ def main() -> None:
     # Chains are drawn instead of changes only on a pilot read under chains, and the other way
     # round; the planned test changes become chains at the training window's ratio, the window
     # nearest the test window's size (a larger window joins more of its changes into chains).
-    unit = cluster_unit_of(pilot)
+    try:
+        unit, pilot_chains = cluster_of(pilot)
+    except ValueError as error:
+        raise SystemExit(f"{args.pilot} was {error}") from error
     if (args.chains is not None) != (unit == "chain"):
         raise SystemExit(f"the pilot was read by {unit}; --chains must match it")
-    chain_of = ratio = None
+    chain_of = ratio = drawn = None
     if args.chains is not None:
         chain_artifact = json.loads(args.chains.read_text())
         if pilot["cluster_unit"].get("file") != str(args.chains):
             raise SystemExit(f"the pilot read chains from {pilot['cluster_unit'].get('file')}")
+        # The path can name a file regenerated since the pilot read it.
+        drawn = chains_sha256(chain_artifact)
+        if drawn != pilot_chains:
+            raise SystemExit(f"{args.chains} is not the chains file the pilot read")
         chain_of = chain_map(chain_artifact, args.org)
         train = chain_artifact["windows"]["train"]
         ratio = train["clusters_by_chain"] / train["clusters_by_change"]
@@ -671,6 +677,7 @@ def main() -> None:
         "cluster_unit": {
             "unit": unit,
             "file": None if args.chains is None else str(args.chains),
+            "sha256": drawn,
             "planned_ratio": ratio,
         },
         "placebo": None if args.placebo is None else str(args.placebo),

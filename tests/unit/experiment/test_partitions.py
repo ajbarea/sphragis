@@ -12,11 +12,16 @@ from statistics import NormalDist, stdev
 
 import pytest
 
+from sphragis.corpus.chains import chains_sha256
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
+    CHAINS_PINNED_UNTIL,
+    CHAINS_SHA256_BEFORE_RECORDED,
     REGISTERED_SENSITIVITIES,
     REGISTERED_SPREAD_TARGET,
     SPREAD_TARGETS,
+    cluster_of,
+    cluster_unit_of,
     sensitivity_bounds,
 )
 from sphragis.experiment.decomposition import SESOI
@@ -31,7 +36,6 @@ from sphragis.experiment.partitions import (
     MAX_DROPPED_SHARE,
     XI,
     chi2_quantile,
-    cluster_unit_of,
     common_runs,
     coverage_runs,
     h1_over_partitions,
@@ -431,6 +435,7 @@ def test_spread_targets_are_named_by_the_one_registered_list() -> None:
     assert REGISTERED_SPREAD_TARGET in SPREAD_TARGETS
 
 
+_CHAIN = {"unit": "chain", "file": "c.json", "sha256": "a" * 64}
 _COVERAGE_PILOT = {
     "org": "wikimedia",
     "window": "development",
@@ -499,7 +504,7 @@ def test_the_pilots_reproducibility_k_is_kept_when_it_is_the_larger() -> None:
         ([_grid_point(10, 0.001, 0.002, metric="exact_match")], "is on exact_match"),
         ([_grid_point(10, 0.001, 0.002, null_trials=1_000)], "1000 null studies"),
         (
-            [_grid_point(10, 0.001, 0.002, cluster_unit={"unit": "chain"})],
+            [_grid_point(10, 0.001, 0.002, cluster_unit=_CHAIN)],
             "was simulated by chain, the pilot by change",
         ),
         (
@@ -536,7 +541,7 @@ def test_a_grid_the_rule_cannot_read_is_refused(grid: list, match: str) -> None:
 
 
 def test_a_grid_is_read_in_the_pilots_cluster_unit() -> None:
-    chain = {"cluster_unit": {"unit": "chain"}}
+    chain = {"cluster_unit": _CHAIN}
     by_change = [_grid_point(10, 0.001, 0.002)]
     by_chain = [_grid_point(10, 0.001, 0.002, **chain)]
     pilot = _COVERAGE_PILOT | chain
@@ -544,6 +549,54 @@ def test_a_grid_is_read_in_the_pilots_cluster_unit() -> None:
         coverage_runs(pilot, by_change, org="wikimedia", name="pilot")
     read = coverage_runs(pilot, by_chain, org="wikimedia", name="pilot")
     assert read == coverage_runs(_COVERAGE_PILOT, by_change, org="wikimedia", name="pilot")
+    # One chains path, regenerated between the pilot and the grid.
+    regenerated = [_grid_point(10, 0.001, 0.002, cluster_unit=_CHAIN | {"sha256": "b" * 64})]
+    with pytest.raises(ValueError, match="another chains file than the pilot"):
+        coverage_runs(pilot, regenerated, org="wikimedia", name="pilot")
+    with pytest.raises(ValueError, match="with no digest of it"):
+        coverage_runs(
+            pilot | {"cluster_unit": {"unit": "chain", "file": "c.json"}},
+            by_chain,
+            org="wikimedia",
+            name="pilot",
+        )
+
+
+def test_every_committed_chain_artifact_names_the_chains_it_was_drawn_from() -> None:
+    """Each resolves to the digest its chains file has now, recorded or pinned: chains rebuilt
+    into other clusters leave the artifacts drawn from the old ones refused, not matched."""
+    root = Path(__file__).resolve().parents[3]
+    artifacts = sorted(
+        path
+        for path in (root / "datasets/results").glob("*chains*.json")
+        if not path.name.startswith("relation-chains-")
+    )
+    assert artifacts
+    for path in artifacts:
+        artifact = json.loads(path.read_text())
+        named = root / artifact["cluster_unit"]["file"]
+        assert cluster_of(artifact) == ("chain", chains_sha256(json.loads(named.read_text()))), (
+            path.name
+        )
+
+
+def test_only_an_artifact_made_before_digests_were_recorded_takes_the_pinned_one() -> None:
+    file = next(iter(CHAINS_SHA256_BEFORE_RECORDED))
+    pinned = {"unit": "chain", "file": file}
+    made = {"generated_at": CHAINS_PINNED_UNTIL.isoformat()}
+    early = {"cluster_unit": pinned, "provenance": made}
+    assert cluster_of(early) == ("chain", CHAINS_SHA256_BEFORE_RECORDED[file])
+    recorded = early | {"cluster_unit": pinned | {"sha256": "c" * 64}}
+    assert cluster_of(recorded) == ("chain", "c" * 64)
+    assert cluster_of({}) == ("change", None)
+    # Written later by code that records no digest, or with no provenance: nothing to pin.
+    later = {"generated_at": "2026-10-27T00:00:00+00:00"}
+    for artifact in (early | {"provenance": later}, {"cluster_unit": pinned}):
+        with pytest.raises(ValueError, match="with no digest of it"):
+            cluster_of(artifact)
+    for digest in ("", None, "c" * 63):
+        with pytest.raises(ValueError, match="not a sha256"):
+            cluster_of(early | {"cluster_unit": pinned | {"sha256": digest}})
 
 
 def test_a_coverage_artifact_is_a_k_source_for_its_own_organization() -> None:
@@ -595,6 +648,9 @@ def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid
         capture_output=True,
     )
     rerun = json.loads(out.read_text())
+    # A rerun records the chains it drew by digest, which the committed artifact resolves to.
+    if suffix:
+        assert rerun["cluster_unit"].pop("sha256") == cluster_of(committed)[1]
     drop = {"provenance"}
     assert {k: v for k, v in rerun.items() if k not in drop} == {
         k: v for k, v in committed.items() if k not in drop
