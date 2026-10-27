@@ -867,6 +867,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-26**: A chain pilot, K and simulation record the chains they drew by a digest of what a read takes from the chains file, and every check that compared the unit compares the chains too; a test read's unit is checked against the registration, Gerrit by chain and GitHub by change (#214). `provenance` reads changed code with `git status --porcelain -z`, so a quoted or renamed path reaches the dirty-code digest (#212). `make verify` runs lint and test once (#213).
 - **2026-10-26**: First comment and docstring sweep over `sphragis/`, `scripts/`, `harvest.py` and `tests/`, one PR per folder, behaviour unchanged. Comments that were wrong about the code were corrected (among them `tpr_at_fpr`'s threshold, the K source a test read takes, the window bounds, the digest count), and figures restated in `stats.py` now point at their artifact.
 - **2026-10-20** — "Without targets found before the checkpoint" joins the registered sensitivities and is read on OpenStack's and Wikimedia's development windows: no reading moves (research log).
 - **2026-10-20** — The backport lookup run on every pilot, train and dev target of OpenStack, Wikimedia and Qt: 4.1 to 5.2% of dev targets found in their project's branches at the weight upload, examples the branch-name rule did not reach (research log).
