@@ -594,7 +594,7 @@ def test_only_an_artifact_made_before_digests_were_recorded_takes_the_pinned_one
     for artifact in (early | {"provenance": later}, {"cluster_unit": pinned}):
         with pytest.raises(ValueError, match="with no digest of it"):
             cluster_of(artifact)
-    for digest in ("", None, "c" * 63):
+    for digest in ("", None, "c" * 63, "Z" * 64):
         with pytest.raises(ValueError, match="not a sha256"):
             cluster_of(early | {"cluster_unit": pinned | {"sha256": digest}})
 

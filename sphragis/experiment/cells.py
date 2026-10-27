@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 import numbers
+import re
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import Any
@@ -79,7 +80,7 @@ def cluster_of(artifact: Mapping[str, Any]) -> tuple[str, str | None]:
     recorded = artifact["cluster_unit"]
     if "sha256" in recorded:
         digest = recorded["sha256"]
-        if not (isinstance(digest, str) and len(digest) == 64):
+        if not (isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest)):
             raise ValueError(f"made by chain with the digest {digest!r}, not a sha256")
         return unit, digest
     pinned = CHAINS_SHA256_BEFORE_RECORDED.get(recorded.get("file"))

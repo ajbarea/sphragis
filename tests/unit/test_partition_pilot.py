@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from sphragis.corpus.chains import chains_sha256
-from sphragis.experiment import decomposition, partitions
+from sphragis.experiment import cells, decomposition, partitions
 from sphragis.experiment.cells import K_COVERAGE, REGISTERED_METRIC, REGISTERED_SENSITIVITIES
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
@@ -1240,6 +1240,26 @@ def test_a_test_read_records_the_chains_its_k_and_bounds_were_drawn_from(
     unit = _chain_unit(argv[argv.index("--chains") + 1])
     assert {key: report["cluster_unit"][key] for key in unit} == unit
     assert report["k_from"]["cluster_unit"] == report["sensitivity"]["cluster_unit"] == unit
+
+
+def test_a_k_and_bounds_made_before_digests_were_recorded_carry_the_pinned_one_into_the_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    """The committed K and simulations record no digest; the report must carry the one they
+    resolve to, since the gates read the report without the artifacts."""
+    argv = _gerrit_test_argv(tmp_path)
+    chains = argv[argv.index("--chains") + 1]
+    digest = chains_sha256(json.loads(Path(chains).read_text()))
+    monkeypatch.setitem(cells.CHAINS_SHA256_BEFORE_RECORDED, chains, digest)
+    for path in (tmp_path / "sizing.json", Path(argv[argv.index("--sensitivity") + 1])):
+        artifact = json.loads(path.read_text())
+        del artifact["cluster_unit"]["sha256"]
+        artifact["provenance"] = {"generated_at": cells.CHAINS_PINNED_UNTIL.isoformat()}
+        path.write_text(json.dumps(artifact))
+    _main(monkeypatch, argv)
+    report = json.loads((tmp_path / "o.json").read_text())
+    assert report["k_from"]["cluster_unit"]["sha256"] == digest
+    assert report["sensitivity"]["cluster_unit"]["sha256"] == digest
 
 
 @pytest.mark.parametrize("made", ["sizing.json", "sensitivity"])
