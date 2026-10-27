@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -204,10 +206,9 @@ def test_every_name_a_job_script_imports_from_sphragis_exists(script: Path) -> N
 
 def _checkout_at(monkeypatch: pytest.MonkeyPatch, head: str | None) -> None:
     answers = {("rev-parse", "HEAD"): head, ("rev-parse", "--abbrev-ref", "HEAD"): "main"}
+    monkeypatch.setattr(provenance, "_git", lambda *args: answers[args])
     # A clean tree: the status call that looks for uncommitted code finds none.
-    monkeypatch.setattr(
-        provenance, "_git", lambda *args: "" if args[0] == "status" else answers[args]
-    )
+    monkeypatch.setattr(provenance, "_changed_code", list)
 
 
 def test_a_job_records_the_commit_it_started_on_not_the_one_deployed_since(
@@ -299,6 +300,71 @@ def test_uncommitted_code_is_named_exactly_and_results_do_not_count(
     record = provenance._git_record()
     assert record["uncommitted_code"] == ["scripts/attack.py", "scripts/new_probe.py"]
     assert len(record["uncommitted_code_sha256"]) == 64
+
+
+def test_an_untracked_file_git_would_quote_still_reaches_the_digest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Under `core.quotePath` git C-quotes a non-ASCII name, which named no file on disk."""
+    repo = _repo(tmp_path)
+    subprocess.run(["git", "config", "core.quotePath", "true"], cwd=repo, check=True)
+    untracked = repo / "scripts" / "análise.py"
+    monkeypatch.chdir(repo)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    untracked.write_text("y = 1\n")
+    first = provenance._git_record()
+    untracked.write_text("y = 2\n")
+    second = provenance._git_record()
+    assert first["uncommitted_code"] == ["scripts/análise.py"]
+    assert first["uncommitted_code_sha256"] != second["uncommitted_code_sha256"]
+
+
+def test_a_staged_rename_records_both_paths_not_an_arrow(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _repo(tmp_path)
+    subprocess.run(["git", "mv", "scripts/attack.py", "scripts/probe.py"], cwd=repo, check=True)
+    monkeypatch.chdir(repo)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    assert provenance._git_record()["uncommitted_code"] == ["scripts/attack.py", "scripts/probe.py"]
+
+
+def test_a_name_that_is_not_utf8_is_shown_escaped_and_still_digested(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Writers dump the record with ensure_ascii=False, which a lone surrogate would stop."""
+    repo = _repo(tmp_path)
+    untracked = os.fsencode(repo / "scripts") + b"/bad\xff.py"
+    monkeypatch.chdir(repo)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    Path(os.fsdecode(untracked)).write_text("y = 1\n")
+    first = provenance._git_record()
+    Path(os.fsdecode(untracked)).write_text("y = 2\n")
+    second = provenance._git_record()
+    assert first["uncommitted_code"] == ["scripts/bad\\xff.py"]
+    json.dumps(first, ensure_ascii=False).encode()
+    assert first["uncommitted_code_sha256"] != second["uncommitted_code_sha256"]
+
+
+def test_a_copy_records_its_new_path_and_reads_its_source_field_as_no_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _repo(tmp_path)
+    body = "".join(f"x{i} = {i}\n" for i in range(40))
+    (repo / "scripts" / "attack.py").write_text(body)
+    subprocess.run(["git", "commit", "-qam", "longer"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "status.renames", "copies"], cwd=repo, check=True)
+    # Git looks for a copy's source among the changed files only.
+    (repo / "scripts" / "attack.py").write_text(body + "y = 2\n")
+    (repo / "scripts" / "attack2.py").write_text(body)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    monkeypatch.chdir(repo)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    assert [status for status, _ in provenance._changed_code()] == [b"M ", b"C "]
+    assert provenance._git_record()["uncommitted_code"] == [
+        "scripts/attack.py",
+        "scripts/attack2.py",
+    ]
 
 
 def test_a_clean_tree_carries_no_uncommitted_code_field(
