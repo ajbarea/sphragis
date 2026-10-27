@@ -1,0 +1,25 @@
+chromium 2024-11: fetched 41863 in 425 pages, kept 38467, dropped 3396 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2024-11.ndjson.gz
+chromium 2024-12: fetched 34745 in 354 pages, kept 34333, dropped 412 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2024-12.ndjson.gz
+chromium 2025-01: fetched 41066 in 421 pages, kept 40766, dropped 300 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-01.ndjson.gz
+chromium 2025-02: fetched 40868 in 414 pages, kept 40558, dropped 310 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-02.ndjson.gz
+chromium 2025-03: fetched 41668 in 423 pages, kept 41560, dropped 108 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-03.ndjson.gz
+chromium 2025-04: fetched 41110 in 419 pages, kept 40987, dropped 123 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-04.ndjson.gz
+chromium 2025-05: fetched 41993 in 427 pages, kept 41907, dropped 86 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-05.ndjson.gz
+chromium 2025-06: fetched 39277 in 398 pages, kept 39193, dropped 84 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-06.ndjson.gz
+chromium 2025-07: fetched 41166 in 418 pages, kept 41066, dropped 100 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-07.ndjson.gz
+chromium 2025-08: fetched 40580 in 415 pages, kept 40495, dropped 85 created before 2024-11-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-08.ndjson.gz
+chromium 2025-09: fetched 40786 in 415 pages, kept 1804, dropped 162 created before 2024-11-01 and 38820 from 2025-09-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-09.ndjson.gz
+chromium 2025-10: fetched 40233 in 409 pages, kept 448, dropped 83 created before 2024-11-01 and 39702 from 2025-09-01, and 0 not code
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking/chromium/raw/2025-10.ndjson.gz
+chromium: 219 projects, 401584 changes; wrote datasets/results/pool-order-chromium.json

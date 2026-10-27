@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 786 artifacts under
+repository. This page is generated from those scripts: 789 artifacts under
 74 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -179,6 +179,7 @@ Whether a host's `total_comment_count` of 0 means a row has no comments, asked o
 | artifact |
 |---|
 | `comment-count-probe-aosp.json` |
+| `comment-count-probe-chromium-pool.json` |
 | `comment-count-probe-chromium.json` |
 | `comment-count-probe-fuchsia.json` |
 | `comment-count-probe-qt.json` |
@@ -342,6 +343,7 @@ Whether a built foreign pool covers every matched draw an H2 run can make from i
 | artifact |
 |---|
 | `foreign-pool-coverage-aosp.json` |
+| `foreign-pool-coverage-chromium.json` |
 | `foreign-pool-coverage-fuchsia.json` |
 
 ## `scripts/github_conversion.py`
@@ -953,6 +955,7 @@ A foreign pool's projects in the order item 4 of the H2 plan takes them, from li
 | artifact |
 |---|
 | `pool-order-aosp.json` |
+| `pool-order-chromium.json` |
 | `pool-order-fuchsia.json` |
 
 ## `scripts/power_rq1.py`

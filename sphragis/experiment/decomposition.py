@@ -229,7 +229,7 @@ ADMITTED_ORGANIZATIONS: tuple[str, ...] | None = None
 # Qt's foreign source, set by the commit that fixes it before the first H2 development contrast
 # is read, or None while no source qualifies. Every read takes it from here, never from a
 # caller, so no source can be chosen after a contrast is seen.
-FOREIGN_SOURCE: str | None = None
+FOREIGN_SOURCE: str | None = "chromium"
 
 # Why H2 was withdrawn from the confirmatory family after its source was fixed (a foreign pool
 # over check 4's threshold), set by the commit recording it; None while H2 stands.
