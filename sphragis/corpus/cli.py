@@ -86,7 +86,8 @@ STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "veri
 GERRIT = {
     "aosp": "https://android-review.googlesource.com",
     "chromium": "https://chromium-review.googlesource.com",
-    # H2's foreign source after Chromium's and AOSP's pools fell short (research log, 2026-10-19).
+    # Second in H2's source order; its pool covers, but Chromium's, first, does too (research
+    # log, 2026-10-27).
     "fuchsia": "https://fuchsia-review.googlesource.com",
     # Checked live 2026-09-29: about 29,800 changes merged in the training window. A candidate
     # organization for H1, and at most an exploratory H2 cell (research log, 2026-09-29).

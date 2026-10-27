@@ -223,11 +223,10 @@ def test_an_exploratory_cell_never_decides_a_verdict() -> None:
     assert outcome["verdicts"]["H2"] == "pass"
 
 
-def test_admitting_openstack_and_qt_tests_h1_alone_at_the_whole_family_level(
+def test_admitting_openstack_and_qt_without_a_foreign_source_tests_h1_alone(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Qt admitted with no foreign source registered: H2 has no confirmatory cell.
-    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", None)
+    _registered_source(monkeypatch, None)  # no source registered: H2 has no confirmatory cell
     admitted = ("openstack", "qt")
     results = _results(_by_relation(0.75, 0.25, 0.25), orgs=admitted)
     outcome = decomposition_gate(
@@ -1087,8 +1086,7 @@ def test_a_bound_missing_at_the_laxer_holm_level_is_refused() -> None:
 def test_a_design_with_no_confirmatory_h2_reads_the_bound_registered_at_its_one_level(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Qt admitted with no foreign source registered: H2 has no confirmatory cell.
-    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", None)
+    _registered_source(monkeypatch, None)  # no source registered: H2 has no confirmatory cell
     admitted = ("openstack", "qt")
     results = _results(_by_relation(0.25, 0.75, 0.75), orgs=admitted)
     only_lax = {"H1": {o: {0.95: BOUND} for o in admitted}}
@@ -1498,8 +1496,7 @@ def test_a_confirmatory_h2_cell_without_a_bound_is_refused() -> None:
 
 
 def test_an_exploratory_cell_never_reads_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Qt admitted with no foreign source registered: H2 has no confirmatory cell.
-    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", None)
+    _registered_source(monkeypatch, None)  # no source registered: H2 has no confirmatory cell
     admitted = ("openstack", "qt")
     results = _results(_by_relation(0.75, 0.25, 0.25), orgs=admitted)
     outcome = decomposition_gate(

@@ -10890,28 +10890,34 @@ a rate grant" (2026-10-19) fixed. The ranking listings, 2024-11 to 2025-10 by la
 changes created in Qt's training window (2024-11-01 to 2025-08-31), in two-day ranges over every
 code project the host shows, ran 2026-10-20 10:02 to 15:46 at 25174e8 and hold 401,584 merged
 changes over 219 projects, none listed twice (`pool-order-chromium.json`, sha256 f5caf51e;
-`chromium/src` first, 169,778 merged and 69,397 with an inline comment). The pool lists that first
-project by name over the same ranges. The comment-count probe on the pool's root holds: none of
+`chromium/src` first, 169,778 merged and 69,397 with an inline comment). Ranked again at d0fd7cf,
+the order is unchanged. The pool lists that first project by name over the same ranges. The comment-count probe on the pool's root holds: none of
 the 300 zero-count changes asked carries a comment, no control came back empty, and the upper 95%
 bound on the share with comments is 0.0099 (`comment-count-probe-chromium-pool.json`), so the
-registered rule admits `--fewer-requests`. The build ran at 25174e8, was repinned to 42c2f95 when
-2025-02 closed (#192's per-change checkpoint, the same build sources), was restarted after each
-stop, last on 2026-10-26 at 19:21, skipped the closed months by their records, and ended with
-refine and dedup on 2026-10-27 at 00:17 (logs in `datasets/logs/chromium-pool-2026-10-20/`:
-`status.log` with every start and the repin, `build.log` with the skips). Deduplicated as one
-corpus, the pool holds 45,670 examples, 30,076 of them C++, after 1,060 exact and 528 near
-duplicates were removed (`foreign-pool-coverage-chromium.json`).
+registered rule admits `--fewer-requests`. The build ran at 25174e8. It was repinned to 42c2f95 when
+2025-02 closed; #192 adds only the per-change checkpoint to the build path. It was restarted
+after each stop, last on 2026-10-26 at 19:21, and skipped the closed months by their records
+(logs in `datasets/logs/chromium-pool-2026-10-20/`: `status.log` with every start and the repin,
+`build.log` with the skips). It gave 51,109 examples. Refinement kept 47,258; 3,840 of those it
+removed carried a suggested edit (`refine.log`). Refine and dedup ended on 2026-10-27 at 00:17.
+Deduplicated as one corpus, the pool holds 45,670 examples, 30,076 of them C++, after 1,060 exact
+and 528 near duplicates were removed (`foreign-pool-coverage-chromium.json`).
 
 The largest matched draw needs 1,308 C++ examples (seed 58, qt-b) and 926 others (seed 71, qt-a)
 (`foreign-need-qt.json`). By the stop rule, cleared of copies of Qt's 9,449 unsealed examples, the
 first project, `chromium/src`, holds 45,656 examples, 30,067 C++ and 15,589 others, which covers
 all 80 draws and all 40 partitions (`stop_rule`, with that prefix pool's own digest; coverage run
-at bc7ab74 on the order above, 2026-10-27 00:18 to 10:37). The shortest covering prefix is one
-project, so no other project is listed or built.
+at bc7ab74 on the order above, 2026-10-27 00:18 to 10:37). The coverage code,
+`foreign_pool_coverage.py` and every module it imports, is the same at bc7ab74 and at the build's
+42c2f95 (`git diff`). The shortest covering prefix is one project, so no other project is listed
+or built.
 
 So Chromium is H2's foreign source. Item 1 of the H2 plan takes the first of Chromium, Fuchsia and
 AOSP, in that order, whose host is admitted for this use and whose pool covers every matched draw.
 Chromium's host is admitted under the rate answer (`REST_PERMITTED`) and its pool covers, so
 Fuchsia's covering pool (2026-10-20) is not used. No H2 development contrast has been read. This
-commit sets `decomposition.FOREIGN_SOURCE = "chromium"`, and every H2 read takes the source from
-there.
+commit sets `decomposition.FOREIGN_SOURCE = "chromium"`. The gates read it through
+`registered_design`, and `partition_pilot.py` refuses an H2 read against any other source. The
+foreign arms are to train on the pool the stop rule covered, cleared of Qt's copies (digest
+75d9f7f3). `rq1_pilot.py` builds them from the pool before that clearing, 14 examples more, so the
+clearing comes first (IMPL).

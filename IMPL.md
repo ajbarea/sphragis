@@ -44,7 +44,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and
   `partition_sensitivity.sbatch` with `FOREIGN_SOURCE` simulates it (`power.cell_contrast`,
-  `plan_cell`). Both wait on a qualifying foreign source and Qt's 22 development runs with its arms.
+  `plan_cell`). Both wait on the Chromium pool, cleared against Qt and on TIGRIS, and on Qt's 22
+  development runs with its arms.
 
 ## Next
 
@@ -53,19 +54,23 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    and simulation come before its test window.
 2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
    `ADMITTED_ORGANIZATIONS` (`FOREIGN_SOURCE` is set earlier, before the first H2 development
-   contrast, item 3(b)). Qt can be admitted until 2026-11-20, with its
+   contrast, item 3(b)). With Qt admitted, H2 is confirmatory against Chromium, so
+   `decomposition_gate` refuses a Qt read until H2's bounds are simulated and `h1_test_gate`
+   refuses until H2's test read over partitions is built. Qt can be admitted until 2026-11-20, with its
    cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
    2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
    (a) done 2026-10-27: Chromium's pool covers every draw, first in the order, so
-   `FOREIGN_SOURCE = "chromium"`; its pool (`sphragis-data-local/chromium-pool/pool`) goes to
-   TIGRIS's sphragis-data before the foreign arms train on it; (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   `FOREIGN_SOURCE = "chromium"`, and `partition_pilot.py` refuses an H2 read against another
+   source. Before the foreign arms train, its pool (`sphragis-data-local/chromium-pool/pool`) is
+   cleared of Qt's copies as the stop rule read it (digest 75d9f7f3; `rq1_pilot.py` builds from
+   the uncleared pool, 14 examples more) and copied to TIGRIS's sphragis-data; (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
-   recorded by setting `H2_WITHDRAWN`; a fixed source other than Chromium refuses every read
-   once Chromium is admitted, so admitting Chromium then resets it; (c) the matched foreign
+   recorded by setting `H2_WITHDRAWN`; (c) the matched foreign
    sampler is `holdout.matched_foreign_draw` (2026-10-14); the two foreign adapters per run in the
-   partition jobs read the Chromium pool; the H2 development read needs H2 bounds in
+   partition jobs take `FOREIGN_SOURCE=chromium` and the cleared pool from the job's
+   environment; the H2 development read needs H2 bounds in
    `detectable_effects`, which only the H2 simulation supplies; (d) Qt's terms arrived 2026-10-15 and its host is in `REST_PERMITTED`: its fetch, freeze, split check,
    development pilot for K and both cells' simulation, then the H2 test read over partitions
    through `require_test_read`.
@@ -87,8 +92,8 @@ A test window below its projected size is read with `power_at_size.py` run on it
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. The paper ends its body on page 6 again (papers#112) and is mirrored to the lab's
-Overleaf project (`make overleaf PAPER=org-house-style`); its Table I and Section IV-B name
-Chromium as H2's foreign source once the papers change for this reading merges. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
+Overleaf project (`make overleaf PAPER=org-house-style`; Overleaf fb673a2 = papers e8bbaeb). A
+papers PR, pending, names Chromium as H2's foreign source in Table I and Section IV-B. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before. A host is read only as its registry admits
 it: Qt's REST API at the terms granted 2026-10-15, Chromium's, AOSP's and Fuchsia's under Chrome
 Infra's rate answer of the same day (`REST_PERMITTED`); over git, AOSP alone
