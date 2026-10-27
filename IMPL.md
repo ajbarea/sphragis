@@ -38,12 +38,18 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   the largest draw needs), so Fuchsia qualifies; AOSP's and V8's pools do not. Chromium, first in
   item 1's order, is being read under its rate grant (research log, 2026-10-19): ranking listings
   over every code project in two-day ranges (started 2026-10-20), then the covering prefix listed
-  by name into its own root, built and covered the same way. The pool build (`chromium/src`,
-  worktree chromium-data at 42c2f95) stopped at the 2026-10-23 08:35 shutdown with 2024-11 to
-  2025-07 built; restarted 2026-10-26 19:21 (unit `sphragis-chromium-pool`, coverage waiter
-  `sphragis-chromium-coverage`), it resumed 2025-08 from its checkpoint and built it by 19:34;
-  2025-09 (1,246 listed) and 2025-10 (242) follow at about 9 to 14 changes a minute, then
-  refine, dedup and coverage. If it covers it is the source, else
+  by name into its own root, built and covered the same way. The pool (`chromium/src`, worktree
+  chromium-data at 42c2f95) ended done 2026-10-27 00:17: every month listed, built, refined and
+  deduplicated with rc=0 (`sphragis-data-local/chromium-pool/status.log`). Its coverage under the
+  stop rule (unit `sphragis-chromium-coverage`, worktree chromium-coverage at bc7ab74, log
+  `coverage.log`) started 00:18 and is still computing: pure-Python near-duplicate matching over
+  the whole pool against Qt's unsealed examples. When `coverage.log` says `coverage rc=0`, record
+  the reading in one PR (worktree chromium-reading, branch `results/chromium-coverage`) in
+  Fuchsia's pattern: copy `foreign-pool-coverage-chromium.json`, `pool-order-chromium.json` and
+  the pool's logs (`datasets/logs/chromium-pool-2026-10-20/`), write the research-log entry from
+  the artifact's `stop_rule`, set `FOREIGN_SOURCE`, then `make redact` and `make docs-index`.
+  The built prefix is `chromium/src` alone; if it falls short, the rule extends the prefix to
+  the order's next projects before Chromium can be ruled out. If it covers, Chromium is the source, else
   Fuchsia; that commit sets `FOREIGN_SOURCE`, and no H2 development contrast is read before it.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
@@ -90,7 +96,9 @@ A test window below its projected size is read with `power_at_size.py` run on it
 (`power_at_size.sbatch`), and its artifact passed to the gate as `powers`.
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
-2026-11-13. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
+2026-11-13. The paper ends its body on page 6 again (papers#112) and is mirrored to the lab's
+Overleaf project (`make overleaf PAPER=org-house-style`, Overleaf fb673a2 = papers e8bbaeb); after
+Chromium's reading it needs Table I's Chromium cell and Section IV-B's foreign-source sentence. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before. A host is read only as its registry admits
 it: Qt's REST API at the terms granted 2026-10-15, Chromium's, AOSP's and Fuchsia's under Chrome
 Infra's rate answer of the same day (`REST_PERMITTED`); over git, AOSP alone
