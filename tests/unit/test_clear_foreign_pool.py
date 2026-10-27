@@ -99,3 +99,72 @@ def test_the_arms_read_the_cleared_file_inside_the_span(tmp_path: Path) -> None:
     assert cleared_pool(path, "chromium", span) == KEPT
     with pytest.raises(ValueError, match="outside its span"):
         cleared_pool(path, "chromium", ("2025-02-01", "2025-03-01"))
+
+
+def _source_rows(i: int, project: str, path: str, before: str, created: str) -> dict:
+    row = _row(i, before, before + " + 1", project=project)
+    return {**row, "path": path, "created": created}
+
+
+def test_the_written_pool_is_the_one_the_coverage_stop_rule_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both scripts on one fixture: the coverage's stop-rule digest is the cleared file's."""
+    import json
+    import sys
+
+    from sphragis.corpus.load import derived_file_rows
+    from sphragis.experiment import holdout
+
+    copied = "int qt_only(const QString& name) { return name.size(); }"
+    rows = {
+        "chromium": [
+            _source_rows(1, "chromium/src", "a.cc", copied, "2025-01-15"),  # Qt's copy
+            _source_rows(2, "chromium/src", "b.cc", "int a = 1;", "2025-02-15"),
+            _source_rows(3, "chromium/src", "c.py", "x = 1", "2025-03-15"),
+            _source_rows(5, "v8/v8", "e.cc", "int c = 3;", "2025-01-15"),  # past the prefix
+        ],
+        "qt": [_source_rows(9, "qt/qtbase", "q.cpp", copied, "2025-01-15")],
+    }
+
+    def refined(root: Path, org: str) -> list[dict]:
+        return [dict(row) for row in rows[org]]
+
+    cover = sys.modules["foreign_pool_coverage"]
+    for module in (cover, clear, holdout):
+        monkeypatch.setattr(module, "refined_examples", refined)
+    monkeypatch.setattr(holdout, "run_dedup", lambda pool: (list(pool), {}))
+    need = {
+        "need": {"in_language": {"examples": 1}, "other": {"examples": 1}},
+        "draws": {"4": {"qt-a": {"in_language": 1, "other": 1}}},
+    }
+    order = {"order": [{"project": "chromium/src"}, {"project": "v8/v8"}]}
+    (tmp_path / "need.json").write_text(json.dumps(need))
+    (tmp_path / "order.json").write_text(json.dumps(order))
+    coverage = tmp_path / "coverage.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["c", "--source", "chromium", "--root", str(tmp_path / "pool")]
+        + ["--need", str(tmp_path / "need.json"), "--order", str(tmp_path / "order.json")]
+        + ["--against", f"qt={tmp_path / 'qt'}", "--out", str(coverage)],
+    )
+    cover.main()
+    stop = json.loads(coverage.read_text())["stop_rule"]
+    assert stop["projects"] == 1 and stop["covers_every_draw"]
+    monkeypatch.setattr(clear, "FOREIGN_POOL_SHA256", stop["digest"])
+    out = tmp_path / "cleared" / "chromium.jsonl"
+    out.parent.mkdir()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["c", "--coverage", str(coverage), "--root", str(tmp_path / "pool")]
+        + ["--against", f"qt={tmp_path / 'qt'}", "--out", str(out)]
+        + ["--record", str(tmp_path / "record.json")],
+    )
+    clear.main()
+    written = derived_file_rows(out)
+    assert pool_digest(written) == stop["digest"]
+    assert sorted(r["id"] for r in written) == ["r2", "r3"]
+    record = json.loads((tmp_path / "record.json").read_text())
+    assert record["cleared_pool"]["examples"] == stop["pool"]["examples"] == 2
