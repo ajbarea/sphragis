@@ -42,7 +42,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   worktree chromium-data at 42c2f95) stopped at the 2026-10-23 08:35 shutdown with 2024-11 to
   2025-07 built; restarted 2026-10-26 19:21 (unit `sphragis-chromium-pool`, coverage waiter
   `sphragis-chromium-coverage`), it resumed 2025-08 from its checkpoint and built it by 19:34;
-  2025-09 and 2025-10 follow, then refine, dedup and coverage. If it covers it is the source, else
+  2025-09 (1,246 listed) and 2025-10 (242) follow at about 9 to 14 changes a minute, then
+  refine, dedup and coverage. If it covers it is the source, else
   Fuchsia; that commit sets `FOREIGN_SOURCE`, and no H2 development contrast is read before it.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
@@ -78,9 +79,10 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    GitHub Pro (Student Pack) for required checks on papers `main`. Decided 2026-10-19: AJ reads
    Chrome Infra's answer as a rate covering Chromium, AOSP and Fuchsia, so H2's source is the
    first of Chromium and Fuchsia whose pool covers; without one, H2 has no confirmatory cell.
-6. `provenance._git_record` splits `git status --porcelain` on whitespace, so an untracked path
-   git quotes (non-ASCII) drops out of `uncommitted_code_sha256` and a rename records `old -> new`;
-   read `--porcelain -z` instead, with a test (open bug issue, found in the comment sweep).
+6. Dependabot alerts 2-4 (filelock) stay open though `main` pins the patched 4.2.1 (#203): the
+   graph update GitHub ran on that merge failed on its side ("fetching job details: missing
+   response") and cannot be rerun, so its graph still reads 3.32.6. The next push that changes
+   `uv.lock` updates it and closes them as fixed; nothing to bump or dismiss.
 
 ## Standing
 
