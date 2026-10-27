@@ -20,6 +20,13 @@ from typing import Any
 _TRACKED_PACKAGES = ("torch", "transformers", "peft", "datasets", "pygments")
 
 
+def _git_bytes(*args: str) -> bytes | None:
+    try:
+        return subprocess.check_output(["git", *args], stderr=subprocess.DEVNULL)
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return None
+
+
 def _git(*args: str) -> str | None:
     try:
         return subprocess.check_output(["git", *args], stderr=subprocess.DEVNULL, text=True).strip()
@@ -35,6 +42,32 @@ def _package_versions() -> dict[str, str]:
         except PackageNotFoundError:
             continue
     return versions
+
+
+def _changed_code() -> list[tuple[bytes, bytes]]:
+    """(status, path) for every code path that differs from HEAD, a rename giving both paths.
+
+    Read with `-z`, whose paths are raw bytes: the line format C-quotes a non-ASCII name and
+    writes a rename as `old -> new`, neither of which names a file on disk. A copy's source is
+    unchanged, so only its new path counts.
+    """
+    raw = _git_bytes(
+        "status", "--porcelain", "-z", "--untracked-files=all", "--", ":/sphragis", ":/scripts"
+    )
+    if raw is None:
+        return []
+    fields = iter(raw.split(b"\0"))
+    entries: list[tuple[bytes, bytes]] = []
+    for field in fields:
+        if not field:
+            continue
+        status, path = field[:2], field[3:]
+        entries.append((status, path))
+        if b"R" in status or b"C" in status:
+            source = next(fields, b"")
+            if b"R" in status and source:
+                entries.append((status, source))
+    return entries
 
 
 def _git_record() -> dict[str, Any]:
@@ -59,21 +92,18 @@ def _git_record() -> dict[str, Any]:
     # from a working tree with the fix not yet committed. Only the code is read, from the top of
     # the repository wherever the script ran, so a result directory full of new outputs does not
     # mark every run dirty.
-    changed = _git(
-        "status", "--porcelain", "--untracked-files=all", "--", ":/sphragis", ":/scripts"
-    )
-    if changed:
-        # Split on the status field rather than slice at a column: `_git` strips its output, so
-        # the first line can lose its leading status space.
-        entries = [line.split(None, 1) for line in changed.splitlines() if line.strip()]
-        paths = sorted(entry[1] for entry in entries)
+    entries = _changed_code()
+    if entries:
+        # A name that is not UTF-8 is shown escaped: a lone surrogate would stop a writer that
+        # dumps JSON with ensure_ascii=False. The file is read and digested by its bytes.
+        paths = sorted({path.decode("utf-8", "backslashreplace") for _, path in entries})
         digest = hashlib.sha256(
             (_git("diff", "HEAD", "--", ":/sphragis", ":/scripts") or "").encode()
         )
         top = Path(_git("rev-parse", "--show-toplevel") or ".")
         for status, path in sorted(entries, key=lambda entry: entry[1]):
-            if status == "??" and (top / path).is_file():
-                digest.update(path.encode() + b"\0" + (top / path).read_bytes())
+            if status == b"??" and (top / os.fsdecode(path)).is_file():
+                digest.update(path + b"\0" + (top / os.fsdecode(path)).read_bytes())
         record["uncommitted_code"] = paths
         record["uncommitted_code_sha256"] = digest.hexdigest()
     return record
