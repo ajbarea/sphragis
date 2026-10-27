@@ -64,8 +64,8 @@ def _changed_code() -> list[tuple[bytes, bytes]]:
         status, path = field[:2], field[3:]
         entries.append((status, path))
         if b"R" in status or b"C" in status:
-            source = next(fields)
-            if b"R" in status:
+            source = next(fields, b"")
+            if b"R" in status and source:
                 entries.append((status, source))
     return entries
 
@@ -94,7 +94,9 @@ def _git_record() -> dict[str, Any]:
     # mark every run dirty.
     entries = _changed_code()
     if entries:
-        paths = sorted({os.fsdecode(path) for _, path in entries})
+        # A name that is not UTF-8 is shown escaped: a lone surrogate would stop a writer that
+        # dumps JSON with ensure_ascii=False. The file is read and digested by its bytes.
+        paths = sorted({path.decode("utf-8", "backslashreplace") for _, path in entries})
         digest = hashlib.sha256(
             (_git("diff", "HEAD", "--", ":/sphragis", ":/scripts") or "").encode()
         )

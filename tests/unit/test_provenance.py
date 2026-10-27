@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -325,6 +327,44 @@ def test_a_staged_rename_records_both_paths_not_an_arrow(
     monkeypatch.chdir(repo)
     monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
     assert provenance._git_record()["uncommitted_code"] == ["scripts/attack.py", "scripts/probe.py"]
+
+
+def test_a_name_that_is_not_utf8_is_shown_escaped_and_still_digested(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Writers dump the record with ensure_ascii=False, which a lone surrogate would stop."""
+    repo = _repo(tmp_path)
+    untracked = os.fsencode(repo / "scripts") + b"/bad\xff.py"
+    monkeypatch.chdir(repo)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    Path(os.fsdecode(untracked)).write_text("y = 1\n")
+    first = provenance._git_record()
+    Path(os.fsdecode(untracked)).write_text("y = 2\n")
+    second = provenance._git_record()
+    assert first["uncommitted_code"] == ["scripts/bad\\xff.py"]
+    json.dumps(first, ensure_ascii=False).encode()
+    assert first["uncommitted_code_sha256"] != second["uncommitted_code_sha256"]
+
+
+def test_a_copy_records_its_new_path_and_reads_its_source_field_as_no_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _repo(tmp_path)
+    body = "".join(f"x{i} = {i}\n" for i in range(40))
+    (repo / "scripts" / "attack.py").write_text(body)
+    subprocess.run(["git", "commit", "-qam", "longer"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "status.renames", "copies"], cwd=repo, check=True)
+    # Git looks for a copy's source among the changed files only.
+    (repo / "scripts" / "attack.py").write_text(body + "y = 2\n")
+    (repo / "scripts" / "attack2.py").write_text(body)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    monkeypatch.chdir(repo)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    assert [status for status, _ in provenance._changed_code()] == [b"M ", b"C "]
+    assert provenance._git_record()["uncommitted_code"] == [
+        "scripts/attack.py",
+        "scripts/attack2.py",
+    ]
 
 
 def test_a_clean_tree_carries_no_uncommitted_code_field(
