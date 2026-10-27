@@ -94,8 +94,8 @@ A test window below its projected size is read with `power_at_size.py` run on it
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. The paper ends its body on page 6 again (papers#112) and is mirrored to the lab's
-Overleaf project (`make overleaf PAPER=org-house-style`; Overleaf fb673a2 = papers e8bbaeb). A
-papers PR, pending, names Chromium as H2's foreign source in Table I and Section IV-B. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
+Overleaf project (`make overleaf PAPER=org-house-style`; Overleaf c418573 = papers 6e595c7, #113:
+Chromium as H2's foreign source, its pool's widening disclosed, body on six pages). `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before. A host is read only as its registry admits
 it: Qt's REST API at the terms granted 2026-10-15, Chromium's, AOSP's and Fuchsia's under Chrome
 Infra's rate answer of the same day (`REST_PERMITTED`); over git, AOSP alone
