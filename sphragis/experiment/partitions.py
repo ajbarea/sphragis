@@ -27,6 +27,7 @@ from sphragis.experiment.cells import (
     Cell,
     by_level,
     cell_of,
+    cluster_of,
     is_count,
     level_key,
     same_calibration,
@@ -266,11 +267,6 @@ def pilot_sizing(
     return runs
 
 
-def cluster_unit_of(artifact: Mapping[str, Any]) -> str:
-    """The unit an artifact resampled by; one made before chains existed names none: by change."""
-    return (artifact.get("cluster_unit") or {}).get("unit", "change")
-
-
 def coverage_runs(
     pilot: Mapping[str, Any],
     grid: Sequence[tuple[str, Mapping[str, Any]]],
@@ -288,7 +284,7 @@ def coverage_runs(
     """
     # The pilot sizes its own cell; the grid's points must be made for that cell too (below).
     cell = cell_of(pilot)
-    unit = cluster_unit_of(pilot)
+    unit, chains = cluster_of(pilot)
     reproducibility = pilot_sizing(pilot, name, org=org, require_org=True, cell=cell)
     targets = spread_targets(pilot)
     metric = pilot.get("metric", "exact_match")
@@ -308,10 +304,11 @@ def coverage_runs(
         # An H2 cell's K is its own (item 6 of the H2 plan), so H1's grid never sizes it.
         if cell_of(simulation) != cell:
             raise ValueError(f"{file} simulates {cell_of(simulation)}, not the pilot's {cell}")
-        if cluster_unit_of(simulation) != unit:
-            raise ValueError(
-                f"{file} was simulated by {cluster_unit_of(simulation)}, the pilot by {unit}"
-            )
+        drawn_by, drawn_from = cluster_of(simulation)
+        if drawn_by != unit:
+            raise ValueError(f"{file} was simulated by {drawn_by}, the pilot by {unit}")
+        if drawn_from != chains:
+            raise ValueError(f"{file} drew chains from another chains file than the pilot")
         if not same_calibration(simulation.get("spread_targets"), targets):
             raise ValueError(f"{file} was calibrated on another pilot than {name}")
         if simulation.get("null_trials") != COVERAGE_NULL_TRIALS:

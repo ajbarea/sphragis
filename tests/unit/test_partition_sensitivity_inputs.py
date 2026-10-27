@@ -327,22 +327,42 @@ def test_a_pilot_read_under_chains_is_not_simulated_by_change(tmp_path: Path) ->
     pilot = json.loads(
         (ROOT / "datasets/results/partition-pilot-wikimedia-likelihood.json").read_text()
     )
-    pilot["cluster_unit"] = {"unit": "chain", "file": "c.json"}
+    pilot["cluster_unit"] = {"unit": "chain", "file": "c.json", "sha256": "0" * 64}
+    result = _from_pilot(tmp_path, pilot)
+    assert result.returncode != 0
+    assert "the pilot was read by chain; --chains must match it" in result.stderr
+
+
+def test_chains_are_drawn_only_from_the_file_the_pilot_read(tmp_path: Path) -> None:
+    """The path alone would pass a chains file regenerated since the pilot read it."""
+    chains = tmp_path / "chains.json"
+    train = {"clusters_by_change": 1, "clusters_by_chain": 1}
+    chains.write_text(
+        json.dumps({"org": "wikimedia", "change_chain": {}, "windows": {"train": train}})
+    )
+    pilot = json.loads(
+        (ROOT / "datasets/results/partition-pilot-wikimedia-likelihood.json").read_text()
+    )
+    pilot["cluster_unit"] = {"unit": "chain", "file": str(chains), "sha256": "0" * 64}
+    result = _from_pilot(tmp_path, pilot, "--chains", str(chains))
+    assert result.returncode != 0
+    assert f"{chains} is not the chains file the pilot read" in result.stderr
+
+
+def _from_pilot(tmp_path: Path, pilot: dict, *extra: str) -> subprocess.CompletedProcess:
     (tmp_path / "pilot.json").write_text(json.dumps(pilot))
     results = ROOT / "datasets/results"
     argv = ["--corpus", "datasets/gerrit", "--org", "wikimedia", "--metric", "logprob_per_token"]
     argv += ["--pilot", str(tmp_path / "pilot.json")]
     argv += ["--projection", str(results / "project-windows-wikimedia-v3.json")]
     argv += ["--admissible", str(results / "admissible-partitions-wikimedia.json")]
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT), *argv, "--out", str(tmp_path / "o.json")],
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), *argv, *extra, "--out", str(tmp_path / "o.json")],
         cwd=ROOT,
         capture_output=True,
         text=True,
         check=False,
     )
-    assert result.returncode != 0
-    assert "the pilot was read by chain; --chains must match it" in result.stderr
 
 
 def test_a_chain_pool_takes_each_chains_one_project(tmp_path: Path, monkeypatch) -> None:

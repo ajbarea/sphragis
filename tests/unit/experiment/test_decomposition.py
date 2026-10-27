@@ -17,6 +17,7 @@ from sphragis.experiment.cells import (
     REGISTERED_METRIC,
     REGISTERED_SENSITIVITIES,
     require_sensitivities,
+    require_test_read,
     same_calibration,
 )
 from sphragis.experiment.decomposition import (
@@ -1000,7 +1001,9 @@ def test_a_read_waits_for_its_organizations_to_be_frozen(
         "cells": 1,
         "spread_target": "sizing_bound_90",
         "metric": REGISTERED_METRIC,
+        "cluster_unit": "change",
     }
+    assert registered_read("openstack")["cluster_unit"] == "chain"
 
 
 @pytest.mark.parametrize("bad", [0.0, -0.01, True, float("nan")])
@@ -1671,18 +1674,26 @@ def _gerrit_report(
 ) -> dict:
     """An admitted organization's test-window report, read at H1-alone's 95%."""
     report = _replication_cell(low, high, p, bound=bound, org=org, changes=changes)
-    return report | {
-        "levels": [0.95],
-        "intervals": {0.95: {"low": low, "high": high}},
-        "bounds": {0.95: bound},
-        "sensitivity": {**report["sensitivity"], "cells": cells},
-        "bootstrap_se": se,
-    }
+    # A Gerrit read, its K and its bounds resample relation chains from one chains file.
+    unit = {"cluster_unit": {"unit": "chain", "file": f"chains-{org}.json", "sha256": "a" * 64}}
+    return (
+        report
+        | unit
+        | {
+            "levels": [0.95],
+            "intervals": {0.95: {"low": low, "high": high}},
+            "bounds": {0.95: bound},
+            "k_from": report["k_from"] | unit,
+            "sensitivity": {**report["sensitivity"], "cells": cells} | unit,
+            "bootstrap_se": se,
+        }
+    )
 
 
 def _gerrit_sim(org: str, bound: float = 0.03, *, cells: int = 2) -> dict:
     by_level = {"0.95": {"by_cells": {str(cells): {"minimum_detectable_effect": bound}}}}
-    return _sim(bound, org, by_level=by_level)
+    unit = {"unit": "chain", "file": f"chains-{org}.json", "sha256": "a" * 64}
+    return _sim(bound, org, by_level=by_level) | {"cluster_unit": unit}
 
 
 @pytest.fixture
@@ -1789,6 +1800,55 @@ def test_the_h1_test_gate_refuses(admitted, reports: dict, sims: Any, match: str
     sims = sims if sims is not None else {o: _gerrit_sim(o) for o in ("openstack", "wikimedia")}
     with pytest.raises(ValueError, match=match):
         h1_test_gate(reports, simulations=sims)
+
+
+def _without_unit(record: dict) -> dict:
+    return {key: value for key, value in record.items() if key != "cluster_unit"}
+
+
+@pytest.mark.parametrize(
+    ("change", "match"),
+    [
+        (_without_unit, "the read resampled by change, registered by chain"),
+        (lambda r: r | {"k_from": _without_unit(r["k_from"])}, "k_from resampled by change"),
+        (
+            lambda r: r | {"sensitivity": r["sensitivity"] | {"cluster_unit": _CHAINS_B}},
+            "read different chains files",
+        ),
+        (
+            lambda r: r | {"k_from": r["k_from"] | {"cluster_unit": {"unit": "chain"}}},
+            "k_from was made by chain from None, with no digest of it",
+        ),
+    ],
+)
+def test_a_gerrit_test_read_resamples_its_registered_unit_from_one_chains_file(
+    admitted, change: Callable[[dict], dict], match: str
+) -> None:
+    admitted("openstack", "wikimedia")
+    report = change(_gerrit_report("openstack", 0.01, 0.05, 0.001))
+    with pytest.raises(ValueError, match=match):
+        require_test_read(report, org="openstack", expected=registered_read("openstack"))
+
+
+def test_the_h1_test_gate_refuses_a_simulation_drawn_from_other_chains(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    sims = {o: _gerrit_sim(o) for o in reports}
+    sims["wikimedia"]["cluster_unit"] = _CHAINS_B
+    with pytest.raises(ValueError, match="wikimedia: the simulation given is not the one"):
+        h1_test_gate(reports, simulations=sims)
+
+
+def test_a_replication_read_resamples_by_change(frozen) -> None:
+    frozen("apache")
+    report = _replication_cell(0.02, 0.05, 0.0001)
+    expected = registered_read("apache")
+    require_test_read(report, org="apache", expected=expected)
+    with pytest.raises(ValueError, match="the read resampled by chain, registered by change"):
+        require_test_read(report | {"cluster_unit": _CHAINS_B}, org="apache", expected=expected)
+
+
+_CHAINS_B = {"unit": "chain", "file": "chains.json", "sha256": "b" * 64}
 
 
 @pytest.mark.parametrize(

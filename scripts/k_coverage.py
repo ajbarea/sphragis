@@ -23,8 +23,13 @@ import argparse
 import json
 from pathlib import Path
 
-from sphragis.experiment.cells import K_COVERAGE, REGISTERED_SPREAD_TARGET
-from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, cluster_unit_of, coverage_runs
+from sphragis.experiment.cells import (
+    K_COVERAGE,
+    REGISTERED_SPREAD_TARGET,
+    cluster_of,
+    cluster_unit_of,
+)
+from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, coverage_runs
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -44,6 +49,14 @@ def main() -> None:
             "(a K made by chain is named *-chains.json, a K made by change is not)"
         )
     grid = [(str(path), json.loads(path.read_text())) for path in args.grid]
+    # The pilot's unit, with the digest of its chains resolved where the pilot predates it.
+    try:
+        _, chains = cluster_of(pilot)
+    except ValueError as error:
+        raise SystemExit(f"not sized: {args.pilot} was {error}") from error
+    cluster = pilot.get("cluster_unit")
+    if chains is not None:
+        cluster = {**cluster, "sha256": chains}
     try:
         k = coverage_runs(pilot, grid, org=args.org, name=str(args.pilot))
     except (KeyError, TypeError, ValueError) as error:
@@ -62,7 +75,7 @@ def main() -> None:
         "pilot": str(args.pilot),
         # A coverage artifact is made in the unit of the pilot it covers; `partition_pilot.py`
         # refuses a K from another unit.
-        **({"cluster_unit": pilot["cluster_unit"]} if "cluster_unit" in pilot else {}),
+        **({"cluster_unit": cluster} if cluster else {}),
         "spread_target": REGISTERED_SPREAD_TARGET,
         "null_trials": COVERAGE_NULL_TRIALS,
         **k,
