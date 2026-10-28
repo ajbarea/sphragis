@@ -67,6 +67,11 @@ PARTITION_SENSITIVITY = f"{RESULTS}/partition-sensitivity-openstack-rp1.0-logpro
 PARTITION_SENSITIVITY_WM = (
     f"{RESULTS}/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json"
 )
+# Each H1 cell's simulation under relation chains, at its K of record.
+PARTITION_SENSITIVITY_CHAINS = {
+    org: f"{RESULTS}/partition-sensitivity-{org}-rp1.0-logprob_per_token-chains{suffix}.json"
+    for org, suffix in (("openstack", ""), ("wikimedia", "-k20"), ("qt", ""))
+}
 K_COVERAGE_OS = f"{RESULTS}/k-coverage-openstack-likelihood.json"
 K_COVERAGE_WM = f"{RESULTS}/k-coverage-wikimedia-likelihood.json"
 K_COVERAGE_OS_CHAINS = f"{RESULTS}/k-coverage-openstack-likelihood-chains.json"
@@ -277,8 +282,8 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["levels", "0"],
-        # With the replication family's one-sided 0.0125 and the K-grid sentence's nominal.
-        {"reduce": "one_sided", "occurrences": 3},
+        # With the replication family's one-sided 0.0125, the chain rates' and the K grid's nominal.
+        {"reduce": "one_sided", "occurrences": 4},
     ),
     (
         "rd_partition_fp_nominal_95",
@@ -286,7 +291,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.025",
         PARTITION_SENSITIVITY,
         ["levels", "1"],
-        {"reduce": "one_sided"},
+        {"reduce": "one_sided", "after": "against ", "occurrences": 2},
     ),
     (
         "rd_partition_fp_95_low",
@@ -318,7 +323,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.02475",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.95"},
+        {"reduce": "max:null_false_positive/0.95", "after": "0.00725 to "},
     ),
     (
         "rd_partition_floor",
@@ -428,43 +433,6 @@ CLAIMS: list[tuple[Any, ...]] = [
         {"after": "Qt K = "},
     ),
     (
-        "rd_cell_power",
-        "registered-decisions.md",
-        "0.9747",
-        PARTITION_SENSITIVITY,
-        ["cell_power", "2"],
-    ),
-    (
-        "rd_partition_mde_975",
-        "registered-decisions.md",
-        "+0.0109",
-        PARTITION_SENSITIVITY,
-        [
-            "by_target",
-            "sizing_bound_90",
-            "by_level",
-            "0.975",
-            "by_cells",
-            "2",
-            "minimum_detectable_effect",
-        ],
-    ),
-    (
-        "rd_partition_mde_95",
-        "registered-decisions.md",
-        "+0.0103",
-        PARTITION_SENSITIVITY,
-        [
-            "by_target",
-            "sizing_bound_90",
-            "by_level",
-            "0.95",
-            "by_cells",
-            "2",
-            "minimum_detectable_effect",
-        ],
-    ),
-    (
         "rd_partition_fp_low_wm",
         "registered-decisions.md",
         "0.0035",
@@ -481,34 +449,55 @@ CLAIMS: list[tuple[Any, ...]] = [
         {"reduce": "max:null_false_positive/0.975"},
     ),
     (
-        "rd_partition_mde_975_wm",
+        "rd_cell_power",
         "registered-decisions.md",
-        "+0.0071",
-        PARTITION_SENSITIVITY_WM,
-        [
-            "by_target",
-            "sizing_bound_90",
-            "by_level",
-            "0.975",
-            "by_cells",
-            "2",
-            "minimum_detectable_effect",
-        ],
+        "0.983",
+        PARTITION_SENSITIVITY_CHAINS["openstack"],
+        ["cell_power", "3"],
     ),
-    (
-        "rd_partition_mde_95_wm",
-        "registered-decisions.md",
-        "+0.0065",
-        PARTITION_SENSITIVITY_WM,
-        [
-            "by_target",
-            "sizing_bound_90",
-            "by_level",
-            "0.95",
-            "by_cells",
-            "2",
-            "minimum_detectable_effect",
-        ],
+    *(
+        (
+            f"rd_chain_fp_{level}_{org}",
+            "registered-decisions.md",
+            value,
+            PARTITION_SENSITIVITY_CHAINS[org],
+            ["by_target", target, "null_false_positive", level],
+            {"after": after},
+        )
+        for org, level, target, value, after in (
+            ("openstack", "0.975", "sizing_bound_90", "0.0075", "at the stricter level "),
+            ("wikimedia", "0.975", "sizing_bound_90", "0.011", "for OpenStack, "),
+            ("qt", "0.975", "sizing_bound_90", "0.01175", "for Wikimedia and "),
+            ("openstack", "0.95", "sizing_bound_90", "0.019", "at the 95% level "),
+            ("wikimedia", "0.95", "sizing_bound_90", "0.02475", "0.019, "),
+            ("qt", "0.95", "sizing_bound_90", "0.025", "0.02475 and "),
+            ("qt", "0.975", "pilot_upper_99", "0.01875", ""),
+        )
+    ),
+    *(
+        (
+            f"rd_partition_mde_{level}_{org}",
+            "registered-decisions.md",
+            value,
+            PARTITION_SENSITIVITY_CHAINS[org],
+            [
+                "by_target",
+                "sizing_bound_90",
+                "by_level",
+                level,
+                "by_cells",
+                "3",
+                "minimum_detectable_effect",
+            ],
+        )
+        for org, level, value in (
+            ("openstack", "0.975", "+0.0120"),
+            ("openstack", "0.95", "+0.0112"),
+            ("wikimedia", "0.975", "+0.0074"),
+            ("wikimedia", "0.95", "+0.0069"),
+            ("qt", "0.975", "+0.0083"),
+            ("qt", "0.95", "+0.0077"),
+        )
     ),
     # outcome-neutral.md
     (
