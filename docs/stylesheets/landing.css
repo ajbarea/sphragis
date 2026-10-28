@@ -699,21 +699,7 @@ body.hero-page .md-content__inner {
 
 .md-header {
   box-shadow: 0 1px 0 rgba(244, 168, 150, 0.08);
-}/* Brand mark in the footer copyright (inverted to light on the dark footer) */
-.md-copyright .brand-mark,
-.landing-footer .brand-mark {
-  height: 1em;
-  width: auto;
-  vertical-align: -0.18em;
-  margin: 0 0.15rem;
-  opacity: 0.75;
-  filter: invert(1);
 }
-/* Light mode: brand mark stays dark on the (light) content-page footer */
-[data-md-color-scheme="default"] .md-copyright .brand-mark {
-  filter: none;
-}
-
 /* The permalink mark belongs on reference headings, not on the hero title. */
 .md-typeset .hero h1 .headerlink {
   display: none;
