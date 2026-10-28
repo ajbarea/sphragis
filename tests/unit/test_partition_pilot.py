@@ -1085,6 +1085,25 @@ def test_an_h2_development_read_is_sibling_against_matched_foreign_on_cpp(
     assert report["window"] == "development"
 
 
+def test_an_h2_read_under_chains_draws_the_cells_cpp_changes_by_chain(
+    tmp_path, monkeypatch
+) -> None:
+    # In each half two chains join two C++ changes each, leaving ten C++ chains a half (the floor)
+    # where there are twelve C++ changes.
+    path = tmp_path / "chains.json"
+    chains = {f"c{i}": f"chain-c{i - 2 if i % N in (2, 6) else i}" for i in range(2 * N)}
+    train = {"clusters_by_change": 2 * N, "clusters_by_chain": 2 * N - 4}
+    path.write_text(json.dumps({"org": "qt", "change_chain": chains, "windows": {"train": train}}))
+    out = tmp_path / "out.json"
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    _main(monkeypatch, [*argv, "--chains", str(path), "--resamples", "2000", "--out", str(out)])
+    report = json.loads(out.read_text())
+    assert report["per_run"] == pytest.approx([1.0] * len(ADMISSIBLE))
+    assert (report["cell_examples"], report["changes"]) == (N, N - 4)
+    unit = {**_chain_unit(str(path)), "changes": 2 * N, "chains": 2 * N - 4}
+    assert report["cluster_unit"] == unit
+
+
 @pytest.mark.parametrize(
     ("foreign", "flags", "message"),
     [
