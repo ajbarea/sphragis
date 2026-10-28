@@ -133,16 +133,23 @@ def matched_foreign_draw(
 
 
 def foreign_pool(
-    root: Path, source: str, span: tuple[str, str]
+    root: Path,
+    source: str,
+    span: tuple[str, str],
+    *,
+    dedup: Callable[
+        [list[dict[str, Any]]], tuple[list[dict[str, Any]], dict[str, int]]
+    ] = run_dedup,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """A foreign source's pool: its refined examples under `root`, deduplicated as one corpus.
+    """A foreign source's pool: its refined examples under `root`, deduplicated as one corpus by
+    `dedup` (`run_dedup`, or a caller's cache of it).
 
     Refused when empty, when any row was created in the sealed test window or after it (a foreign
     arm trains on its draw, and the window is read only after acceptance), or when any row lies
     outside `span`, the created dates the source's pool was registered over (`created_from`
     inclusive, `created_before` exclusive).
     """
-    pool, removed = run_dedup(refined_examples(root, source))
+    pool, removed = dedup(refined_examples(root, source))
     if not pool:
         raise ValueError(f"no refined examples for {source} under {root}")
     return _in_span(pool, source, span), removed
