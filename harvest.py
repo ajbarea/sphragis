@@ -283,7 +283,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         PARTITION_SENSITIVITY,
         ["levels", "0"],
         # With the replication family's one-sided 0.0125 and the K-grid sentence's nominal.
-        {"reduce": "one_sided", "occurrences": 3},
+        {"reduce": "one_sided", "occurrences": 4},
     ),
     (
         "rd_partition_fp_nominal_95",
@@ -291,7 +291,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.025",
         PARTITION_SENSITIVITY,
         ["levels", "1"],
-        {"reduce": "one_sided"},
+        {"reduce": "one_sided", "occurrences": 3},
     ),
     (
         "rd_partition_fp_95_low",
@@ -323,7 +323,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.02475",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.95"},
+        {"reduce": "max:null_false_positive/0.95", "occurrences": 2},
     ),
     (
         "rd_partition_floor",
@@ -454,6 +454,25 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.983",
         PARTITION_SENSITIVITY_CHAINS["openstack"],
         ["cell_power", "3"],
+    ),
+    *(
+        (
+            f"rd_chain_fp_{level}_{org}",
+            "registered-decisions.md",
+            value,
+            PARTITION_SENSITIVITY_CHAINS[org],
+            ["by_target", target, "null_false_positive", level],
+            {"after": after},
+        )
+        for org, level, target, value, after in (
+            ("openstack", "0.975", "sizing_bound_90", "0.0075", "at the stricter level "),
+            ("wikimedia", "0.975", "sizing_bound_90", "0.011", "for OpenStack, "),
+            ("qt", "0.975", "sizing_bound_90", "0.01175", "for Wikimedia and "),
+            ("openstack", "0.95", "sizing_bound_90", "0.019", "at the 95% level "),
+            ("wikimedia", "0.95", "sizing_bound_90", "0.02475", "0.019, "),
+            ("qt", "0.95", "sizing_bound_90", "0.025", "0.02475 and "),
+            ("qt", "0.975", "pilot_upper_99", "0.01875", "stricter rate most, at\n"),
+        )
     ),
     *(
         (

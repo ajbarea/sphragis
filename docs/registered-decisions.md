@@ -35,13 +35,15 @@ every one of its cells is supported, so a pass generalizes across the organizati
 resting on one. Requiring every cell makes it an intersection-union test, which holds its level
 without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
 evaluated projects) is confirmatory on Qt's C++ examples, against a foreign adapter trained on as
-many C++ examples as the sibling from Chromium's pool, the first of Chromium, Fuchsia and AOSP, in
-that fixed order, whose pool covers every matched draw (research log, 2026-10-14 and 2026-10-27).
+many C++ examples as the sibling, filled to N from its other files, from Chromium's pool: the first
+of Chromium, Fuchsia and AOSP, in that fixed order, whose host is admitted for this use and whose
+pool covers every matched draw (research log, 2026-10-14 and 2026-10-27).
 The two hypotheses share one family-wise level under Holm's step-down: both are read on a
 two-sided 97.5% interval, and if one passes, the other is read again on a 95% one. An
 organization lost after acceptance is reported as a deviation and the hypotheses are read over
-the rest; without Qt or Chromium, H2 is exploratory and H1, the whole family, carries the whole
-family-wise level: it is read on the 95% interval alone, bounded against δ.
+the rest. Without Qt or Chromium's pool, or with H2 withdrawn because the pool fails check 4
+(`H2_WITHDRAWN`; research log, 2026-10-14), H2 is exploratory and H1, the whole family, carries
+the whole family-wise level: it is read on the 95% interval alone, bounded against δ.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the SESOI δ (a one-sided equivalence test; research log, 2026-10-14), and **inconclusive**
@@ -49,22 +51,23 @@ otherwise. A cell is read bounded only once its sensitivity simulation, its powe
 The margin moved to δ after the development pilots were read (research log, 2026-10-14).
 A hypothesis is bounded only when every cell is.
 
-The admitted organizations are Gerrit hosts: OpenStack, Wikimedia and Qt for H1, and Chromium as
-H2's foreign source. H1 is intersection-union over its three cells, each sized at 0.95^(1/3); with
-three cells a between-organization variance is not estimable with useful precision, so
-heterogeneity is read beside the rule, not in it (below). Every H1 cell's simulation is read at
-three cells; H2's cell is simulated from its own development runs before the test window is
-fetched.
+The admitted organizations are Gerrit hosts whose splits qualify: OpenStack, Wikimedia and Qt.
+Chromium is not admitted (no split qualifies) and supplies H2's foreign pool. H1 is
+intersection-union over its three cells, each sized at 0.95^(1/3); with three cells a
+between-organization variance is not estimable with useful precision, so heterogeneity is read
+beside the rule, not in it (below). Every H1 cell's simulation is read at three cells, and H2's
+cell is simulated from its own development runs before the seal.
 
 ### GitHub organizations: a registered replication on a second platform (2026-10-04)
 
 On GitHub, review before merging depends on each project's settings and is often optional, where
 Gerrit's is enforced, so a GitHub cell inside H1 would let platform decide the hypothesis; and no
 GitHub cell can be powered by Stage 1. The GitHub organizations are therefore a family of their
-own, read after the confirmatory hypotheses. **Membership is fixed at Stage 1:** of Apache, LLVM, .NET and Grafana, in that order, each a
-member only if its pilot, train and development windows were frozen and its split met the
-criteria at the registered N, Apache and .NET are members and no split of LLVM's or Grafana's
-qualifies (research log, 2026-10-18); none joins later. Each member is read on H1 only, with the Gerrit
+own, read after the confirmatory hypotheses. **Membership is fixed at Stage 1 (2026-11-20):** the candidates were Apache, LLVM, .NET and
+Grafana, in that order, each a member only if its pilot, train and development windows are frozen
+and its split meets the criteria at the registered N. Apache and .NET are members; no split of
+LLVM's or Grafana's qualifies, so each is reported as not collected (research log, 2026-10-18).
+None joins later. Each member is read on H1 only, with the Gerrit
 cells' windows, rules and estimand, on the two-sided 97.5% interval; its K comes from its own
 development pilot and its bound from its own simulation, of that one cell at 97.5%, both fixed
 before its test window is fetched. The family's reported outcome is the partial conjunction r over its members at
@@ -273,10 +276,14 @@ figures they replace are in the research log.
 ### Interval the gate reads: the crossed run-by-cluster bootstrap
 
 Decided by the coverage study and the fixed-K simulation. A Gerrit read's cluster is a relation
-chain and a GitHub member's a change (research log, 2026-10-21); the false-positive rates below
-are the by-change simulations', and the chain simulations' are in their artifacts
-(`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`). A run is one admissible partition at its
-own training seed; runs and changes are crossed rather than nested, so they are resampled
+chain and a GitHub member's a change (research log, 2026-10-21). Under chains, at the spread K was
+sized on (the pilot's 90% upper bound), each H1 cell's simulated one-sided false-positive rate is
+within nominal: at the stricter level 0.0075 for OpenStack, 0.011 for Wikimedia and 0.01175 for
+Qt, against 0.0125, and at the 95% level 0.019, 0.02475 and 0.025, against 0.025. At the pilot's
+99% upper spread Wikimedia's and Qt's exceed nominal at both levels, Qt's stricter rate most, at
+0.01875 (`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`). The rates in the
+rest of this section are the by-change simulations'. A run is one admissible partition at its
+own training seed; runs and clusters are crossed rather than nested, so they are resampled
 independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122. Over
 the registered runs, simulated on the registered metric, its one-sided false-positive rate at the
@@ -320,8 +327,7 @@ runs, read under relation chains, OpenStack's H1 cell detects a half-split contr
 +0.0112 nats per token at the two Holm levels, Wikimedia's +0.0074 and +0.0069 and Qt's +0.0083
 and +0.0077, at the per-run spread K was sized on
 (`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`, `by_cells` 3). H2's cell has
-no simulation yet; it is simulated from its own development runs before the test window is
-fetched.
+no simulation yet; it is simulated from its own development runs before the seal.
 Each is below the SESOI, the margin a bounded reading is judged against (Pass rule), and under a
 true null every simulated interval lies inside the SESOI band at both levels. Wikimedia's test size is a lower bound if test-window arrivals hold at the
 training rate (checked at fetch), and its bounds are then conservative. Power from a pilot's own
