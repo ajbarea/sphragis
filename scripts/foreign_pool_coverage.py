@@ -25,6 +25,7 @@ Reads no outcome.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from collections import Counter
 from collections.abc import Sequence
@@ -99,9 +100,32 @@ def against(pool: Sequence[dict[str, Any]], other: Sequence[dict[str, Any]]) -> 
     return kept
 
 
+def rows_key(rows: Sequence[dict[str, Any]]) -> str:
+    """The rows' identity, in order: what `run_dedup` and `against` read of them."""
+    digest = hashlib.sha256()
+    for row in rows:
+        digest.update(json.dumps(row, sort_keys=True).encode() + b"\n")
+    return digest.hexdigest()
+
+
+# One run asks for the same rows' dedup up to four times (the pool, the whole order, the covering
+# prefix, the cut), each hours at a pool's size; each distinct input is computed once.
+_DEDUPED: dict[str, tuple[list[dict[str, Any]], dict[str, int]]] = {}
+_CLEARED: dict[tuple[str, str], list[dict[str, Any]]] = {}
+
+
+def deduplicated(rows: Sequence[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """`run_dedup`, computed once per distinct input in this process."""
+    key = rows_key(rows)
+    if key not in _DEDUPED:
+        _DEDUPED[key] = run_dedup(rows)
+    kept, removed = _DEDUPED[key]
+    return list(kept), dict(removed)
+
+
 def unsealed(root: Path, org: str) -> list[dict[str, Any]]:
     """An organization's deduplicated examples created before the sealed test window."""
-    rows, _ = run_dedup(refined_examples(root, org))
+    rows, _ = deduplicated(refined_examples(root, org))
     return [row for row in rows if str(row.get("created", "")) < WINDOWS["test"][0]]
 
 
@@ -110,8 +134,11 @@ def prefix_pool(
 ) -> list[dict[str, Any]]:
     """The pool a prefix of the order gives: its refined rows deduplicated, then against `other`."""
     named = set(projects)
-    rows, _ = run_dedup([row for row in pool if row["project"] in named])
-    return against(rows, other)
+    rows, _ = deduplicated([row for row in pool if row["project"] in named])
+    key = (rows_key(rows), rows_key(other))
+    if key not in _CLEARED:
+        _CLEARED[key] = against(rows, other)
+    return list(_CLEARED[key])
 
 
 def counts(rows: Sequence[dict[str, Any]]) -> tuple[int, int]:
@@ -122,7 +149,9 @@ def counts(rows: Sequence[dict[str, Any]]) -> tuple[int, int]:
 def main() -> None:
     args = parser.parse_args()
     need = json.loads(args.need.read_text())
-    pool, removed = foreign_pool(args.root, args.source, FOREIGN_SPANS[args.source])
+    pool, removed = foreign_pool(
+        args.root, args.source, FOREIGN_SPANS[args.source], dedup=deduplicated
+    )
     cpp = sum(is_cpp(row) for row in pool)
     other = len(pool) - cpp
     draws = coverage(cpp, other, need["draws"])
