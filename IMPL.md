@@ -44,8 +44,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and
   `partition_sensitivity.sbatch` with `FOREIGN_SOURCE` simulates it (`power.cell_contrast`,
-  `plan_cell`). Both wait on the cleared Chromium pool's copy on TIGRIS and on Qt's 22
-  development runs with its arms.
+  `plan_cell`). Both wait on Qt's 22 development runs with their arms: submitted 2026-10-28 from
+  9716914 (TIGRIS jobs 613360 to 613405, `foreign_arms.sbatch` with `FOREIGN_SOURCE=chromium` and
+  the cleared pool, each followed `afterok` by `likelihood_score.sbatch`).
 
 ## Next
 
@@ -66,9 +67,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    cleared of Qt's copies as the stop rule read it, was written on 2026-10-27 at the registered
    digest (research log, "Chromium's pool cleared of Qt's copies"):
    `sphragis-data-local/chromium-pool/cleared/chromium.jsonl` with its `.source.json` record, the
-   file `rq1_pilot.py --foreign-pool` and `foreign_arms.sbatch FOREIGN_POOL` take. Next: copy both
-   to TIGRIS (`~/ajsoftworks/sphragis-data/chromium-pool/cleared/`, sha256 checked at both ends;
-   needs AJ's Duo login); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   file `rq1_pilot.py --foreign-pool` and `foreign_arms.sbatch FOREIGN_POOL` take. Both were
+   copied to TIGRIS on 2026-10-28 (`~/ajsoftworks/sphragis-data/chromium-pool/cleared/`, sha256
+   equal at both ends: `chromium.jsonl` 03f3faa3, its record 79c3267a); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
    recorded by setting `H2_WITHDRAWN`; (c) the matched foreign
