@@ -35,7 +35,7 @@ every one of its cells is supported, so a pass generalizes across the organizati
 resting on one. Requiring every cell makes it an intersection-union test, which holds its level
 without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
 evaluated projects) is confirmatory on Qt's C++ examples, against a foreign adapter trained on as
-many C++ examples as the sibling, filled to N from its other files, from Chromium's pool: the first
+many C++ examples as the sibling, filled to N from the pool's other files, from Chromium's pool: the first
 of Chromium, Fuchsia and AOSP, in that fixed order, whose host is admitted for this use and whose
 pool covers every matched draw (research log, 2026-10-14 and 2026-10-27).
 The two hypotheses share one family-wise level under Holm's step-down: both are read on a
@@ -278,7 +278,7 @@ figures they replace are in the research log.
 Decided by the coverage study and the fixed-K simulation. A Gerrit read's cluster is a relation
 chain and a GitHub member's a change (research log, 2026-10-21). Under chains, at the spread K was
 sized on (the pilot's 90% upper bound), each H1 cell's simulated one-sided false-positive rate is
-within nominal: at the stricter level 0.0075 for OpenStack, 0.011 for Wikimedia and 0.01175 for
+within nominal, Qt's at the 95% level exactly at it: at the stricter level 0.0075 for OpenStack, 0.011 for Wikimedia and 0.01175 for
 Qt, against 0.0125, and at the 95% level 0.019, 0.02475 and 0.025, against 0.025. At the pilot's
 99% upper spread Wikimedia's and Qt's exceed nominal at both levels, Qt's stricter rate most, at
 0.01875 (`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`). The rates in the

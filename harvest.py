@@ -282,7 +282,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["levels", "0"],
-        # With the replication family's one-sided 0.0125 and the K-grid sentence's nominal.
+        # With the replication family's one-sided 0.0125, the chain rates' and the K grid's nominal.
         {"reduce": "one_sided", "occurrences": 4},
     ),
     (
@@ -291,7 +291,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.025",
         PARTITION_SENSITIVITY,
         ["levels", "1"],
-        {"reduce": "one_sided", "occurrences": 3},
+        {"reduce": "one_sided", "after": "against ", "occurrences": 2},
     ),
     (
         "rd_partition_fp_95_low",
@@ -323,7 +323,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.02475",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.95", "occurrences": 2},
+        {"reduce": "max:null_false_positive/0.95", "after": "0.00725 to "},
     ),
     (
         "rd_partition_floor",
@@ -471,7 +471,7 @@ CLAIMS: list[tuple[Any, ...]] = [
             ("openstack", "0.95", "sizing_bound_90", "0.019", "at the 95% level "),
             ("wikimedia", "0.95", "sizing_bound_90", "0.02475", "0.019, "),
             ("qt", "0.95", "sizing_bound_90", "0.025", "0.02475 and "),
-            ("qt", "0.975", "pilot_upper_99", "0.01875", "stricter rate most, at\n"),
+            ("qt", "0.975", "pilot_upper_99", "0.01875", ""),
         )
     ),
     *(
