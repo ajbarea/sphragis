@@ -1,0 +1,30 @@
+{
+  "source": "chromium",
+  "coverage": "datasets/results/foreign-pool-coverage-chromium.json",
+  "projects": [
+    "chromium/src"
+  ],
+  "against": {
+    "org": "qt",
+    "examples": 9449
+  },
+  "cleared_pool": {
+    "examples": 45656,
+    "in_language": 30067,
+    "other": 15589,
+    "digest": "75d9f7f37e1faafb863f0fd3bcc3508506309e3c2e4edbe9b631d05258fe5ba9"
+  },
+  "file": "/home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/cleared/chromium.jsonl",
+  "provenance": {
+    "generated_at": "2026-10-27T23:17:52.063071+00:00",
+    "git": {
+      "commit": "469c01edac4dffb8acb94585086b5c08b0d2b4ed",
+      "branch": "HEAD"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

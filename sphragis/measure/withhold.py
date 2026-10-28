@@ -129,6 +129,7 @@ ALLOWED_HASHES: tuple[HashField, ...] = (
     ),
     HashField("pool", "digest", "scripts/foreign_pool_coverage.py"),
     HashField("stop_rule", "digest", "scripts/foreign_pool_coverage.py"),
+    HashField("cleared_pool", "digest", "scripts/clear_foreign_pool.py"),
     HashField("foreign_pool", "pool_sha256", "scripts/rq1_pilot.py"),
     HashField("", "digest", "scripts/label_audit_decision.py"),
 )

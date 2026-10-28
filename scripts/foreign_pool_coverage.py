@@ -2,8 +2,9 @@
 
 Item 4 of the H2 plan (research log, 2026-10-14) takes a source only when its pool covers every
 draw: `holdout.matched_foreign_draw` refuses a pool short of a draw rather than training a smaller
-arm. The pool is read as the arms read it (`holdout.foreign_pool`: refined, deduplicated as one
-corpus, inside the source's registered span); each draw `foreign_need.py` recorded for Qt's
+arm. The pool is read by `holdout.foreign_pool` (refined, deduplicated as one corpus, inside the
+source's registered span); the arms read the stop rule's pool, which `clear_foreign_pool.py` writes
+once. Each draw `foreign_need.py` recorded for Qt's
 admissible partitions needs as many C++ examples as its sibling's and the rest of N from other
 files. Each arm draws from the whole pool, so a draw is covered when the pool alone holds both; a
 partition is covered when both its arms' draws are, since a run refuses a missing arm.

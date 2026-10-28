@@ -10923,3 +10923,25 @@ foreign arms train on the pool the stop rule covered, cleared of Qt's copies: `r
 refuses to draw them from a pool with another digest, and `partition_pilot.py` refuses an H2 read
 of arms recorded against one (`FOREIGN_POOL_SHA256`, 75d9f7f3). The pool as built holds
 14 examples more, so the clearing comes first (IMPL).
+
+### Chromium's pool cleared of Qt's copies as the stop rule read it; the arms read that file (2026-10-27)
+
+`# research(2026-10)`. The step the entry "Chromium's pool covers every matched draw with its first
+project" (2026-10-27) left before the foreign arms train. `scripts/clear_foreign_pool.py` runs the
+coverage's own `prefix_pool` and `unsealed` on the inputs `foreign-pool-coverage-chromium.json`
+names: Chromium's refined examples inside its span, the stop rule's prefix of the order, and Qt's
+unsealed examples. It writes that pool once as a derived corpus file recording both sources, and
+writes nothing unless the pool's digest is the stop rule's and `FOREIGN_POOL_SHA256`. A test runs
+the coverage and the clearing on one fixture and requires the same digest.
+
+It ran on 2026-10-27 from 16:30 to 19:17 at 469c01e (tag `prov/chromium-cleared-pool`), on the
+machine holding both sources, as the coverage did. The pool is the stop rule's one project,
+`chromium/src`, cleared against Qt's 9,449 unsealed examples, and holds 45,656 examples, 30,067
+of them C++ and 15,589 others, at the registered digest 75d9f7f3
+(`foreign-pool-cleared-chromium.json`). The file stays out of the repository, in
+`sphragis-data-local/chromium-pool/cleared/`, beside its record.
+
+`rq1_pilot.py --foreign-pool` now takes that file (`holdout.cleared_pool`), not a corpus root, so
+no arm job deduplicates the pool again. On a machine without the sources, the file is checked
+against its own record and the arms' digest refusal. The foreign arms train on TIGRIS once the
+file and its record are copied to sphragis-data there.

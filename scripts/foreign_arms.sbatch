@@ -12,10 +12,10 @@
 
 # One H1 partition run's H2 arms: its halves' adapters reused from its decoder-checked run
 # (decoder_check.sbatch's -rp output), the two matched foreign arms trained on FOREIGN_SOURCE's
-# pool under FOREIGN_POOL (rq1_pilot.py --foreign-pool) and saved beside them, and every arm
-# generated again at the registered decoder. Chain decoder_check -> foreign_arms ->
-# likelihood_score (FOREIGN_SOURCE set), each afterok on the one before. Sized as the partition
-# run, which trains two adapters too.
+# cleared pool, the file FOREIGN_POOL names (clear_foreign_pool.py's; rq1_pilot.py --foreign-pool),
+# and saved beside them, and every arm generated again at the registered decoder. Chain
+# decoder_check -> foreign_arms -> likelihood_score (FOREIGN_SOURCE set), each afterok on the one
+# before. Sized as the partition run, which trains two adapters too.
 set -euo pipefail
 
 cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
@@ -26,7 +26,7 @@ PARTITION_SEED="${PARTITION_SEED:?set PARTITION_SEED of the stored run}"
 TRAIN_SIZE="${TRAIN_SIZE:?set TRAIN_SIZE of the stored run}"
 SEEDS="${SEEDS:?set SEEDS of the stored run}"
 FOREIGN_SOURCE="${FOREIGN_SOURCE:?set FOREIGN_SOURCE to the foreign source}"
-FOREIGN_POOL="${FOREIGN_POOL:?set FOREIGN_POOL to the corpus root holding its pool}"
+FOREIGN_POOL="${FOREIGN_POOL:?set FOREIGN_POOL to its cleared pool (clear_foreign_pool.py)}"
 if [ -n "${PLANT:-}" ]; then
   echo "foreign arms are drawn for an unplanted run only" >&2
   exit 1

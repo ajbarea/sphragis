@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 789 artifacts under
-74 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 790 artifacts under
+75 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -135,6 +135,14 @@ How much of each window's true cohort the collection boundary removes.
 | artifact |
 |---|
 | `censoring.json` |
+
+## `scripts/clear_foreign_pool.py`
+
+H2's registered foreign pool as the stop rule found it covering, written once for the arms.
+
+| artifact |
+|---|
+| `foreign-pool-cleared-chromium.json` |
 
 ## `scripts/client_attribution.py`
 

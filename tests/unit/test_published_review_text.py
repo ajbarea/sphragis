@@ -599,6 +599,7 @@ PRODUCED = {
         "stop_rule": {"pool": {"examples": 2}, "digest": SHA},
     },
     "scripts/label_audit_decision.py": {"model": "m", "digest": SHA, "items": 2},
+    "scripts/clear_foreign_pool.py": {"cleared_pool": {"examples": 2, "digest": SHA}},
 }
 
 
@@ -634,6 +635,7 @@ SURVEYED = frozenset(
         ("source", "sha256"),
         ("sources", "sha256"),
         ("stop_rule", "digest"),
+        ("cleared_pool", "digest"),
         ("under", "code_files_sha256"),
     }
 )
