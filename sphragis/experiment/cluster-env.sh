@@ -30,6 +30,10 @@ mkdir -p "$SPHRAGIS_RESULTS" "$SPHRAGIS_ADAPTERS"
 # HF_HUB_CACHE, not HF_HOME: relocating HF_HOME also relocates the auto-refreshing OAuth token
 # `hf auth login` writes, and the job would then authenticate with a stale copy.
 export HF_HUB_CACHE="$SPHRAGIS_DATA/hf-cache/hub"
+# Jobs load pinned revisions from the cache. Online, AutoTokenizer still lists chat templates on
+# the Hub, and transformers 5.17 lets a proxy 500 there through: two foreign-arms jobs died on it
+# (2026-10-29). HF_HUB_OFFLINE=0 for a job that has to download.
+export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"
 export TOKENIZERS_PARALLELISM=false
 # The commit this job starts on, which sphragis.provenance records in place of whatever the
 # checkout holds when the result is written. Empty outside a checkout.

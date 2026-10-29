@@ -76,6 +76,29 @@ def test_the_shared_uv_still_serves_when_no_machine_directory_exists(tmp_path: P
     assert result.stdout.strip() == "uv-for-this-machine"
 
 
+def test_jobs_load_from_the_hub_cache_offline(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    # printenv: what the job's Python inherits, not a shell variable.
+    result = _source(tmp_path, tmp_path, "printenv HF_HUB_OFFLINE")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "1"
+
+
+def test_an_exported_hub_offline_overrides_the_default(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = subprocess.run(
+        ["bash", "-c", f'set -euo pipefail; source "{_ENV}"; printenv HF_HUB_OFFLINE'],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin", "HF_HUB_OFFLINE": "0"},
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "0"
+
+
 def test_a_uv_that_cannot_run_here_stops_the_job_with_the_fix(tmp_path: Path) -> None:
     broken = tmp_path / ".local" / "bin" / "uv"
     broken.parent.mkdir(parents=True)
