@@ -30,9 +30,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
       - name: ruff format
-        run: uv run ruff format --check .
+        run: uv run ruff format --check --output-format=github .
       - name: ruff check
-        run: uv run ruff check .
+        run: uv run ruff check --output-format=github .
       - name: ty type-check
         run: uv run ty check
       - name: Minimize uv cache

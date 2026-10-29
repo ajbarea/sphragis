@@ -136,7 +136,7 @@ def main() -> int:
     dangling = prune(args.site, removed)
     print(f"pruned {len(removed)} unlisted pages: {', '.join(removed) or 'none'}")
     if dangling:
-        print("links to pruned pages:\n  " + "\n  ".join(dangling))
+        print("links to pruned pages:\n  " + "\n  ".join(dangling), file=sys.stderr)
         return 1
     return 0
 

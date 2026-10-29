@@ -1055,7 +1055,7 @@ def main() -> None:
         return
 
     if args.check and tree_is_dirty():
-        print("datasets/ has uncommitted work; these numbers describe no commit")
+        print("datasets/ has uncommitted work; these numbers describe no commit", file=sys.stderr)
         sys.exit(2)
 
     verified, drifted, unbacked = check_claims()

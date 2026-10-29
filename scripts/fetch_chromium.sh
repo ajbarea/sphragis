@@ -39,7 +39,7 @@ raise SystemExit(0 if permission and permission.permitted else 1)
 "; then
   echo "refusing to run: chromium.googlesource.com is not permitted in" \
     "sphragis.corpus.notedb.GIT_PERMITTED; bulk Chromium collection waits for the host's" \
-    "permission"
+    "permission" >&2
   exit 1
 fi
 
@@ -66,7 +66,7 @@ for m in $MONTHS; do
 from sphragis.corpus.storage import finished_month
 sys.exit(0 if finished_month(sys.argv[1]) else 3)' "$raw.ndjson.gz" || refused=$?
     if [ "$refused" -ne 0 ] && [ "$refused" -ne 3 ]; then
-      echo "$m: could not check the snapshot (probe exit $refused); stopping"
+      echo "$m: could not check the snapshot (probe exit $refused); stopping" >&2
       exit 1
     fi
   fi
@@ -77,7 +77,7 @@ record = json.load(open(sys.argv[1]))
 print(" ".join(sorted(record.get("projects", {}))))
 ' "$raw.record.json")
     if [[ "$recorded" != "$current_projects" ]]; then
-      echo "$m: already fetched under a different project set ($recorded); stopping"
+      echo "$m: already fetched under a different project set ($recorded); stopping" >&2
       exit 1
     fi
     echo "=== $m already fetched, skipping fetch ==="
@@ -89,7 +89,7 @@ print(" ".join(sorted(record.get("projects", {}))))
   uv run --no-sync --no-active python -m sphragis.corpus fetch \
     --via git --org "$ORG" --month "$m" --root "$ROOT" --cutoff "$CUTOFF" \
     "${project_args[@]}" "${overwrite[@]}" --request-interval 1.0 \
-    || { echo "$m: fetch failed, stopping"; exit 1; }
+    || { echo "$m: fetch failed, stopping" >&2; exit 1; }
 done
 
 # Build walks every snapshot, skips months already built from the snapshot on disk, and
@@ -97,5 +97,5 @@ done
 echo "=== build $(date '+%F %T') ==="
 uv run --no-sync --no-active python -m sphragis.corpus build \
   --org "$ORG" --root "$ROOT" --cutoff "$CUTOFF" --request-interval 1.0 \
-  || { echo "build failed, stopping"; exit 1; }
+  || { echo "build failed, stopping" >&2; exit 1; }
 echo "=== chromium complete $(date '+%F %T') ==="

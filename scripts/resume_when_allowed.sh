@@ -82,9 +82,9 @@ while :; do
   fi
   if [ "$built" -eq 3 ]; then
     # This month's snapshot was refused; building again will not fix it, refetching will.
-    echo "$(date '+%m-%d %H:%M') build refused $ORG $MONTH's snapshot (see above); refetch it"
+    echo "$(date '+%m-%d %H:%M') build refused $ORG $MONTH's snapshot (see above); refetch it" >&2
     exit 1
   fi
-  echo "$(date '+%m-%d %H:%M') build failed after being admitted; backing off"
+  echo "$(date '+%m-%d %H:%M') build failed after being admitted; backing off" >&2
   sleep "$AFTER_FAIL"
 done

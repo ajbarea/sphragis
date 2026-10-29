@@ -88,7 +88,7 @@ target-version = "py312"
 extend-exclude = ["datasets/logs"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+select = ["E", "F", "I", "UP", "B", "SIM", "G", "LOG"]
 
 [tool.ty.src]
 include = ["sphragis", "tests"]
@@ -126,4 +126,4 @@ allowed-unresolved-imports = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -ra"
