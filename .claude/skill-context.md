@@ -75,6 +75,11 @@ Repo-specific facts the techne skills read. Logic lives in the skills; only fact
 - tool error markers: `ruff`, `ty`, `FAILED` / `passed` (pytest), `harvest` (a site figure
   that disagrees with its artifact), `uv lock --check` (lockfile out of sync)
 
+## logging
+
+- skip: datasets/logs/ (Slurm and pool-build logs committed as the study's evidence; the
+  research log cites them by path)
+
 ## slop_ground_truth
 
 - Every quantitative claim traces to an artifact under `datasets/results/` and is recorded

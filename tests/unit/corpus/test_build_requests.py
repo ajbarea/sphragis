@@ -317,7 +317,7 @@ def test_a_month_outside_the_grant_is_not_built(tmp_path, monkeypatch, capsys) -
     write_snapshot(tmp_path, "chromium", "2024-10", [_change(1, 1)], record={})
     monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
     cli.main(["build", "--org", "chromium", "--root", str(tmp_path)])
-    assert "2024-10: outside the host's grant; not built" in capsys.readouterr().out
+    assert "2024-10: outside the host's grant; not built" in capsys.readouterr().err
     assert not (tmp_path / "chromium" / "examples" / "2024-10.jsonl").exists()
 
 
@@ -437,7 +437,7 @@ def test_a_held_row_of_a_project_outside_the_grant_is_not_built(tmp_path, monkey
     write_snapshot(tmp_path, "chromium", "2024-11", rows, record={})
     monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
     cli.main(["build", "--org", "chromium", "--root", str(tmp_path)])
-    assert "2024-11: rows of projects outside the host's grant" in capsys.readouterr().out
+    assert "2024-11: rows of projects outside the host's grant" in capsys.readouterr().err
     assert not (tmp_path / "chromium" / "examples" / "2024-11.jsonl").exists()
 
 
@@ -475,8 +475,8 @@ def test_a_held_row_created_outside_the_grant_is_not_built(
     write_snapshot(tmp_path, "chromium", month, [change], record={})
     monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
     cli.main(["build", "--org", "chromium", "--root", str(tmp_path)])
-    out = capsys.readouterr().out
-    assert f"{month}: " in out and why in out and "not built" in out
+    err = capsys.readouterr().err
+    assert f"{month}: " in err and why in err and "not built" in err
     assert not (tmp_path / "chromium" / "examples" / f"{month}.jsonl").exists()
 
 

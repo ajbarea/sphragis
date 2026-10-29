@@ -1055,17 +1055,17 @@ def main() -> None:
         return
 
     if args.check and tree_is_dirty():
-        print("datasets/ has uncommitted work; these numbers describe no commit")
+        print("datasets/ has uncommitted work; these numbers describe no commit", file=sys.stderr)
         sys.exit(2)
 
     verified, drifted, unbacked = check_claims()
     stale_index = INDEX_PAGE.exists() and INDEX_PAGE.read_text() != render_index()
     for line in drifted:
-        print(f"  DRIFT    {line}")
+        print(f"  DRIFT    {line}", file=sys.stderr)
     for line in unbacked:
-        print(f"  UNBACKED {line}")
+        print(f"  UNBACKED {line}", file=sys.stderr)
     if stale_index:
-        print(f"  STALE    {INDEX_PAGE.relative_to(ROOT)}; run `make docs-index`")
+        print(f"  STALE    {INDEX_PAGE.relative_to(ROOT)}; run `make docs-index`", file=sys.stderr)
     print(f"\n{len(verified)} verified, {len(drifted)} drifted, {len(unbacked)} unbacked")
     # Unbacked fails the gate but not the report: a number nothing resolves is the state
     # this harvest exists to make visible, and under --check it is a defect like any other.

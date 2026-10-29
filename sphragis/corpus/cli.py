@@ -11,6 +11,7 @@ import http.client
 import json
 import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -1246,17 +1247,17 @@ def _stage_refine(args: argparse.Namespace) -> int:
     snapshots = sorted(raw.glob("*.ndjson.gz"))
     refused = [(path.name, reason) for path in snapshots if (reason := refused_snapshot(path))]
     for name, reason in refused:
-        print(f"{args.org} {name}: {reason}")
+        print(f"{args.org} {name}: {reason}", file=sys.stderr)
     if refused:
         return 1
     try:
         index = index_changes(change for path in snapshots for change in iter_snapshot(path))
     except ValueError as error:
-        print(f"{args.org}: {error}")
+        print(f"{args.org}: {error}", file=sys.stderr)
         return 1
     built = sorted(_examples_dir(args).glob("*.jsonl"))
     if not built:
-        print(f"no examples under {_examples_dir(args)}; run build first")
+        print(f"no examples under {_examples_dir(args)}; run build first", file=sys.stderr)
         return 1
     out = _refined_dir(args)
     out.mkdir(parents=True, exist_ok=True)
@@ -1401,12 +1402,13 @@ def _stage_stamp(args: argparse.Namespace) -> int:
     if allowed["build_rules"] != BUILD_RULES:
         print(
             f"refusing to stamp: the build rules are {BUILD_RULES}, and the audit covered "
-            f"{allowed['build_rules']}; rebuild instead"
+            f"{allowed['build_rules']}; rebuild instead",
+            file=sys.stderr,
         )
         return 1
     built = sorted(_examples_dir(args).glob("*.jsonl"))
     if not built:
-        print(f"no examples under {_examples_dir(args)}; run build first")
+        print(f"no examples under {_examples_dir(args)}; run build first", file=sys.stderr)
         return 1
     raw = Path(args.root) / args.org / "raw"
     plans: list[tuple[Path, dict[str, Any]]] = []
@@ -1442,7 +1444,7 @@ def _stage_stamp(args: argparse.Namespace) -> int:
                 stamp["without_context"] = without
             plans.append((source_path(path), stamp))
     if refused:
-        print(f"refusing to stamp {args.org}: {refused}")
+        print(f"refusing to stamp {args.org}: {refused}", file=sys.stderr)
         return 1
     for record, stamp in plans:
         write_json_atomic(record, stamp)
@@ -1596,7 +1598,10 @@ def checkpointed_changes(checkpoint: Path, key: dict[str, Any]) -> dict[int, dic
     if not (isinstance(header, dict) and header.get("key") == key) or not all(
         _checkpoint_entry(entry) for entry in entries
     ):
-        print(f"{checkpoint.name}: written under another build or malformed; discarded")
+        print(
+            f"{checkpoint.name}: written under another build or malformed; discarded",
+            file=sys.stderr,
+        )
         checkpoint.unlink()
         return {}
     return {
@@ -1622,7 +1627,7 @@ def _build_org(args: argparse.Namespace) -> int:
     raw = Path(args.root) / args.org / "raw"
     snapshots = sorted(raw.glob("*.ndjson.gz"))
     if not snapshots:
-        print(f"no snapshots under {raw}; run fetch first")
+        print(f"no snapshots under {raw}; run fetch first", file=sys.stderr)
         return 1
     rest: tuple[CommentFetcher, DiffFetcher] | None = None
     # The changes a scoped host's transport may ask about, admitted month by month below.
@@ -1657,7 +1662,7 @@ def _build_org(args: argparse.Namespace) -> int:
         reason = refused_snapshot(snapshot)
         if reason:
             # Skipped, not raised: one month whose fetch stopped must not cost every month after.
-            print(f"{args.org} {month}: {reason}")
+            print(f"{args.org} {month}: {reason}", file=sys.stderr)
             refused.append(month)
             continue
         # A month refetched after it was built leaves examples derived from a snapshot that
@@ -1681,10 +1686,14 @@ def _build_org(args: argparse.Namespace) -> int:
         elif matches is True and built_under_current_rules(target) is None:
             print(
                 f"{args.org} {month}: no build rules recorded; the loader refuses it until it "
-                "is stamped or rebuilt"
+                "is stamped or rebuilt",
+                file=sys.stderr,
             )
         if matches is None and target.exists() and not args.overwrite:
-            print(f"{args.org} {month}: no snapshot digest recorded, cannot check staleness")
+            print(
+                f"{args.org} {month}: no snapshot digest recorded, cannot check staleness",
+                file=sys.stderr,
+            )
         if target.exists() and not args.overwrite and matches is not False:
             # Resume. A month costs minutes of network time, and Qt needs roughly 400
             # requests per month, so discarding completed work on interruption is not
@@ -1706,13 +1715,13 @@ def _build_org(args: argparse.Namespace) -> int:
             changes = read_snapshot(snapshot)
         except ValueError as error:
             # A snapshot whose header reads but whose body does not: zeros past the header.
-            print(f"{args.org} {month}: {error}")
+            print(f"{args.org} {month}: {error}", file=sys.stderr)
             refused.append(month)
             continue
         asked = rest_rows(changes)
         why = outside_grant(scope, month, asked)
         if why:
-            print(f"{args.org} {month}: {why}; not built")
+            print(f"{args.org} {month}: {why}; not built", file=sys.stderr)
             refused.append(month)
             continue
         if args.org in GERRIT:
@@ -1793,8 +1802,13 @@ def _build_org(args: argparse.Namespace) -> int:
         total += len(rows)
     months = len(snapshots) - len(refused)
     print(f"{args.org}: {total} examples over {months} months, drops {dict(drops)}")
+    # Flushed so the summary comes before the refusal when both streams share one log file.
+    sys.stdout.flush()
     if refused:
-        print(f"{args.org}: {len(refused)} month(s) not built; fetch them again, then build")
+        print(
+            f"{args.org}: {len(refused)} month(s) not built; fetch them again, then build",
+            file=sys.stderr,
+        )
     if args.expect_month:
         # Build walks the whole org, so a caller after one month needs that month's verdict,
         # judged by what this loop did with it rather than by the files it left.
@@ -1802,7 +1816,7 @@ def _build_org(args: argparse.Namespace) -> int:
         if expected in current:
             return 0
         if expected not in refused:
-            print(f"{args.org} {expected}: no snapshot; fetch it")
+            print(f"{args.org} {expected}: no snapshot; fetch it", file=sys.stderr)
         return BUILD_NEEDS_REFETCH
     # Not 1: the months that could be built were, and building again will not help the rest.
     return BUILD_NEEDS_REFETCH if refused else 0
@@ -1812,7 +1826,7 @@ def _stage_dedup(args: argparse.Namespace) -> int:
     """Report what dedup would remove. Deliberately writes nothing."""
     examples = _load_examples(args)
     if not examples:
-        print(f"no examples under {_examples_dir(args)}; run build first")
+        print(f"no examples under {_examples_dir(args)}; run build first", file=sys.stderr)
         return 1
     kept, removed = run_dedup(examples)
     print(f"{args.org}: {len(examples)} in, {len(kept)} kept, removed {dict(removed)}")
@@ -1823,16 +1837,21 @@ def _stage_split(args: argparse.Namespace) -> int:
     """Report the window assignment. Deliberately writes nothing."""
     examples = _load_examples(args)
     if not examples:
-        print(f"no examples under {_examples_dir(args)}; run build first")
+        print(f"no examples under {_examples_dir(args)}; run build first", file=sys.stderr)
         return 1
     kept, _ = run_dedup(examples)
     windows, straddling, unassigned = run_split(kept, WINDOWS)
     for name, rows in windows.items():
         print(f"  {name:<6} {len(rows)}")
+    # Flushed so the counts come before a refusal when both streams share one log file.
+    sys.stdout.flush()
     if unassigned:
-        print(f"UNASSIGNED {len(unassigned)} change(s) match no window: {unassigned[:5]}")
+        print(
+            f"UNASSIGNED {len(unassigned)} change(s) match no window: {unassigned[:5]}",
+            file=sys.stderr,
+        )
     if straddling:
-        print(f"STRADDLING {straddling}")
+        print(f"STRADDLING {straddling}", file=sys.stderr)
     return 1 if (straddling or unassigned) else 0
 
 
@@ -1840,19 +1859,22 @@ def _stage_freeze(args: argparse.Namespace) -> int:
     """The only stage that commits windows to disk."""
     examples = _load_examples(args)
     if not examples:
-        print(f"no examples under {_examples_dir(args)}; run build first")
+        print(f"no examples under {_examples_dir(args)}; run build first", file=sys.stderr)
         return 1
     kept, removed = run_dedup(examples)
     windows, straddling, unassigned = run_split(kept, WINDOWS)
     if straddling:
-        print(f"refusing to freeze: changes straddle a window boundary: {straddling}")
+        print(
+            f"refusing to freeze: changes straddle a window boundary: {straddling}", file=sys.stderr
+        )
         return 1
     if unassigned:
         # Freezing here would record counts for a corpus quietly missing these changes,
         # and the manifest would verify cleanly forever after.
         print(
             f"refusing to freeze: {len(unassigned)} change(s) match no window "
-            f"(first: {unassigned[:5]}). Widen WINDOWS or drop the out-of-range months."
+            f"(first: {unassigned[:5]}). Widen WINDOWS or drop the out-of-range months.",
+            file=sys.stderr,
         )
         return 1
     manifest = freeze_windows(
@@ -1884,7 +1906,7 @@ def _stage_verify(args: argparse.Namespace) -> int:
     """Re-derive every window's hash from disk and fail on any drift."""
     manifest_path = Path(args.root) / args.org / "manifest.json"
     if not manifest_path.is_file():
-        print(f"no manifest at {manifest_path}; freeze the corpus first")
+        print(f"no manifest at {manifest_path}; freeze the corpus first", file=sys.stderr)
         return 1
     manifest = json.loads(manifest_path.read_text())
     splits = manifest_path.parent / "splits"
@@ -1908,7 +1930,7 @@ def _stage_verify(args: argparse.Namespace) -> int:
         problems.extend(f"reproduce: {p}" for p in _reproduce(args, manifest))
     if problems:
         for problem in problems:
-            print(f"DRIFT {problem}")
+            print(f"DRIFT {problem}", file=sys.stderr)
         return 1
     total = sum(manifest["counts"].values())
     reproduced = ", reproduced from the refined examples" if args.reproduce else ""

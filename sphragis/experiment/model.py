@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -553,7 +554,7 @@ def _smoke(model_id: str) -> int:
     import time
 
     if not torch.cuda.is_available():
-        print("no CUDA device; this module needs a GPU")
+        print("no CUDA device; this module needs a GPU", file=sys.stderr)
         return 1
     props = torch.cuda.get_device_properties(0)
     print(f"gpu {props.name} {props.total_memory / 1e9:.1f}GB torch {torch.__version__}")
@@ -598,7 +599,7 @@ def main() -> int:
     args = parser.parse_args()
     if args.smoke:
         return _smoke(args.model_id)
-    print("evaluation over frozen windows is not wired yet; see plan A2")
+    print("evaluation over frozen windows is not wired yet; see plan A2", file=sys.stderr)
     return 1
 
 

@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -80,7 +81,10 @@ def by_month(org: str) -> dict[str, list[dict[str, Any]]]:
     out: dict[str, list[dict[str, Any]]] = {}
     for path in refined_month_files(Path("datasets/gerrit"), org):
         if path.stem >= SEALED_FROM:
-            print(f"refusing {org} {path.stem}: at or past the sealed window {SEALED_FROM}")
+            print(
+                f"refusing {org} {path.stem}: at or past the sealed window {SEALED_FROM}",
+                file=sys.stderr,
+            )
             continue
         rows = [json.loads(line) for line in path.open() if line.strip()]
         kept, _ = run_dedup(rows)

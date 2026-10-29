@@ -161,7 +161,7 @@ def test_verify_fails_on_a_corpus_frozen_under_other_rules(
         tmp_path, "openstack", windows, stats={"rules": "old", "build_rules": BUILD_RULES}
     )
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert "frozen under rules old" in capsys.readouterr().out
+    assert "frozen under rules old" in capsys.readouterr().err
 
 
 def test_verify_fails_when_a_window_no_longer_matches_its_manifest(
@@ -184,7 +184,7 @@ def test_verify_fails_when_a_window_no_longer_matches_its_manifest(
     splits = tmp_path / "openstack" / "splits"
     (splits / "pilot.jsonl").write_text('{"id": "tampered", "change_id": "I1"}\n')
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert "pilot" in capsys.readouterr().out
+    assert "pilot" in capsys.readouterr().err
 
 
 def test_verify_reports_a_missing_manifest_rather_than_raising(
@@ -193,7 +193,7 @@ def test_verify_reports_a_missing_manifest_rather_than_raising(
     from sphragis.corpus.cli import main
 
     assert main(["verify", "--org", "qt", "--root", str(tmp_path)]) == 1
-    assert "no manifest" in capsys.readouterr().out
+    assert "no manifest" in capsys.readouterr().err
 
 
 class _FakeResponse:
@@ -512,7 +512,7 @@ def test_build_skips_a_month_whose_fetch_did_not_finish_and_builds_the_rest(
     _snapshot(tmp_path, "openstack", "2024-11", [])
     _open_snapshot_record(tmp_path, "openstack", "2024-10")
     assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 3
-    assert "2024-10: its fetch did not finish" in capsys.readouterr().out
+    assert "2024-10: its fetch did not finish" in capsys.readouterr().err
     examples = tmp_path / "openstack" / "examples"
     assert (examples / "2024-11.jsonl").exists() and not (examples / "2024-10.jsonl").exists()
 
@@ -531,7 +531,7 @@ def test_build_skips_a_month_whose_body_is_zeroed_and_builds_the_rest(
     _snapshot(tmp_path, "openstack", "2024-11", [])
     _zero_body(tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz")
     assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 3
-    assert "2024-10.ndjson.gz: unreadable" in capsys.readouterr().out
+    assert "2024-10.ndjson.gz: unreadable" in capsys.readouterr().err
     assert (tmp_path / "openstack" / "examples" / "2024-11.jsonl").exists()
 
 
@@ -544,9 +544,9 @@ def test_refine_names_every_refused_month_at_once(
     _open_snapshot_record(tmp_path, "openstack", "2099-01")
     _open_snapshot_record(tmp_path, "openstack", "2099-02")
     assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    out = capsys.readouterr().out
-    assert "2099-01.ndjson.gz: its fetch did not finish" in out
-    assert "2099-02.ndjson.gz: its fetch did not finish" in out
+    err = capsys.readouterr().err
+    assert "2099-01.ndjson.gz: its fetch did not finish" in err
+    assert "2099-02.ndjson.gz: its fetch did not finish" in err
 
 
 def test_refine_refuses_a_zeroed_body_by_name_without_a_traceback(
@@ -556,7 +556,7 @@ def test_refine_refuses_a_zeroed_body_by_name_without_a_traceback(
     snapshot = sorted((tmp_path / "openstack" / "raw").glob("*.ndjson.gz"))[0]
     _zero_body(snapshot)
     assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert f"{snapshot.name}: unreadable" in capsys.readouterr().out
+    assert f"{snapshot.name}: unreadable" in capsys.readouterr().err
 
 
 def test_two_fetches_of_one_org_month_never_run_together(
@@ -602,7 +602,7 @@ def test_build_reports_a_missing_snapshot_rather_than_raising(
 ) -> None:
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
     assert main(["build", "--org", "qt", "--root", str(tmp_path)]) == 1
-    assert "no snapshots" in capsys.readouterr().out
+    assert "no snapshots" in capsys.readouterr().err
 
 
 def test_dedup_and_split_report_without_writing(
@@ -871,9 +871,9 @@ def test_examples_with_no_recorded_snapshot_still_resume(
     monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
 
     assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
-    out = capsys.readouterr().out
-    assert "no snapshot digest recorded" in out
-    assert "skip, already built" in out
+    captured = capsys.readouterr()
+    assert "no snapshot digest recorded" in captured.err
+    assert "skip, already built" in captured.out
 
 
 def _offline(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -937,7 +937,7 @@ def test_an_unreadable_record_resumes_rather_than_aborting_the_build(
     for broken in ('{"snapshot_sha256": "abc', "", "null", "[]"):
         cli.source_path(built).write_text(broken)
         assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
-        assert "no snapshot digest recorded" in capsys.readouterr().out
+        assert "no snapshot digest recorded" in capsys.readouterr().err
 
 
 def test_a_month_whose_write_was_interrupted_is_not_certified_complete(
@@ -1092,7 +1092,7 @@ def test_refine_refuses_cleanly_while_a_months_fetch_is_unfinished(
     month = sorted((tmp_path / "openstack" / "raw").glob("*.ndjson.gz"))[0].name[:7]
     _open_snapshot_record(tmp_path, "openstack", month)
     assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert "did not finish" in capsys.readouterr().out
+    assert "did not finish" in capsys.readouterr().err
 
 
 def test_refine_drops_examples_whose_successor_only_rebased(tmp_path: Path) -> None:
@@ -1190,7 +1190,7 @@ def test_stamp_refuses_a_month_it_cannot_vouch_for_and_writes_nothing(
     record.write_text(json.dumps(damage(json.loads(record.read_text()))))
     before = record.read_text()
     assert main(["stamp", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert reason in capsys.readouterr().out
+    assert reason in capsys.readouterr().err
     assert record.read_text() == before
 
 
@@ -1199,7 +1199,7 @@ def test_stamp_refuses_a_month_the_audit_did_not_cover(
 ) -> None:
     _unstamped(tmp_path, monkeypatch, snapshots={})
     assert main(["stamp", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert "not a month the audit covered" in capsys.readouterr().out
+    assert "not a month the audit covered" in capsys.readouterr().err
 
 
 def test_stamp_refuses_once_the_build_rules_move(
@@ -1207,7 +1207,7 @@ def test_stamp_refuses_once_the_build_rules_move(
 ) -> None:
     _unstamped(tmp_path, monkeypatch, build_rules="the audited build")
     assert main(["stamp", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert "rebuild instead" in capsys.readouterr().out
+    assert "rebuild instead" in capsys.readouterr().err
 
 
 def test_stamp_checks_every_month_before_writing_any(
@@ -1252,7 +1252,7 @@ def test_verify_fails_on_a_corpus_frozen_under_other_build_rules(
         tmp_path, "openstack", windows, stats={"rules": RULES_VERSION, "build_rules": "old"}
     )
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert "frozen under build_rules old" in capsys.readouterr().out
+    assert "frozen under build_rules old" in capsys.readouterr().err
 
 
 def _frozen_corpus(tmp_path: Path) -> None:
@@ -1286,8 +1286,8 @@ def test_verify_reproduce_catches_a_dedup_change_that_plain_verify_passes(
     capsys.readouterr()
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 0
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path), "--reproduce"]) == 1
-    out = capsys.readouterr().out
-    assert "DRIFT reproduce" in out and "deduped" in out
+    err = capsys.readouterr().err
+    assert "DRIFT reproduce" in err and "deduped" in err
 
 
 def test_verify_reproduce_catches_same_ids_with_different_content(
@@ -1305,7 +1305,7 @@ def test_verify_reproduce_catches_same_ids_with_different_content(
     monkeypatch.setattr(cli, "run_dedup", keeps_another_copy)
     capsys.readouterr()
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path), "--reproduce"]) == 1
-    assert "DRIFT reproduce" in capsys.readouterr().out
+    assert "DRIFT reproduce" in capsys.readouterr().err
 
 
 def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
@@ -1317,7 +1317,7 @@ def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
     monkeypatch.setattr(cli, "WINDOWS", {k: v for k, v in cli.WINDOWS.items() if k != "test"})
     capsys.readouterr()
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path), "--reproduce"]) == 1
-    assert "test" in capsys.readouterr().out
+    assert "test" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
@@ -1653,7 +1653,7 @@ def test_the_resume_script_refuses_a_host_without_rest_permission(org: str) -> N
         ["bash", str(script), org, "2024-10"], capture_output=True, text=True, timeout=10
     )
     assert result.returncode == 1
-    assert "disallows automated clients" in result.stdout
+    assert "disallows automated clients" in result.stderr
 
 
 def _fetch_git(
@@ -1817,8 +1817,8 @@ def test_fetch_chromium_script_refuses_before_any_request() -> None:
         env={**os.environ, "PROJECTS": "v8/v8"},
     )
     assert result.returncode == 1
-    assert "not permitted" in result.stdout
-    assert "GIT_PERMITTED" in result.stdout
+    assert "not permitted" in result.stderr
+    assert "GIT_PERMITTED" in result.stderr
 
 
 def test_fetch_chromium_script_sorts_projects_with_the_c_locale() -> None:
@@ -2005,7 +2005,7 @@ def test_the_resume_script_refuses_a_grant_this_machine_does_not_hold(tmp_path: 
         env={**os.environ, "PATH": f"{stub}:{os.environ['PATH']}"},
     )
     assert result.returncode == 1
-    assert "written grant to this study's collector" in result.stdout
+    assert "written grant to this study's collector" in result.stderr
     assert not called.exists()
 
 
@@ -2434,4 +2434,4 @@ def test_the_resume_script_refuses_a_host_granted_for_a_scoped_pool(org: str, mo
         ["bash", str(script), org, month], capture_output=True, text=True, timeout=30
     )
     assert result.returncode == 1
-    assert "granted for a scoped pool" in result.stdout
+    assert "granted for a scoped pool" in result.stderr

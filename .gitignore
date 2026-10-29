@@ -74,6 +74,10 @@ COMMITS.md
 logs/*
 !logs/.gitkeep
 
+# Log files anywhere else stay local; datasets/logs/ holds job logs committed as evidence.
+*.log
+!datasets/logs/**/*.log
+
 # The built docs site. `zensical build` writes it; the workflow publishes from the job.
 site/
 
