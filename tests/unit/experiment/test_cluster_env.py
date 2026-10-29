@@ -76,6 +76,18 @@ def test_the_shared_uv_still_serves_when_no_machine_directory_exists(tmp_path: P
     assert result.stdout.strip() == "uv-for-this-machine"
 
 
+def test_jobs_load_from_the_hub_cache_offline_unless_a_job_says_otherwise(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, 'echo "$HF_HUB_OFFLINE"')
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "1"
+    result = _source(
+        tmp_path, tmp_path, f'HF_HUB_OFFLINE=0; source "{_ENV}"; echo "$HF_HUB_OFFLINE"'
+    )
+    assert result.stdout.strip() == "0"
+
+
 def test_a_uv_that_cannot_run_here_stops_the_job_with_the_fix(tmp_path: Path) -> None:
     broken = tmp_path / ".local" / "bin" / "uv"
     broken.parent.mkdir(parents=True)
