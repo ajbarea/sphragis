@@ -871,9 +871,9 @@ def test_examples_with_no_recorded_snapshot_still_resume(
     monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
 
     assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
-    out = capsys.readouterr().out
-    assert "no snapshot digest recorded" in out
-    assert "skip, already built" in out
+    captured = capsys.readouterr()
+    assert "no snapshot digest recorded" in captured.err
+    assert "skip, already built" in captured.out
 
 
 def _offline(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -937,7 +937,7 @@ def test_an_unreadable_record_resumes_rather_than_aborting_the_build(
     for broken in ('{"snapshot_sha256": "abc', "", "null", "[]"):
         cli.source_path(built).write_text(broken)
         assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
-        assert "no snapshot digest recorded" in capsys.readouterr().out
+        assert "no snapshot digest recorded" in capsys.readouterr().err
 
 
 def test_a_month_whose_write_was_interrupted_is_not_certified_complete(

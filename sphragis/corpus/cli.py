@@ -1686,10 +1686,14 @@ def _build_org(args: argparse.Namespace) -> int:
         elif matches is True and built_under_current_rules(target) is None:
             print(
                 f"{args.org} {month}: no build rules recorded; the loader refuses it until it "
-                "is stamped or rebuilt"
+                "is stamped or rebuilt",
+                file=sys.stderr,
             )
         if matches is None and target.exists() and not args.overwrite:
-            print(f"{args.org} {month}: no snapshot digest recorded, cannot check staleness")
+            print(
+                f"{args.org} {month}: no snapshot digest recorded, cannot check staleness",
+                file=sys.stderr,
+            )
         if target.exists() and not args.overwrite and matches is not False:
             # Resume. A month costs minutes of network time, and Qt needs roughly 400
             # requests per month, so discarding completed work on interruption is not
@@ -1798,6 +1802,8 @@ def _build_org(args: argparse.Namespace) -> int:
         total += len(rows)
     months = len(snapshots) - len(refused)
     print(f"{args.org}: {total} examples over {months} months, drops {dict(drops)}")
+    # Flushed so the summary comes before the refusal when both streams share one log file.
+    sys.stdout.flush()
     if refused:
         print(
             f"{args.org}: {len(refused)} month(s) not built; fetch them again, then build",
