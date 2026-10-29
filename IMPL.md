@@ -8,6 +8,19 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **This branch (`results/h2-pilot`, issue #228): H2's development pilot and simulation.**
+  Done: Qt's 22 runs' foreign arms (TIGRIS, all completed 2026-10-29); the pilot by change and by
+  chain (`partition-pilot-qt-foreignchromium-likelihood[-chains].json`, read with
+  `scripts/reading.py`); the published-text guard lists the two hash places the foreign reads add,
+  and the four foreign read families are committed while their job sidecars stay ignored (two
+  review rounds, the second clean). Running on TIGRIS at this branch's first commit (525d1af):
+  `partition_sensitivity.sbatch` with `FOREIGN_SOURCE=chromium CHAINS=1 RUN_TAG=rp1.0`, smoke
+  635096 (done), full 635097, null-only K 12/15/20/25 635098-635101 (k12 done). Next:
+  `h2-steps.sh step4b` (in `sphragis-data-local/chromium-pool/`: copy the simulations into
+  `datasets/results`, then `k_coverage.py`); a full simulation at the coverage K if it is above the
+  pilot's 10; research-log entry; PR linking #228; review until clean; merge; then H2's detectable
+  effect into P4. Wait on the jobs with
+  `sphragis-data-local/tools/watch-group.sh 635097,635099,635100,635101 h2-sims`.
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from
