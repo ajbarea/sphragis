@@ -190,7 +190,7 @@ def test_a_malformed_entry_discards_the_checkpoint(tmp_path: Path, monkeypatch, 
     checkpoint = _paths(tmp_path)[1]
     checkpoint.write_text(checkpoint.read_text() + json.dumps({"at": 1}) + "\n")
     assert _build(tmp_path, monkeypatch) == [1, 2, 3]
-    assert "malformed; discarded" in capsys.readouterr().out
+    assert "malformed; discarded" in capsys.readouterr().err
 
 
 def test_a_second_build_of_the_org_is_refused_while_one_runs(tmp_path: Path, monkeypatch) -> None:

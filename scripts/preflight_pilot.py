@@ -16,6 +16,7 @@ itself, required a hand-copied script the deploy discipline forbids, and validat
 
 import argparse
 import subprocess
+import sys
 from pathlib import Path
 
 from sphragis.corpus.load import derived_file_rows
@@ -63,7 +64,7 @@ try:
     from sphragis.measure.stats import MIN_CLUSTERS
 except Exception as error:
     problems.append(f"import failed: {type(error).__name__}: {error}")
-    print("\n".join(problems))
+    print("\n".join(problems), file=sys.stderr)
     raise SystemExit(1) from error
 
 # 3. For every corpus: the data path works on every real example, nothing is silently
@@ -144,9 +145,10 @@ if git("status", "--porcelain", "--untracked-files=no"):
     problems.append("the checkout has uncommitted changes; the job would run code with no SHA")
 
 print()
+sys.stdout.flush()
 if problems:
-    print("PREFLIGHT FAILED")
+    print("PREFLIGHT FAILED", file=sys.stderr)
     for p in problems:
-        print(f"  - {p}")
+        print(f"  - {p}", file=sys.stderr)
     raise SystemExit(1)
 print("PREFLIGHT OK - safe to sbatch")

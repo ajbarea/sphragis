@@ -512,7 +512,7 @@ def test_build_skips_a_month_whose_fetch_did_not_finish_and_builds_the_rest(
     _snapshot(tmp_path, "openstack", "2024-11", [])
     _open_snapshot_record(tmp_path, "openstack", "2024-10")
     assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 3
-    assert "2024-10: its fetch did not finish" in capsys.readouterr().out
+    assert "2024-10: its fetch did not finish" in capsys.readouterr().err
     examples = tmp_path / "openstack" / "examples"
     assert (examples / "2024-11.jsonl").exists() and not (examples / "2024-10.jsonl").exists()
 
@@ -531,7 +531,7 @@ def test_build_skips_a_month_whose_body_is_zeroed_and_builds_the_rest(
     _snapshot(tmp_path, "openstack", "2024-11", [])
     _zero_body(tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz")
     assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 3
-    assert "2024-10.ndjson.gz: unreadable" in capsys.readouterr().out
+    assert "2024-10.ndjson.gz: unreadable" in capsys.readouterr().err
     assert (tmp_path / "openstack" / "examples" / "2024-11.jsonl").exists()
 
 
@@ -1653,7 +1653,7 @@ def test_the_resume_script_refuses_a_host_without_rest_permission(org: str) -> N
         ["bash", str(script), org, "2024-10"], capture_output=True, text=True, timeout=10
     )
     assert result.returncode == 1
-    assert "disallows automated clients" in result.stdout
+    assert "disallows automated clients" in result.stderr
 
 
 def _fetch_git(
@@ -2005,7 +2005,7 @@ def test_the_resume_script_refuses_a_grant_this_machine_does_not_hold(tmp_path: 
         env={**os.environ, "PATH": f"{stub}:{os.environ['PATH']}"},
     )
     assert result.returncode == 1
-    assert "written grant to this study's collector" in result.stdout
+    assert "written grant to this study's collector" in result.stderr
     assert not called.exists()
 
 
@@ -2434,4 +2434,4 @@ def test_the_resume_script_refuses_a_host_granted_for_a_scoped_pool(org: str, mo
         ["bash", str(script), org, month], capture_output=True, text=True, timeout=30
     )
     assert result.returncode == 1
-    assert "granted for a scoped pool" in result.stdout
+    assert "granted for a scoped pool" in result.stderr

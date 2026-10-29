@@ -1598,7 +1598,10 @@ def checkpointed_changes(checkpoint: Path, key: dict[str, Any]) -> dict[int, dic
     if not (isinstance(header, dict) and header.get("key") == key) or not all(
         _checkpoint_entry(entry) for entry in entries
     ):
-        print(f"{checkpoint.name}: written under another build or malformed; discarded")
+        print(
+            f"{checkpoint.name}: written under another build or malformed; discarded",
+            file=sys.stderr,
+        )
         checkpoint.unlink()
         return {}
     return {
@@ -1659,7 +1662,7 @@ def _build_org(args: argparse.Namespace) -> int:
         reason = refused_snapshot(snapshot)
         if reason:
             # Skipped, not raised: one month whose fetch stopped must not cost every month after.
-            print(f"{args.org} {month}: {reason}")
+            print(f"{args.org} {month}: {reason}", file=sys.stderr)
             refused.append(month)
             continue
         # A month refetched after it was built leaves examples derived from a snapshot that
@@ -1708,13 +1711,13 @@ def _build_org(args: argparse.Namespace) -> int:
             changes = read_snapshot(snapshot)
         except ValueError as error:
             # A snapshot whose header reads but whose body does not: zeros past the header.
-            print(f"{args.org} {month}: {error}")
+            print(f"{args.org} {month}: {error}", file=sys.stderr)
             refused.append(month)
             continue
         asked = rest_rows(changes)
         why = outside_grant(scope, month, asked)
         if why:
-            print(f"{args.org} {month}: {why}; not built")
+            print(f"{args.org} {month}: {why}; not built", file=sys.stderr)
             refused.append(month)
             continue
         if args.org in GERRIT:
@@ -1796,7 +1799,10 @@ def _build_org(args: argparse.Namespace) -> int:
     months = len(snapshots) - len(refused)
     print(f"{args.org}: {total} examples over {months} months, drops {dict(drops)}")
     if refused:
-        print(f"{args.org}: {len(refused)} month(s) not built; fetch them again, then build")
+        print(
+            f"{args.org}: {len(refused)} month(s) not built; fetch them again, then build",
+            file=sys.stderr,
+        )
     if args.expect_month:
         # Build walks the whole org, so a caller after one month needs that month's verdict,
         # judged by what this loop did with it rather than by the files it left.
@@ -1804,7 +1810,7 @@ def _build_org(args: argparse.Namespace) -> int:
         if expected in current:
             return 0
         if expected not in refused:
-            print(f"{args.org} {expected}: no snapshot; fetch it")
+            print(f"{args.org} {expected}: no snapshot; fetch it", file=sys.stderr)
         return BUILD_NEEDS_REFETCH
     # Not 1: the months that could be built were, and building again will not help the rest.
     return BUILD_NEEDS_REFETCH if refused else 0
@@ -1831,6 +1837,8 @@ def _stage_split(args: argparse.Namespace) -> int:
     windows, straddling, unassigned = run_split(kept, WINDOWS)
     for name, rows in windows.items():
         print(f"  {name:<6} {len(rows)}")
+    # Flushed so the counts come before a refusal when both streams share one log file.
+    sys.stdout.flush()
     if unassigned:
         print(
             f"UNASSIGNED {len(unassigned)} change(s) match no window: {unassigned[:5]}",

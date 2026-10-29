@@ -46,7 +46,7 @@ if refusal := unheld_grant(urlsplit(url).hostname):
 print(url)
 print(USER_AGENT)
 PY
-) || { echo "$LOOKUP"; exit 1; }
+) || { echo "$LOOKUP" >&2; exit 1; }
 HOST=$(sed -n 1p <<<"$LOOKUP")
 UA=$(sed -n 2p <<<"$LOOKUP")
 
