@@ -593,7 +593,11 @@ def test_a_listed_hash_name_is_listed_only_where_the_survey_found_it(
 
 #: Each producer's shape for the hashes of public or local artifacts it writes.
 PRODUCED = {
-    "scripts/rq1_pilot.py": {"foreign_pool": {"pool_sha256": SHA, "pool_examples": 3}},
+    "scripts/rq1_pilot.py": {
+        "foreign_pool": {"pool_sha256": SHA, "pool_examples": 3},
+        "training": {"foreign-chromium-for-qt-a-s1": {"adapter_sha256": SHA}},
+    },
+    "scripts/partition_pilot.py": {"cluster_unit": {"unit": "chain", "sha256": SHA, "chains": 3}},
     "scripts/foreign_pool_coverage.py": {
         "pool": {"examples": 3, "digest": SHA},
         "stop_rule": {"pool": {"examples": 2}, "digest": SHA},
@@ -636,6 +640,9 @@ SURVEYED = frozenset(
         ("sources", "sha256"),
         ("stop_rule", "digest"),
         ("cleared_pool", "digest"),
+        ("cluster_unit", "sha256"),
+        ("foreign_pool", "pool_sha256"),
+        ("foreign-<org>-for-<org>-<half>-<seed>", "adapter_sha256"),
         ("under", "code_files_sha256"),
     }
 )
@@ -643,6 +650,8 @@ SURVEYED = frozenset(
 
 def _slots(parent: str) -> str:
     orgs = "|".join(sorted(w.organizations()))
+    if foreign := re.fullmatch(rf"foreign-(?:{orgs})-for-(.+)", parent):
+        return "foreign-<org>-for-" + _slots(foreign[1])
     return re.sub(rf"^({orgs})(?:-[ab](?:-(s\d+))?)?$", _slot, parent)
 
 
@@ -1143,3 +1152,19 @@ def test_a_name_without_a_granted_org_is_not_ignored() -> None:
         for s in (".json",)
     ]
     assert _ignored(names) == set()
+
+
+def test_a_foreign_arms_reads_are_committed_and_their_sidecars_ignored() -> None:
+    reads = [
+        f"{RESULTS}/likelihood-partition-qt-p4-n1850-foreignchromium-rp1.0.json",
+        f"{RESULTS}/partition-pilot-qt-foreignchromium-likelihood-chains.json",
+        f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains.json",
+        f"{RESULTS}/k-coverage-qt-foreignchromium-likelihood-chains.json",
+    ]
+    assert not _ignored(reads)
+    sidecars = [
+        read.removesuffix(".json") + sidecar
+        for read in reads
+        for sidecar in (*SIDECARS[1:], ".json.partial", ".claim")
+    ]
+    assert not (kept := set(sidecars) - _ignored(sidecars)), sorted(kept)

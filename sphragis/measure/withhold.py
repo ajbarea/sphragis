@@ -108,6 +108,7 @@ _HALF = r"{org}-[ab]"
 ALLOWED_HASHES: tuple[HashField, ...] = (
     HashField("", "initial_adapter_sha256", "scripts/adapter_geometry.py"),
     HashField(r"{org}-[ab]-s\d+", "adapter_sha256", "scripts/rq1_pilot.py"),
+    HashField(r"foreign-{org}-for-{org}-[ab]-s\d+", "adapter_sha256", "scripts/rq1_pilot.py"),
     HashField("evidence", "adapter_sha256", "scripts/rq1_pilot.py"),
     HashField("", "manifest_sha256", "scripts/aosp_census.py"),
     HashField("{org}", "manifest_sha256", "scripts/dataset_funnel.py"),
@@ -131,6 +132,7 @@ ALLOWED_HASHES: tuple[HashField, ...] = (
     HashField("stop_rule", "digest", "scripts/foreign_pool_coverage.py"),
     HashField("cleared_pool", "digest", "scripts/clear_foreign_pool.py"),
     HashField("foreign_pool", "pool_sha256", "scripts/rq1_pilot.py"),
+    HashField("cluster_unit", "sha256", "scripts/partition_pilot.py"),
     HashField("", "digest", "scripts/label_audit_decision.py"),
 )
 #: A bot-audit list of short real review comments, which no published artifact carries, and the
