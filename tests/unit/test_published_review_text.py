@@ -1159,6 +1159,7 @@ def test_a_foreign_arms_reads_are_committed_and_their_sidecars_ignored() -> None
         f"{RESULTS}/likelihood-partition-qt-p4-n1850-foreignchromium-rp1.0.json",
         f"{RESULTS}/partition-pilot-qt-foreignchromium-likelihood-chains.json",
         f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains.json",
+        f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json",
         f"{RESULTS}/k-coverage-qt-foreignchromium-likelihood-chains.json",
     ]
     assert not _ignored(reads)

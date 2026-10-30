@@ -11016,8 +11016,10 @@ trials a point, seed 43, one cell at power 0.95. In nats per token:
 | sizing bound 90 | 0.0113 | 0.0109 | 0.0103 | 0.01325 | 0.0245 |
 | pilot upper 99 | 0.0146 | 0.0124 | 0.0115 | 0.0125 | 0.026 |
 
-Every detectable effect is below δ (0.0161); at the sizing bound, +0.0109 at 97.5% against K =
-10's +0.0174. Each point's sigma_run and null false-positive rates equal the null-only run at K = 40
-(654030) to the last digit, as the shared seed makes them, so the coverage reading of 2026-10-29
-stands: K = 40 misses nominal at 97.5% by 0.00075 and holds at 95%. Which K H2's cell takes, or
-whether H2 is read as exploratory, remains a decision for the registration, not made here.
+Every detectable effect is below δ (0.0161); at the sizing bound, +0.0109 at 97.5% against K = 10's
++0.0174. Where the null runs above nominal, as at the sizing bound at 97.5% (0.01325 against
+0.0125), the effect beside it is read as slightly liberal. Each point's sigma_run and null
+false-positive rates equal the null-only run at K = 40 (654030) to the last digit, as the shared
+seed makes them, so the coverage reading of 2026-10-29 stands: K = 40 misses nominal at 97.5% by
+0.00075 and holds at 95%. Which K H2's cell takes, or whether H2 is read as exploratory, remains a
+decision for the registration, not made here.

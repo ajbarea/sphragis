@@ -46,7 +46,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   matched draw with its first project"): first in item 1's order, its pool's first project,
   `chromium/src`, covers all 80 matched draws and 40 partitions against Qt, so
   `decomposition.FOREIGN_SOURCE = "chromium"`. Fuchsia's pool also covers (2026-10-20) and is not
-  used; AOSP's and V8's do not. No H2 development contrast has been read. The pool's raw data stay in
+  used; AOSP's and V8's do not. Its development pilot was read on 2026-10-29 (inconclusive, +0.0107). The pool's raw data stay in
   `sphragis-data-local/chromium-pool/` (not published); its logs are in
   `datasets/logs/chromium-pool-2026-10-20/`.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
