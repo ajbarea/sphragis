@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 822 artifacts under
+repository. This page is generated from those scripts: 823 artifacts under
 75 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -718,6 +718,7 @@ Operating characteristics of a cell over repeated partitions at the registered K
 | `partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k30-null.json` |
 | `partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k35-null.json` |
 | `partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40-null.json` |
+| `partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json` |
 | `partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains.json` |
 | `partition-sensitivity-qt-rp1.0-logprob_per_token-chains-k12-null.json` |
 | `partition-sensitivity-qt-rp1.0-logprob_per_token-chains-k15-null.json` |

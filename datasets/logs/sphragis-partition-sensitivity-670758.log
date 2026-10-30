@@ -1,0 +1,13 @@
+pilot_lower_90: spread 0.0087 at 223 changes -> sigma_run 0.0055 (realised 0.0088)
+pilot_lower_90 (sigma_run 0.0055) at 0.975, 1 cell(s), power 0.9500: detects +0.0087; null FP 0.012, bounded 0.963; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0055) at 0.95, 1 cell(s), power 0.9500: detects +0.0081; null FP 0.024, bounded 0.964; reproducibility failure 0.000
+pilot_estimate: spread 0.0104 at 223 changes -> sigma_run 0.0079 (realised 0.0104)
+pilot_estimate (sigma_run 0.0079) at 0.975, 1 cell(s), power 0.9500: detects +0.0095; null FP 0.012, bounded 0.967; reproducibility failure 0.000
+pilot_estimate (sigma_run 0.0079) at 0.95, 1 cell(s), power 0.9500: detects +0.0088; null FP 0.024, bounded 0.965; reproducibility failure 0.000
+sizing_bound_90: spread 0.0131 at 223 changes -> sigma_run 0.0113 (realised 0.0131)
+sizing_bound_90 (sigma_run 0.0113) at 0.975, 1 cell(s), power 0.9500: detects +0.0109; null FP 0.013, bounded 0.969; reproducibility failure 0.000
+sizing_bound_90 (sigma_run 0.0113) at 0.95, 1 cell(s), power 0.9500: detects +0.0103; null FP 0.025, bounded 0.971; reproducibility failure 0.000
+pilot_upper_99: spread 0.0159 at 223 changes -> sigma_run 0.0146 (realised 0.0160)
+pilot_upper_99 (sigma_run 0.0146) at 0.975, 1 cell(s), power 0.9500: detects +0.0124; null FP 0.013, bounded 0.964; reproducibility failure 0.000
+pilot_upper_99 (sigma_run 0.0146) at 0.95, 1 cell(s), power 0.9500: detects +0.0115; null FP 0.026, bounded 0.964; reproducibility failure 0.000
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json

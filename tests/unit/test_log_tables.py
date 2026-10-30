@@ -37,6 +37,12 @@ TABLES = {
     "Qt at K = 10 by chain": lambda: log_tables.sensitivity(
         RESULTS / "partition-sensitivity-qt-rp1.0-logprob_per_token-chains.json"
     ),
+    "H2, Qt against Chromium, at K = 10 by chain": lambda: log_tables.sensitivity(
+        RESULTS / "partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains.json"
+    ),
+    "H2, Qt against Chromium, at K = 40 by chain": lambda: log_tables.sensitivity(
+        RESULTS / "partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json"
+    ),
     "Qt's K": lambda: log_tables.k_coverage(RESULTS / "k-coverage-qt-likelihood.json"),
     "Qt's K by chain": lambda: log_tables.k_coverage(
         RESULTS / "k-coverage-qt-likelihood-chains.json"
