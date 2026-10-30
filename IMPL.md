@@ -9,23 +9,16 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **This branch (`results/h2-pilot`, issue #228): H2's development pilot and simulation.**
-  Done: Qt's 22 runs' foreign arms (TIGRIS, all completed 2026-10-29); the pilot by change and by
-  chain (`partition-pilot-qt-foreignchromium-likelihood[-chains].json`, read with
-  `scripts/reading.py`); the published-text guard lists the two hash places the foreign reads add,
-  and the four foreign read families are committed while their job sidecars stay ignored (two
-  review rounds, the second clean). Running on TIGRIS at this branch's first commit (525d1af):
-  `partition_sensitivity.sbatch` with `FOREIGN_SOURCE=chromium CHAINS=1 RUN_TAG=rp1.0`, smoke
-  635096 (done), full 635097 (running), null-only K 12/15/20/25 635098-635101 (done, copied to
-  `datasets/results`, sha256 equal at both ends, untracked until the results commit). No K
-  through 25 holds at the sizing bound (stricter rate 0.0135 at K 25 against 0.0125; K 10's
-  log reads 0.020), so the rest of the registered grid, null-only K 30/35/40, was submitted
-  2026-10-29 from a detached worktree at 525d1af (`.claude/worktrees/h2-submit`, the cluster's
-  commit): 654028-654030. A grid with no K that holds is refused by `coverage_runs`; that case
-  goes to AJ. K 10's live log also reads the sizing bound detecting +0.0174 at 97.5%, above δ
-  (0.0161); judge on the artifact at the coverage K, and a detectable effect above δ goes to AJ
-  before P4. Next: copy 635097 and 654028-654030, `h2-steps.sh step4b` with the grid extended;
-  a full simulation at the coverage K; research-log entry; PR linking #228; review until clean;
-  merge; then H2's detectable effect into P4.
+  Done: Qt's 22 runs' foreign arms; the pilot by chain and by change (inconclusive, +0.0107);
+  the simulation at 525d1af, full at K = 10 and null-only at every other grid K (research log,
+  2026-10-29, "no K in the registered grid holds its null"). No K from 10 to 40 holds at both
+  levels (K = 40: 0.01325 against 0.0125, holds at 95%), so `k_coverage.py` writes nothing, and
+  K = 10's detectable effect at the sizing bound (+0.0174) is above δ. Both go to AJ (queue,
+  "Needs you"): which K H2's cell takes is a registration decision. Running: a full simulation at
+  K = 40 (TIGRIS 670758, `RUNS=40` without `NULL_ONLY`, from detached worktree
+  `.claude/worktrees/h2-submit` at 525d1af; output `...-chains-k40.json`). Next: copy it (sha256
+  both ends), add its row to the research-log entry, commit, PR linking #228, review until clean,
+  merge; P4 (step 5) waits on AJ's call. Remove `h2-submit` after 670758 lands.
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from
