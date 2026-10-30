@@ -10999,3 +10999,25 @@ not. What H2's cell takes is a decision for the registration, not made here. At 
 detectable effect at the sizing bound, +0.0174 at 97.5%, is above δ (0.0161), where "Stated power"
 records each H1 cell's below it. A full simulation at K = 40 is running (TIGRIS 670758, from
 525d1af); its detectable effect is one input to that decision.
+
+### H2 at K = 40 by chain: every detectable effect below δ, the null as the null-only run read it (2026-10-30)
+
+`# research(2026-10)`. The full simulation at K = 40 that the 2026-10-29 entry left running,
+`partition_sensitivity.sbatch` with `FOREIGN_SOURCE=chromium CHAINS=1` at 525d1af (TIGRIS 670758,
+completed 2026-10-30; log `datasets/logs/sphragis-partition-sensitivity-670758.log`), writes
+`partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json`. It keeps the
+K = 10 run's design: 1,925 planned changes, 223 calibration chains, 1,000 trials and 4,000 null
+trials a point, seed 43, one cell at power 0.95. In nats per token:
+
+| spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
+|---|---|---|---|---|---|
+| pilot lower 90 | 0.0055 | 0.0087 | 0.0081 | 0.012 | 0.0235 |
+| pilot estimate | 0.0079 | 0.0095 | 0.0088 | 0.01225 | 0.024 |
+| sizing bound 90 | 0.0113 | 0.0109 | 0.0103 | 0.01325 | 0.0245 |
+| pilot upper 99 | 0.0146 | 0.0124 | 0.0115 | 0.0125 | 0.026 |
+
+Every detectable effect is below δ (0.0161); at the sizing bound, +0.0109 at 97.5% against K =
+10's +0.0174. Each point's sigma_run and null false-positive rates equal the null-only run at K = 40
+(654030) to the last digit, as the shared seed makes them, so the coverage reading of 2026-10-29
+stands: K = 40 misses nominal at 97.5% by 0.00075 and holds at 95%. Which K H2's cell takes, or
+whether H2 is read as exploratory, remains a decision for the registration, not made here.

@@ -8,18 +8,15 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **This branch (`results/h2-pilot`, issue #228): H2's development pilot and simulation.**
-  Done: Qt's 22 runs' foreign arms; the pilot by chain and by change (inconclusive, +0.0107);
-  the simulation at 525d1af, full at K = 10 and null-only at every other grid K (research log,
-  2026-10-29, "no K in the registered grid holds its null"). No K from 10 to 40 holds at both
-  levels (K = 40: 0.01325 against 0.0125, holds at 95%), so `k_coverage.py` writes nothing, and
-  K = 10's detectable effect at the sizing bound (+0.0174) is above δ. Which K H2's cell takes is
-  a registration decision. PR #229 carries the results and the entry. Running: a full simulation
-  at K = 40 (TIGRIS 670758, `RUNS=40` without `NULL_ONLY`, from detached worktree
-  `.claude/worktrees/h2-submit` at 525d1af; output `...-chains-k40.json`, log in the cluster
-  checkout's `logs/`, which `make pull-logs` does not read). Next: copy it (sha256 both ends) and
-  its log, add its row to the research-log entry; P4 (step 5) waits on the registration decision.
-  Remove `h2-submit` after 670758 lands.
+- **This branch (`results/h2-k40-full`, issue #228): H2's full simulation at K = 40.**
+  Done: the pilot and simulation of PR #229 (research log, 2026-10-29: inconclusive pilot, no grid
+  K holds the null at both levels); the full simulation at K = 40, TIGRIS 670758 at 525d1af,
+  copied with its log (sha256 equal at both ends) and read in the research log, 2026-10-30 ("H2 at
+  K = 40 by chain"): every detectable effect below δ, +0.0109 at the sizing bound at 97.5%; its
+  null rates equal the null-only run's. `log_tables.sensitivity` prints a one-cell simulation's
+  effect as one value, and `test_log_tables` now checks both H2 tables. Next: PR, review, merge;
+  P4 (step 5) waits on the registration decision (K = 40 with the miss disclosed, or H2
+  exploratory). Remove `.claude/worktrees/h2-submit` (detached, submit-only) after merge.
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from

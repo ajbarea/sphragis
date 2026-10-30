@@ -56,7 +56,8 @@ def sensitivity(path: Path) -> str:
                 c["minimum_detectable_effect"]
                 for c in target["by_level"][level]["by_cells"].values()
             ]
-            cells.append(f"{min(effects):.4f} to {max(effects):.4f}")
+            low, high = f"{min(effects):.4f}", f"{max(effects):.4f}"
+            cells.append(low if len(effects) == 1 else f"{low} to {high}")
         cells += [str(target["null_false_positive"][level]) for level in LEVELS]
         rows.append(cells)
     header = ["spread point", "sigma_run"]
