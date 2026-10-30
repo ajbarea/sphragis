@@ -10949,10 +10949,13 @@ file and its record are copied to sphragis-data there.
 ### H2's development pilot is inconclusive, and no K in the registered grid holds its null at nominal (2026-10-29)
 
 `# research(2026-10)`. H2's cell, Qt's C++ examples against Chromium's foreign adapter, read on
-Qt's 22 development runs with their matched foreign arms (TIGRIS 613360 to 613405, from 9716914,
-all completed 2026-10-29). The pilot, by chain (the registered Gerrit unit) and by change beside it
-(`partition-pilot-qt-foreignchromium-likelihood[-chains].json`, at 525d1af), estimates +0.0107
-nats per token, 425 cell examples:
+Qt's 22 development runs with their matched foreign arms (submitted from 9716914 as TIGRIS 613360
+to 613405, all completed 2026-10-29). The 22 likelihood rescorings ran at 27ca745 (#226), five as
+first submitted (613361 to 613377) and 17 resubmitted (626564, 626780, and 627121 to 627149). The
+pilot, by chain (the registered Gerrit unit) and by change beside it
+(`partition-pilot-qt-foreignchromium-likelihood[-chains].json`, generated at 27ca745 and committed
+at 525d1af), estimates +0.0107 nats per token on the pooled estimand, read on the registered
+crossed interval, over 425 cell examples:
 
 | unit | clusters | 97.5% interval | 95% interval | verdict |
 |---|---|---|---|---|
@@ -10966,7 +10969,8 @@ The simulation, `partition_sensitivity.sbatch` with `FOREIGN_SOURCE=chromium CHA
 525d1af: smoke 635096, full at K = 10 635097, and null-only at the grid's other K, 635098 to
 635101 (12 to 25) and 654028 to 654030 (30 to 40, submitted when none through 25 held); logs
 `datasets/logs/sphragis-partition-sensitivity-<job>.log`. 1,925 planned changes, 223 calibration
-chains, 1,000 trials and 4,000 null trials a point, one cell. At K = 10, in nats per token:
+chains, 1,000 trials and 4,000 null trials a point, one cell at power 0.95 (`by_cells` 1). At
+K = 10, in nats per token:
 
 | spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
 |---|---|---|---|---|---|
@@ -10986,11 +10990,12 @@ nominal 0.0125 and 0.025:
 No K holds at both levels, so `k_coverage.py` writes no artifact ("not sized"), as
 `partitions.coverage_runs` refuses a grid in which no K holds. K = 40 misses by 0.00075 at the
 stricter level, under half a Monte Carlo standard error at 4,000 trials (0.0018), and holds at
-95%. From K = 25 on the rates stop falling: read together, K = 25 to 40 give 0.0141 and 0.0279,
-1.8 and 2.3 standard errors above nominal over their 16,000 null studies, so more runs alone do
-not bring this cell's null to nominal. The registered rule keeps K within 10 to 40 and states no
-case in which no grid K holds, so what H2's cell takes is a decision for the registration, not
-made here. At K = 10 the detectable effect at the sizing bound, +0.0174 at 97.5%, is above δ
-(0.0161), where "Stated power" registers each cell's below it. A full simulation at K = 40,
-the grid's cap (TIGRIS 670758, from 525d1af), gives the detectable effect at that K for the
-decision.
+95%. Each K's rate is read against its own Monte Carlo standard error (0.0018 at 97.5%, 0.0025
+at 95%). The grid points share one seed (43), so their 4,000 simulated change sets are the same
+and a larger K extends a smaller one's runs; their rates are not independent and are not pooled.
+The registered rule keeps K within 10 to 40 and states no case in which no grid K holds; "kept
+within 10 to 40" can be read as a clamp at 40, as the reproducibility K is clamped at 10, or not.
+What H2's cell takes is a decision for the registration, not made here. At K = 10 the detectable
+effect at the sizing bound, +0.0174 at 97.5%, is above δ (0.0161), where "Stated power" records
+each H1 cell's below it. A full simulation at K = 40 is running (TIGRIS 670758, from 525d1af);
+its detectable effect is one input to that decision.
