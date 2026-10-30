@@ -10950,12 +10950,12 @@ file and its record are copied to sphragis-data there.
 
 `# research(2026-10)`. H2's cell, Qt's C++ examples against Chromium's foreign adapter, read on
 Qt's 22 development runs with their matched foreign arms (submitted from 9716914 as TIGRIS 613360
-to 613405, all completed 2026-10-29; a job runs the cluster checkout's commit when it starts). The 22 likelihood rescorings ran at 27ca745 (#226), five as
-first submitted (613361 to 613377) and 17 resubmitted (626564, 626780, and 627121 to 627149). The
-pilot, by chain (the registered Gerrit unit) and by change beside it
-(`partition-pilot-qt-foreignchromium-likelihood[-chains].json`, generated at 27ca745 and committed
-at 525d1af), estimates +0.0107 nats per token on the pooled estimand, read on the registered
-crossed interval, over 425 cell examples:
+to 613405, all completed 2026-10-29; a job runs the cluster checkout's commit when it starts). The
+22 likelihood rescorings ran at 27ca745 (#226), five as first submitted (613361 to 613377) and 17
+resubmitted (626564, 626780, and 627121 to 627149). The pilot, by chain (the registered Gerrit
+unit) and by change beside it (`partition-pilot-qt-foreignchromium-likelihood[-chains].json`,
+generated at 27ca745 and committed at 525d1af), estimates +0.0107 nats per token on the pooled
+estimand, read on the registered crossed interval, over 425 cell examples:
 
 | unit | clusters | 97.5% interval | 95% interval | verdict |
 |---|---|---|---|---|
@@ -10989,13 +10989,13 @@ nominal 0.0125 and 0.025:
 
 No K holds at both levels, so `k_coverage.py` writes no artifact ("not sized"), as
 `partitions.coverage_runs` refuses a grid in which no K holds. K = 40 misses by 0.00075 at the
-stricter level, under half a Monte Carlo standard error at 4,000 trials (0.0018), and holds at
-95%. One K's rate has a Monte Carlo standard error of 0.0018 at 97.5% and 0.0025 at 95%. The grid points share one seed (43): their change sets, partition order and run streams are
+stricter level and holds at 95%. At the nominal rate, one K's rate over 4,000 null studies has a
+Monte Carlo standard error of 0.0018 at 97.5% and 0.0025 at 95%, so K = 40's miss is under half of
+one. The grid points share one seed (43): their change sets, partition order and run streams are
 the same, and only sigma_run is calibrated per K, so their rates are not independent and are not
-pooled.
-The registered rule keeps K within 10 to 40 and states no case in which no grid K holds; "kept
-within 10 to 40" can be read as a clamp at 40, as the reproducibility K is clamped at 10, or not.
-What H2's cell takes is a decision for the registration, not made here. At K = 10 the detectable
-effect at the sizing bound, +0.0174 at 97.5%, is above δ (0.0161), where "Stated power" records
-each H1 cell's below it. A full simulation at K = 40 is running (TIGRIS 670758, from 525d1af);
-its detectable effect is one input to that decision.
+pooled. The registered rule keeps K within 10 to 40 and states no case in which no grid K holds;
+"kept within 10 to 40" can be read as a clamp at 40, as the reproducibility K is clamped at 10, or
+not. What H2's cell takes is a decision for the registration, not made here. At K = 10 the
+detectable effect at the sizing bound, +0.0174 at 97.5%, is above δ (0.0161), where "Stated power"
+records each H1 cell's below it. A full simulation at K = 40 is running (TIGRIS 670758, from
+525d1af); its detectable effect is one input to that decision.
