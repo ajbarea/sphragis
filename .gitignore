@@ -66,6 +66,17 @@ datasets/results/rq1-pilot*
 datasets/results/rq1-windows*
 *.partial
 
+# Kept out of the block above, which their names match: a foreign arm's likelihood rescorings and
+# the pilots, simulations and K read from them are ids and scores only, like H1's.
+!datasets/results/likelihood-*-foreign*
+!datasets/results/partition-pilot-*-foreign*
+!datasets/results/partition-sensitivity-*-foreign*
+!datasets/results/k-coverage-*-foreign*
+datasets/results/*-foreign*.partial
+datasets/results/*-foreign*.rows.jsonl
+datasets/results/*-foreign*.part.json
+datasets/results/*-foreign*.claim
+
 COMMITS.md
 
 # Slurm job output. The directory is tracked so a relative --output always resolves

@@ -1,0 +1,256 @@
+{
+  "hypothesis": "H2",
+  "foreign_source": "chromium",
+  "run_files": [
+    "datasets/results/likelihood-partition-qt-p4-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p7-s2-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p11-s3-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p12-s4-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p13-s5-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p16-s6-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p18-s7-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p19-s8-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p20-s9-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p21-s10-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p25-s11-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p26-s12-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p27-s13-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p29-s14-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p32-s15-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p33-s16-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p35-s17-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p36-s18-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p37-s19-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p39-s20-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p41-s21-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p44-s22-n1850-foreignchromium-rp1.0.json"
+  ],
+  "metric": "logprob_per_token",
+  "sesoi": 0.016142401360357633,
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-qt.json",
+  "k_source": "all runs",
+  "k_from": null,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "outcome_neutral_runs": [
+    {
+      "file": "datasets/results/likelihood-partition-qt-p4-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p7-s2-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p11-s3-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p12-s4-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p13-s5-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p16-s6-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p18-s7-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p19-s8-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p20-s9-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p21-s10-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p25-s11-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p26-s12-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p27-s13-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p29-s14-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p32-s15-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p33-s16-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p35-s17-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p36-s18-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p37-s19-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p39-s20-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p41-s21-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p44-s22-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    }
+  ],
+  "org": "qt",
+  "bootstrap_seed": 7,
+  "estimate": 0.010653478548859547,
+  "per_run": [
+    0.00982736625447217,
+    0.015491247284583842,
+    0.012466269769004779,
+    0.005170927982251855,
+    0.008707369146795207,
+    0.01360269875372802,
+    0.027909167554316883,
+    0.007049423722018805,
+    -0.0027809461773768973,
+    -0.0012857480317219339,
+    0.02792345833089996,
+    0.012400917439275905,
+    0.01805896450964828,
+    0.009029625778053468,
+    0.000670139453197105,
+    -0.008497866085204697,
+    0.027654800358327403,
+    0.014379379820110477,
+    0.0021509435819757616,
+    -6.7601532456884605e-06,
+    0.00833085744825926,
+    0.026124291335540145
+  ],
+  "runs": 22,
+  "changes": 250,
+  "reproducibility": {
+    "runs": 22,
+    "variance_of_mean": 4.8972290291304546e-06,
+    "critical_value": 3.391642782621208e-05,
+    "holds": true
+  },
+  "runs_computed": 22,
+  "runs_left_out": [],
+  "intervals": {
+    "0.975": {
+      "low": -0.0029884077786666015,
+      "high": 0.024296455748713877
+    },
+    "0.95": {
+      "low": -0.0013432423981398728,
+      "high": 0.02266123164529318
+    }
+  },
+  "verdicts": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.042,
+  "bootstrap_se": 0.0061336496908216825,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 800,
+  "dropped": 0,
+  "cell_examples": 425,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.010379741742493885,
+    "sd_upper": 0.013072504393467726,
+    "confidence": 0.9,
+    "formula": 5.038572222077042,
+    "runs": 10,
+    "clamped": "min"
+  },
+  "without": {},
+  "lexer_sure": null,
+  "cluster_unit": {
+    "unit": "change"
+  },
+  "provenance": {
+    "generated_at": "2026-10-29T15:22:42.828183+00:00",
+    "git": {
+      "commit": "27ca7455804636c83a9b53078b77fc42d0f6a7c6",
+      "branch": "results/h2-pilot"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

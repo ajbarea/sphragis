@@ -8,6 +8,18 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **This branch (`results/h2-pilot`, issue #228): H2's development pilot and simulation.**
+  Done: Qt's 22 runs' foreign arms; the pilot by chain and by change (inconclusive, +0.0107);
+  the simulation at 525d1af, full at K = 10 and null-only at every other grid K (research log,
+  2026-10-29, "no K in the registered grid holds its null"). No K from 10 to 40 holds at both
+  levels (K = 40: 0.01325 against 0.0125, holds at 95%), so `k_coverage.py` writes nothing, and
+  K = 10's detectable effect at the sizing bound (+0.0174) is above δ. Which K H2's cell takes is
+  a registration decision. PR #229 carries the results and the entry. Running: a full simulation
+  at K = 40 (TIGRIS 670758, `RUNS=40` without `NULL_ONLY`, from detached worktree
+  `.claude/worktrees/h2-submit` at 525d1af; output `...-chains-k40.json`, log in the cluster
+  checkout's `logs/`, which `make pull-logs` does not read). Next: copy it (sha256 both ends) and
+  its log, add its row to the research-log entry; P4 (step 5) waits on the registration decision.
+  Remove `h2-submit` after 670758 lands.
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from
@@ -44,7 +56,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and
   `partition_sensitivity.sbatch` with `FOREIGN_SOURCE` simulates it (`power.cell_contrast`,
-  `plan_cell`). Both wait on Qt's 22 development runs with their arms: submitted 2026-10-28 from
+  `plan_cell`). Both read Qt's 22 development runs with their arms, submitted 2026-10-28 from
   9716914 (TIGRIS jobs 613360 to 613405, `foreign_arms.sbatch` with `FOREIGN_SOURCE=chromium` and
   the cleared pool, each followed `afterok` by `likelihood_score.sbatch`).
 
