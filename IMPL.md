@@ -8,15 +8,14 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **This branch (`results/h2-k40-full`, issue #228): H2's full simulation at K = 40.**
-  Done: the pilot and simulation of PR #229 (research log, 2026-10-29: inconclusive pilot, no grid
-  K holds the null at both levels); the full simulation at K = 40, TIGRIS 670758 at 525d1af,
-  copied with its log (sha256 equal at both ends) and read in the research log, 2026-10-30 ("H2 at
-  K = 40 by chain"): every detectable effect below δ, +0.0109 at the sizing bound at 97.5%; its
-  null rates equal the null-only run's. `log_tables.sensitivity` prints a one-cell simulation's
-  effect as one value, and `test_log_tables` now checks both H2 tables. Next: PR, review, merge;
-  P4 (step 5) waits on the registration decision (K = 40 with the miss disclosed, or H2
-  exploratory). Remove `.claude/worktrees/h2-submit` (detached, submit-only) after merge.
+- **H2's development pilot and simulation (issue #228): done; P4 waits on the registration call.**
+  PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
+  both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects
+  below δ at every spread point, +0.0109 at the sizing bound at 97.5% (K = 10: +0.0174), with its
+  null 0.01325 against 0.0125 at that point. Next, once the registration takes H2's K (K = 40 with
+  the miss disclosed, or H2 exploratory): H2's K and detectable effect into P4's Table I
+  (papers `org-house-style/`, `harvest.py` claims of their own) and registered-decisions "Stated
+  power", then `make overleaf`.
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from
