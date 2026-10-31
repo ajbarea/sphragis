@@ -11149,7 +11149,6 @@ HSRO." Protocol title: "Learning organizations' unwritten code review convention
 review data"; PI AJ Barea; determination date 10/28/2026. The signed letter (Form C) is attached to
 that email in AJ's RIT mailbox and is not copied into this public repository.
 
-This closes the determination the 2026-10-08 entry called due, and it is now citable: the Stage 1
-report's Ethics paragraph may state that RIT's HSRO determined on 2026-10-28 that the study is not
-human-subjects research (45 CFR 46.102; protocol IRB0000393). No amendment for a new source is
-needed, since the study sits outside HSRO's oversight.
+This closes the determination the 2026-10-08 entry called due. No amendment for a new source is
+needed, since the study sits outside HSRO's oversight. The Stage 1 report does not mention it (AJ,
+2026-10-31: no lines on what the study does not need); a venue form that asks gets this answer.
