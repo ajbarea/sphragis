@@ -29,6 +29,7 @@ from sphragis.corpus.chains import chain_map, chains_sha256, relabel
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
     K_COVERAGE,
+    REGISTERED_METRIC,
     REGISTERED_SENSITIVITIES,
     SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
@@ -40,12 +41,14 @@ from sphragis.experiment.cells import (
     sensitivity_bounds,
 )
 from sphragis.experiment.decomposition import (
+    COPRIMARY_METRIC,
     FOREIGN_SOURCES,
     H2_ORGANIZATION,
     ORGANIZATIONS,
     REPLICATION_CONFIDENCE,
     REPLICATION_FAMILY,
     SESOI,
+    coprimary_read,
     foreign_arm,
     halves,
     holm_levels,
@@ -99,7 +102,9 @@ parser.add_argument(
     choices=SPREAD_TARGETS,
     help="which point on the pilot's run spread the bounds assume",
 )
-parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 intersects")
+parser.add_argument(
+    "--h1-cells", type=int, help="the cells H1 intersects: two scores per admitted organization"
+)
 # Any fixed value: fixed so the reading reproduces.
 parser.add_argument(
     "--planted", type=Path, help="the organization's planted dev run (outcome-neutral check 5)"
@@ -118,7 +123,8 @@ parser.add_argument(
 )
 # The per-example score H1 is read on: greedy exact match, or the reference's mean log-probability
 # per token from `likelihood_score.py` (research log, 2026-10-09), or one token class's
-# contribution to it (`likelihood.COMPONENT_METRICS`), which has no SESOI and sizes nothing.
+# contribution to it (`likelihood.COMPONENT_METRICS`), which has no SESOI and sizes nothing but
+# the non-identifier part, H1's co-primary (`decomposition.COPRIMARY_METRIC`).
 parser.add_argument(
     "--metric",
     choices=("exact_match", "logprob_per_token", "logprob", *COMPONENT_METRICS),
@@ -345,6 +351,9 @@ def main() -> None:
             expected = registered_read(args.org)
         except ValueError as error:
             raise SystemExit(f"not read: {error}") from error
+        # A Gerrit H1 cell is read on each co-primary score, its registration otherwise the same.
+        if args.org not in REPLICATION_FAMILY and args.metric == COPRIMARY_METRIC:
+            expected = coprimary_read(expected)
         chosen = {
             "levels": None if args.hypotheses is None else holm_levels(args.hypotheses),
             "cells": args.h1_cells,
@@ -382,6 +391,9 @@ def main() -> None:
         )
         if made_on is not None and made_on != args.metric:
             raise SystemExit(f"{artifact} was made on {made_on}, this read is on {args.metric}")
+    # Check 5 tests the apparatus once per cell, on the registered score, so a co-primary read
+    # takes its cell's (`decomposition.coprimary_read`).
+    cell_metric = REGISTERED_METRIC if args.metric == COPRIMARY_METRIC else args.metric
     if window == "test" and not args.planted:
         raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
     # Bounds are registered before the test window, so it is never read without them.
@@ -391,7 +403,7 @@ def main() -> None:
     if args.planted:
         planted_run = json.loads(args.planted.read_text())
         # Check 5 reads the planted run's verdict, which is on the metric the run was scored by.
-        if planted_run.get("metric", "exact_match") != args.metric:
+        if planted_run.get("metric", "exact_match") != cell_metric:
             raise SystemExit(
                 f"{args.planted} is scored on {planted_run.get('metric', 'exact_match')}"
             )
@@ -426,6 +438,9 @@ def main() -> None:
             "metric": sizing_artifact.get("metric", "exact_match"),
             "kind": sizing_artifact.get("kind", "pilot"),
             "cluster_unit": recorded_cluster(sizing_artifact, args.sizing),
+            # A critical p calibrated at a registered K (`partitions.registered_coverage`).
+            "calibrated": bool(sizing_artifact.get("calibrated")),
+            "critical_p": sizing_artifact.get("critical_p"),
         }
         # Only a test read is checked against its simulation's calibration.
         if window == "test":
@@ -471,6 +486,7 @@ def main() -> None:
             "planned_changes": sensitivity.get("planned_changes"),
             "metric": sensitivity.get("metric", "exact_match"),
             "cluster_unit": recorded_cluster(sensitivity, args.sensitivity),
+            "calibrated": bool(sensitivity.get("calibrated")),
         }
     # Each sensitivity's listing checked against this read before any draw is taken: its window,
     # and the corpus it was made from, which must hold every example any run scored (the runs
@@ -505,6 +521,7 @@ def main() -> None:
         if made_from != cluster_unit.get("sha256"):
             raise SystemExit(f"{artifact} was made from other chains than {args.chains}")
     contrast = {"contrast": h2_contrast(args.foreign_source)} if h2 else {}
+    calibrated = k_from.get("critical_p") if k_from and k_from.get("calibrated") else None
     cell = h1_over_partitions(
         runs,
         org=args.org,
@@ -515,6 +532,7 @@ def main() -> None:
         resamples=args.resamples,
         metric=args.metric,
         sesoi=sesoi or SESOI,
+        critical=calibrated,
         **contrast,
     )
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"], xi=sesoi or SESOI)
@@ -549,6 +567,7 @@ def main() -> None:
                 resamples=args.resamples,
                 metric=args.metric,
                 sesoi=sesoi or SESOI,
+                critical=calibrated,
             )
         except ValueError as error:
             without[name] = {

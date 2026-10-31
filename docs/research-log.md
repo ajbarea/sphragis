@@ -11023,3 +11023,76 @@ false-positive rates equal the null-only run at K = 40 (654030) to the last digi
 seed makes them, so the coverage reading of 2026-10-29 stands: K = 40 misses nominal at 97.5% by
 0.00075 and holds at 95%. Which K H2's cell takes, or whether H2 is read as exploratory, remains a
 decision for the registration, not made here.
+
+### Five design decisions before the seal: H2 at K = 40 calibrated, a non-identifier co-primary, four outcomes per cell, mixed cells read, Fuchsia beside Chromium (2026-10-30)
+
+`# research(2026-10)`. A review of the Stage 1 design (2026-10-30; two independent reviewers, read
+against the MSR 2026 and 2027 Registered Reports calls) named four objections a panel would press,
+and H2's K was open (entry above). AJ decided all five on 2026-10-30; each is now in
+`registered-decisions.md` and the code. Sources were checked against the publisher or a full-text
+copy except where stated.
+
+1. **H2's K is 40, its critical value calibrated** (`decomposition.H2_RUNS`,
+   `partition_sensitivity.py --calibrate`). "Kept within 10 to 40" is read as a clamp, chosen after
+   the grid was read and declared as a deviation. K = 40's excess, 0.01325 against 0.0125, is under
+   half a Monte Carlo SE (Morris, White and Crowther, *Statistics in Medicine* 2019, Table 6:
+   sqrt(p(1 - p) / n_sim), read in the arXiv version), and every K from 15 is inside Bradley's liberal
+   band, 0.5α to 1.5α (Bradley, *BJMSP* 1978; the criterion as cited by secondary sources, the paper
+   itself not read). The excess is calibrated away: H2 reads supported below its simulated null's
+   α-quantile of one-sided p-values, and only where its interval does too (Loh, *JASA* 1987,
+   "Calibrating confidence coefficients": a nominal level altered by its estimated coverage,
+   abstract read). The critical p is set on 4,000 null studies and its rate measured on 4,000
+   more, since on its own studies it reads at most α by construction; `k_coverage.py
+   --registered-runs 40` reads that simulation into H2's K source. The calibrated simulation is to
+   run when TIGRIS's nodes return (drained 2026-10-30 for a patch).
+2. **H1 has a co-primary score**, `logprob_per_token:other`, the reference's non-identifier tokens in
+   the whole score's units (`tokens`, 2026-10-15), and passes only when every cell on both scores
+   does. An intersection-union test needs no adjustment (Berger, *Technometrics* 1982, abstract and a
+   secondary statement of the theorem); requiring every endpoint costs power ("co-primary endpoint
+   testing increases the Type II error rate", FDA, *Multiple Endpoints in Clinical Trials*, 2022,
+   §III.C.1, read in full). δ carries over unchanged: the planted quote-style convention δ was carried
+   at sits in string delimiters, which the lexer classes as other. Each H1 cell is now sized at
+   2k cells. The co-primary is the cell scored again: it is read at the cell's K and after the
+   cell's check 5; its K source reads its own pilot's null at that K, and its critical value is
+   calibrated as H2's should that null miss nominal (a rule the implementation needed, registered
+   with the decision). Its development readings below were made on 2026-10-15, before it was a
+   co-primary, and are the readings the decision was taken beside; by change, before any K or
+   bound on this score exists, read against δ as if a bound were registered:
+
+| organization | estimate | 97.5% interval | four outcomes at 97.5%, against δ |
+|---|---|---|---|
+| OpenStack | +0.0100 | +0.0003 to +0.0218 | supported |
+| Wikimedia | +0.0045 | -0.0008 to +0.0104 | bounded |
+| Qt | +0.0056 | +0.0014 to +0.0100 | supported, below SESOI |
+
+   (`partition-pilot-<org>-likelihood-split-other.json`.) Read under the co-primary rule, the
+   development pattern would not pass H1, as on the whole score it would not.
+3. **Four outcomes per cell**, beside the unchanged verdict (`decomposition.four_way`): the
+   combinations of a test against zero and an equivalence test against δ. The source for the four
+   is Lakens, *SPPS* 2017, "four possible outcomes", read in full; Lakens, Scheel and Isager 2018,
+   the tutorial first named for it, describes three of them and not as a set.
+4. **Mixed cells** are read cell by cell with the partial conjunction "at least r of k" beside them,
+   on each score (Benjamini and Heller, *Biometrics* 2008, abstract). The form computed
+   (`across.partial_conjunction`) makes its adjusted p-values non-decreasing in r, so at r = k it
+   is stricter than the conjunction, whose plain Bonferroni form reduces to the largest p-value
+   there (Wang and Owen, arXiv:1508.00934): it can report fewer than k when every cell passes.
+   A cell with a calibrated critical p enters with its p scaled by α over that critical p, so at
+   α it counts exactly where its own reading does; at the smaller levels a larger r reads it is
+   an approximation, since the critical p was set at α alone.
+5. **Fuchsia trains an exploratory second foreign arm** for H2 on the same runs
+   (`decomposition.EXPLORATORY_FOREIGN_SOURCE`), read beside Chromium's and binding no verdict, so
+   the organization is not read against one domain alone. Its pool is cleared by the same stop rule
+   and its digest fixed before the test window is fetched; the scripts that clear, train and read
+   it accept the exploratory source then (only the guard exists now).
+
+Not done yet, each before the seal: the non-identifier score's by-chain pilots and its K source at
+each cell's K; the simulations at six H1 cells on both scores; H2's calibrated simulation at K = 40
+and its K source; Fuchsia's cleared pool, digest and arms. H2's test read over partitions, which
+will apply its critical p, is not built.
+
+The calibration's checks, beside the critical p: the K source records the rate the calibrated
+test reads on the second null half and refuses a simulation above Bradley's liberal bound, 1.5α,
+at either level (Bradley 1978); the H1 gate refuses bounds powered at another critical p than
+its K's; power at a realised test size reads the cell with its K's critical p, as the read does
+at any size; and a GitHub replication member, never calibrated, is simulated at one cell by
+default and reported with the four outcomes.

@@ -95,6 +95,11 @@ NEAR_DUPLICATE = ["openstack", "near_duplicate_rate", "train->dev"]
 #: where this text precedes it, for a small integer such as a K that the page also uses for
 #: other quantities), or `reduce`, which with `min:a/b` or
 #: `max:a/b` reads `a/b` under every entry at the path and takes the extreme.
+H2_K40 = (
+    f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json"
+)
+H2_K40_AT = ["by_target", "sizing_bound_90", "by_level"]
+
 CLAIMS: list[tuple[Any, ...]] = [
     # protocol.md: the corpus, and where the dev-window reading stands.
     ("corpus_os", "protocol.md", "5,053", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
@@ -132,6 +137,36 @@ CLAIMS: list[tuple[Any, ...]] = [
     ("dev_h1_wm_95_low", "protocol.md", "+0.0003", PARTITION_PILOT_WM, [*AT_95, "low"]),
     ("dev_h1_wm_95_high", "protocol.md", "+0.0117", PARTITION_PILOT_WM, [*AT_95, "high"]),
     # registered-decisions.md
+    # H2 at K = 40 by chain, its full simulation (research log, 2026-10-30).
+    (
+        "rd_h2_k40_null_975",
+        "registered-decisions.md",
+        "0.01325",
+        H2_K40,
+        ["by_target", "sizing_bound_90", "null_false_positive", "0.975"],
+        {"after": "rate is "},
+    ),
+    (
+        "rd_h2_k40_null_95",
+        "registered-decisions.md",
+        "0.0245",
+        H2_K40,
+        ["by_target", "sizing_bound_90", "null_false_positive", "0.95"],
+    ),
+    (
+        "rd_h2_k40_mde_975",
+        "registered-decisions.md",
+        "+0.0109",
+        H2_K40,
+        [*H2_K40_AT, "0.975", "by_cells", "1", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_h2_k40_mde_95",
+        "registered-decisions.md",
+        "+0.0103",
+        H2_K40,
+        [*H2_K40_AT, "0.95", "by_cells", "1", "minimum_detectable_effect"],
+    ),
     (
         "rd_cluster_r_os",
         "registered-decisions.md",
@@ -282,8 +317,9 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["levels", "0"],
-        # With the replication family's one-sided 0.0125, the chain rates' and the K grid's nominal.
-        {"reduce": "one_sided", "occurrences": 4},
+        # With the replication family's one-sided 0.0125, the chain rates', the K grid's and H2's
+        # K = 40 nominal.
+        {"reduce": "one_sided", "occurrences": 5},
     ),
     (
         "rd_partition_fp_nominal_95",
@@ -291,7 +327,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.025",
         PARTITION_SENSITIVITY,
         ["levels", "1"],
-        {"reduce": "one_sided", "after": "against ", "occurrences": 2},
+        {"reduce": "one_sided", "after": "against ", "occurrences": 3},
     ),
     (
         "rd_partition_fp_95_low",
@@ -446,7 +482,8 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.01325",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.975"},
+        # H2's K = 40 rate is the same figure by coincidence and has its own claim.
+        {"reduce": "max:null_false_positive/0.975", "after": "to "},
     ),
     (
         "rd_cell_power",

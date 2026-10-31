@@ -51,12 +51,44 @@ otherwise. A cell is read bounded only once its sensitivity simulation, its powe
 The margin moved to δ after the development pilots were read (research log, 2026-10-14).
 A hypothesis is bounded only when every cell is.
 
+**Co-primary scores for H1 (registered 2026-10-30).** Each H1 organization is read on two
+scores, the reference's per-token log-probability and its non-identifier part
+(`logprob_per_token:other`: the tokens the lexer does not class as names, summed in the whole
+score's nats per token, `sphragis.experiment.tokens`), each a cell, and H1 passes only when every
+cell on both scores does: an intersection-union test, which holds its level with no adjustment
+(Berger 1982), at the cost of power ("there is no multiplicity problem when the study is designed
+to demonstrate efficacy on all of the separate endpoints", FDA, *Multiple Endpoints in Clinical
+Trials*, 2022, §III.C.1). An adapter trained on the evaluated projects knows their names, so the
+whole score can lead on vocabulary alone; the non-identifier score cannot. The non-identifier
+score takes δ unchanged: its parts are in the whole score's units, and the planted quote-style
+convention δ was carried at sits in string delimiters, which the lexer classes as other. The
+whole score passing where the non-identifier score does not is read as "within-half on the whole
+score alone". The GitHub family reads the whole score only.
+
+**Four outcomes per cell, beside the verdict (registered 2026-10-30).** A test against zero and
+an equivalence test against δ together give four outcomes (Lakens, *SPPS* 2017, "four possible
+outcomes"), reported for every cell at every level it is read at: *supported* (above zero, not
+shown below δ), *supported, below SESOI* (above zero and below δ: an effect too small to matter),
+*bounded* (below δ, not above zero) and *inconclusive*. The test against δ is one-sided, the
+interval's upper bound below δ, since a cell below zero reads bounded too. They bind no verdict beyond the pass rule's,
+so the test's level and power are those registered; a hypothesis whose passing cells all sit below
+δ is reported so (`below_sesoi`).
+
+**Mixed cells (registered 2026-10-30).** The every-cell rule stays the headline. When it fails, the
+result is read cell by cell, with the partial conjunction "at least r of k" beside it (Readings
+beside the pass rule), on each co-primary score. In the form computed (Bonferroni, its adjusted
+p-values made non-decreasing in r so a larger r is claimed only with every smaller one), r = k
+needs (k - r + 1) times the r-th smallest p below the level at every r, which is stricter than the
+conjunction: it can report fewer than k when every cell passes, and its power falls as r rises. It
+is read for how many organizations show the effect, never as a second chance to pass.
+
 The admitted organizations are Gerrit hosts whose splits qualify: OpenStack, Wikimedia and Qt.
 Chromium is not admitted (no split qualifies) and supplies H2's foreign pool. H1 is
-intersection-union over its three cells, each sized at 0.95^(1/3); with three cells a
+intersection-union over its cells, sized as Power states; with three organizations a
 between-organization variance is not estimable with useful precision, so heterogeneity is read
-beside the rule, not in it (below). Every H1 cell's simulation is read at three cells, and H2's
-cell is simulated from its own development runs before the seal.
+beside the rule, not in it (below). With the co-primary scores (below) H1 has two cells per
+organization, so every H1 cell's simulation is read at six cells, and H2's cell is simulated from
+its own development runs before the seal.
 
 ### GitHub organizations: a registered replication on a second platform (2026-10-04)
 
@@ -85,7 +117,9 @@ the registered numerics came out at exactly +0.0000.
 Registered-report guidelines ask for "0.95 or higher for all proposed hypothesis tests"
 (Nature Registered Reports author guidelines). H1 passes only when all of its cells do, and the
 organizations are independent, so its power is the product of its cells' powers: with k
-admitted organizations each cell is sized at 0.95^(1/k). The figure is a sensitivity analysis
+admitted organizations each cell is sized at 0.95^(1/k). With the co-primary scores H1 has 2k
+cells, each sized at 0.95^(1/2k), 0.95^(1/6) for three organizations; the two scores of one
+organization are positively correlated, so the product understates the power it targets. The figure is a sensitivity analysis
 rather than a power calculation, because power computed from a pilot's own estimate is biased
 upward (Albers and Lakens 2018).
 
@@ -131,7 +165,8 @@ The sealed window's size is projected from the training months' arrival rate. Wh
 holds more changes than that rate predicts (Wikimedia), the projection is a lower bound, which only
 enlarges the simulated bounds, provided arrivals do not fall below the training rate. So at fetch
 the realised change count is compared with the projection, and a window below it is reported
-beside the verdict with the simulation's power at the realised size.
+beside the verdict with the simulation's power at the realised size, read with the cell's
+calibrated critical p where its K has one, as the read applies it at any size.
 
 ### Contamination: provenance primary, membership scores descriptive
 
@@ -186,7 +221,10 @@ hypothesis the gate reads, on the same draws, at the same levels:
   the k admitted organizations show the effect" is rejected, by the partial conjunction test in
   its Bonferroni form (Benjamini and Heller, Biometrics 2008): with each cell's one-sided
   bootstrap p-value (the share of draws at or below zero), reject for r when the r-th smallest
-  times k - r + 1 is below the hypothesis's level. The organizations are disjoint corpora, so the
+  times k - r + 1 is below the hypothesis's level. A cell whose critical p is calibrated from its
+  simulated null (a co-primary score's K, Number of runs) enters with its p scaled by α over its critical p, so it counts at α exactly where its
+  own reading does; at the smaller levels a larger r reads, the scaling is an approximation, since
+  the critical p was calibrated at α alone. The organizations are disjoint corpora, so the
   cells are independent. A failed every-organization rule then still says how many show it.
 - **Without AI-assisted targets.** The primary estimate recomputed without examples whose change's
   merged commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s rule, read
@@ -252,6 +290,13 @@ secondary, none binding a verdict:
   blindness to correct rewrites is measured rather than assumed.
 - **Renamed identifiers**: the base model's exact match with identifiers renamed against the
   original, post-cutoff against pre-cutoff, read descriptively as exposure through reused code.
+- **A second foreign organization for H2** (registered 2026-10-30): Fuchsia, next after Chromium in
+  the registered order, whose pool also covers every matched draw (research log, 2026-10-20),
+  trains a second foreign arm on the same runs (`decomposition.EXPLORATORY_FOREIGN_SOURCE`).
+  Sibling minus Fuchsia is read beside sibling minus Chromium, on the likelihood score: Chromium
+  is a browser and Qt a toolkit, so a contrast that holds against both rests less on one domain.
+  Its pool is cleared by the same stop rule and its digest fixed in code before the test window
+  is fetched; the steps that clear, train and read it accept the exploratory source then.
 
 ### Leakage threshold: 2% at Jaccard 0.7 or above
 
@@ -320,16 +365,50 @@ unit: OpenStack's K is 10, Wikimedia's K is 20 and Qt's K is 10
 (`k-coverage-<org>-likelihood-chains.json`, the K source a Gerrit test read accepts, which refuses
 a K made in the other unit; research log, 2026-10-22).
 
+The co-primary score (Pass rule) is the same cell scored again, so it is read at the cell's K and
+after the cell's check 5 (`decomposition.coprimary_read`). Its K source reads its own pilot's
+simulated null at that K (`k_coverage.py --registered-runs`); should the null exceed nominal at
+either level, its critical value is calibrated from it as H2's is (below), and the H1 gate reads
+the cell with it. Every H1 cell's K is thus the one the coverage rule gave its whole score. This
+rule is the implementation's of the co-primary decision, registered with it (2026-10-30).
+
+### H2's K = 40, its critical value calibrated from its simulated null (registered 2026-10-30)
+
+On H2's development runs no K in the grid holds the simulated null at both levels (research log,
+2026-10-29), a case the coverage rule did not name. "Kept within 10 to 40" is read as a clamp at 40,
+as the reproducibility K is clamped at 10: **H2's K is 40** (`decomposition.H2_RUNS`). This
+reading was chosen after the grid was read and is declared as a deviation from the rule's letter.
+At K = 40 the null's one-sided rate is 0.01325 against 0.0125 at the stricter level, under half
+its Monte Carlo standard error at 4,000 null studies, sqrt(p(1 - p) / n) (Morris, White and
+Crowther 2019, Table 6), and 0.0245 against 0.025 at 95%; every K from 15 is inside Bradley's
+liberal band, 0.5α to 1.5α (Bradley 1978). That band describes a test as robust; the coverage rule
+asks for nominal, so the band shows the excess is small and selects no K. The excess is not
+accepted: H2's cell reads supported when its interval does and its one-sided bootstrap p-value is
+below its simulated null's α-quantile at the sizing bound, so the calibration can only tighten the
+test (Loh 1987, a nominal level calibrated by its estimated coverage; `partition_sensitivity.py
+--calibrate`). The critical p reads at most α on the null studies it was set on by construction,
+so a second, independent set of 4,000 null studies measures the calibrated rate, itself carrying
+Monte Carlo error. The K source records that rate and refuses the simulation if it exceeds
+Bradley's liberal bound, 1.5α, at either level (`partitions.BRADLEY_LIBERAL`), since the
+calibration would then not carry over; the gate refuses bounds powered at another critical p
+than the one its K applies. Its K source is that simulation read at K = 40 (`k_coverage.py
+--registered-runs`), which carries the critical p. H2's test read over partitions is not built yet,
+so the gate that will read H2's cell with it is not either. Its detectable effects are those of
+that calibrated simulation; uncalibrated, K = 40 detects +0.0109
+and +0.0103 nats per token at the two levels (research log, 2026-10-30), below δ.
+
 ### Stated power: sensitivity, not power at an observed effect
 
-With three cells each is sized at power 0.983. At that power, its projected test size and K
+Sized before the co-primary scores, at three cells, each at power 0.983. At that power, its projected test size and K
 runs, read under relation chains, OpenStack's H1 cell detects a half-split contrast of +0.0120 and
 +0.0112 nats per token at the two Holm levels, Wikimedia's +0.0074 and +0.0069 and Qt's +0.0083
 and +0.0077, at the per-run spread K was sized on
-(`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`, `by_cells` 3). H2's cell has
-no simulation yet; it is simulated from its own development runs before the seal.
-Each is below the SESOI, the margin a bounded reading is judged against (Pass rule), and under a
-true null every simulated interval lies inside the SESOI band at both levels. Wikimedia's test size is a lower bound if test-window arrivals hold at the
+(`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`, `by_cells` 3). Each is below
+the SESOI, the margin a bounded reading is judged against (Pass rule), and under a true null every
+simulated interval lies inside the SESOI band at both levels. With the co-primary scores (Pass
+rule) each H1 cell is sized at six cells, and the non-identifier score's cells are simulated from
+their own development pilots, both before the seal and not yet run; H2's cell at K = 40 is
+simulated with its critical value calibrated (H2's K, above), not yet run either. Wikimedia's test size is a lower bound if test-window arrivals hold at the
 training rate (checked at fetch), and its bounds are then conservative. Power from a pilot's own
 estimate is biased upward, so no power at an observed effect is stated.
 

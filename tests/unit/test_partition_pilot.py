@@ -110,9 +110,11 @@ PILOT = {"per_run": [0.02, -0.01, 0.005, 0.03], "runs_left_out": [], "sizing": S
 def _sensitivity(
     tmp_path: Path, levels: list[float], bound: float, org: str, *, pilot: dict = PILOT
 ) -> Path:
-    """A partition simulation calibrated on `pilot`, its bounds at both named spread targets."""
+    """A partition simulation calibrated on `pilot`, its bounds at both named spread targets: one
+    cell for a replication member, two for one Gerrit organization on its two co-primary scores."""
     path = tmp_path / "sensitivity.json"
-    by_level = {str(c): {"by_cells": {"1": {"minimum_detectable_effect": bound}}} for c in levels}
+    cells = {k: {"minimum_detectable_effect": bound} for k in ("1", "2")}
+    by_level = {str(c): {"by_cells": cells} for c in levels}
     targets = {name: {"by_level": by_level} for name in ("pilot_estimate", "sizing_bound_90")}
     path.write_text(
         json.dumps(
@@ -323,7 +325,7 @@ def test_a_test_window_is_read_only_under_what_was_fixed_before_it(
     }
     argv = [*_inputs(tmp_path, org, "test"), *_planted(tmp_path, org), *extra]
     argv += [a for flag, args in given.items() if flag != drop for a in args]
-    argv += ["--replication"] if org == "apache" else ["--h1-cells", "1"]
+    argv += ["--replication"] if org == "apache" else ["--h1-cells", "2"]
     argv = _registered_metric(argv)
     with pytest.raises(SystemExit, match=match):
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
@@ -646,7 +648,7 @@ def test_a_gerrit_test_read_takes_its_levels_cells_and_target_from_the_registrat
     registered = decomposition.registered_read("openstack")
     assert report["levels"] == registered["levels"] == [0.95]
     assert report["sensitivity"]["spread_target"] == "sizing_bound_90"
-    assert report["sensitivity"]["cells"] == 1
+    assert report["sensitivity"]["cells"] == 2
 
 
 @pytest.mark.parametrize(
@@ -654,7 +656,7 @@ def test_a_gerrit_test_read_takes_its_levels_cells_and_target_from_the_registrat
     [
         ["--hypotheses", "2"],
         ["--spread-target", "pilot_estimate"],
-        ["--h1-cells", "2"],
+        ["--h1-cells", "1"],
     ],
 )
 def test_a_test_read_refuses_a_choice_that_differs_from_the_registration(
@@ -663,6 +665,51 @@ def test_a_test_read_refuses_a_choice_that_differs_from_the_registration(
     with pytest.raises(SystemExit, match="differ from the registered"):
         _main(monkeypatch, _gerrit_test_argv(tmp_path, *extra))
     assert not (tmp_path / "o.json").exists()
+
+
+def _on_coprimary(argv: list[str]) -> list[str]:
+    """A registered test read's arguments moved to H1's co-primary score: every run row scores it,
+    and its bounds and K source are made on it; its check 5 stays the cell's, on the registered
+    score, which is the only planted run a scorer writes."""
+    from sphragis.experiment.decomposition import COPRIMARY_METRIC
+
+    for arg in argv:
+        path = Path(arg)
+        if not (arg.endswith(".json") and path.is_file()):
+            continue
+        record = json.loads(path.read_text())
+        if "run-" in arg:
+            for rows in record["results"].values():
+                for row in rows:
+                    row[COPRIMARY_METRIC] = row["logprob_per_token"] / 2
+        elif path.name in ("sensitivity.json", "sizing.json"):
+            record["metric"] = COPRIMARY_METRIC
+        path.write_text(json.dumps(record))
+    at = argv.index("--metric") + 1
+    return [*argv[:at], COPRIMARY_METRIC, *argv[at + 1 :]]
+
+
+def test_a_gerrit_test_read_on_the_coprimary_score_is_registered_on_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    from sphragis.experiment.decomposition import COPRIMARY_METRIC
+
+    _main(monkeypatch, _on_coprimary(_gerrit_test_argv(tmp_path)))
+    report = json.loads((tmp_path / "o.json").read_text())
+    assert report["metric"] == COPRIMARY_METRIC
+    assert report["sensitivity"]["cells"] == 2
+
+
+def test_a_replication_member_is_not_read_on_the_coprimary_score(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    """The co-primary is H1's on the Gerrit cells; the GitHub family reads the whole score."""
+    with pytest.raises(SystemExit, match="differ from the registered"):
+        _main(
+            monkeypatch,
+            _on_coprimary(_replication_argv(tmp_path, "test")[:-2])
+            + ["--out", str(tmp_path / "pilot.json")],
+        )
 
 
 def test_a_test_read_refuses_a_simulation_calibrated_on_another_pilot(

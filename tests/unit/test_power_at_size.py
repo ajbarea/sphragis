@@ -263,3 +263,27 @@ def test_a_placebo_the_simulation_did_not_run_on_is_refused(
 ) -> None:
     with pytest.raises(SystemExit, match="was simulated on"):
         _main(tmp_path, monkeypatch, placebo_arg=given, placebo=recorded)
+
+
+def test_a_calibrated_read_takes_its_ks_critical_p_which_must_be_the_simulations() -> None:
+    critical = {"0.975": 0.011, "0.95": 0.024}
+    simulation = _simulation(calibrated=True)
+    simulation["by_target"]["sizing_bound_90"]["critical_p"] = critical
+    report = _report(k_from={"calibrated": True, "critical_p": critical})
+    assert power_at_size.registered_critical(report, simulation) == {0.975: 0.011, 0.95: 0.024}
+    assert power_at_size.registered_critical(_report(k_from={}), _simulation()) is None
+    with pytest.raises(ValueError, match="disagree"):
+        power_at_size.registered_critical(_report(k_from={}), simulation)
+    other = _report(k_from={"calibrated": True, "critical_p": {"0.975": 0.01, "0.95": 0.024}})
+    with pytest.raises(ValueError, match="another critical p"):
+        power_at_size.registered_critical(other, simulation)
+
+
+def test_a_calibrated_critical_p_only_lowers_power(small_pool: list) -> None:
+    """The read applies its critical p at any size, so power at size reads it too."""
+    lifts = {0.975: {"lift": 0.3, "bound": 0.15}}
+    with ThreadPoolExecutor(2) as executor:
+        args = {"changes": 80, "sigma_run": 0.0, "lifts": lifts, "simulation": _simulation()}
+        plain = power_at_size.power_at(executor, small_pool, **args)
+        tight = power_at_size.power_at(executor, small_pool, **args, critical={0.975: 0.0})
+    assert plain[0.975]["power"] > 0.0 == tight[0.975]["power"]

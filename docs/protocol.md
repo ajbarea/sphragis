@@ -74,12 +74,16 @@ protects once a house style can be learned.
 The pass rule is fixed in advance, in code, in
 [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py).
 
-**H1 passes only when every admitted organization's cell is supported.** RQ1 claims that
-organizations have a learnable house style, which is a generality claim, and a rule passing on
-one organization does not support it. H1 and H2 share one family-wise level under Holm, read on
-97.5% and 95% intervals. A cell is supported when its lower bound is strictly above zero, bounded when its
-upper bound is below the SESOI δ (a one-sided equivalence test, read once the cell's sensitivity
-simulation is registered), and inconclusive otherwise. The interval is
+**H1 passes only when every admitted organization's cell is supported, on both co-primary
+scores.** RQ1 claims that organizations have a learnable house style, which is a generality
+claim, and a rule passing on one organization does not support it; the second score counts only
+the reference's non-identifier tokens, so a gain in vocabulary alone cannot pass. H1 and H2 share
+one family-wise level under Holm, read on 97.5% and 95% intervals; H2, at K = 40, reads its
+critical value calibrated from its simulated null. A cell is supported when its lower bound is
+strictly above zero, bounded when its upper bound is below the SESOI δ (a one-sided equivalence
+test, read once the cell's sensitivity simulation is registered), and inconclusive otherwise;
+beside the verdict each cell reports which of the four outcomes of the two tests it shows,
+including above zero but below δ. The interval is
 the crossed run-by-change bootstrap over K admissible partitions, and the estimand is pooled.
 Each of those was chosen before the run that would have been decided by it, and each is
 recorded with the evidence that chose it on [Registered decisions](registered-decisions.md).

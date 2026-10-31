@@ -327,22 +327,36 @@ def across_organizations(
     *,
     confidence: float,
     platforms: Mapping[str, str] | None = None,
+    critical: Mapping[str, float] | None = None,
 ) -> dict[str, Any]:
     """Both readings over H1 cells from `h1_over_partitions`, at one Holm step's confidence.
 
     The partial conjunction is read at that step's one-sided level, the cells' own; the summary's
-    interval at the same confidence. Each cell is checked by `require_readable`. A summary
-    `random_effects` cannot compute (one organization, or a zero standard error) is reported with
-    the reason in `unavailable`: neither reading binds a verdict, so neither withholds one.
+    interval at the same confidence. A cell with a `critical` p calibrated from its simulated null
+    enters with its p scaled by alpha over that critical p, so it counts at alpha exactly where its
+    own reading does (research log, 2026-10-30). Each cell is checked by `require_readable`. A
+    summary `random_effects` cannot compute (one organization, or a zero standard error) is
+    reported with the reason in `unavailable`: neither reading binds a verdict, so neither
+    withholds one.
     """
     alpha = one_sided_alpha(confidence)
     require_readable(cells, confidence=confidence, fields=("estimate", "bootstrap_se"))
+    critical = critical or {}
+    for org, c in critical.items():
+        if org not in cells or not 0.0 < c <= alpha:
+            raise ValueError(f"{org}: critical p {c!r} at alpha {alpha}")
     estimates = {org: cell["estimate"] for org, cell in cells.items()}
     standard_errors = {org: cell["bootstrap_se"] for org, cell in cells.items()}
     unavailable = unsummable(estimates, standard_errors)
     return {
         "partial_conjunction": partial_conjunction(
-            {org: cell["p_one_sided"] for org, cell in cells.items()}, alpha=alpha
+            {
+                org: min(1.0, cell["p_one_sided"] * alpha / critical[org])
+                if org in critical
+                else cell["p_one_sided"]
+                for org, cell in cells.items()
+            },
+            alpha=alpha,
         ),
         "random_effects": random_effects(
             estimates, standard_errors, confidence=confidence, platforms=platforms
