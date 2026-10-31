@@ -21,5 +21,7 @@ def test_foreign_arms_train_only_on_the_registered_source_and_pool() -> None:
     """Both checks run before any arm is drawn from the pool."""
     pilot = (ROOT / "scripts" / "rq1_pilot.py").read_text()
     draw = pilot.index("matched_foreign_arms(\n")
-    assert pilot.index("require_registered_source(args.foreign_source)") < draw
-    assert pilot.index("if pool_digest(pool) != FOREIGN_POOL_SHA256:") < draw
+    assert pilot.index("registered_pool(args.foreign_source, exploratory=args.exploratory)") < draw
+    assert pilot.index("if pool_digest(pool) != registered:") < draw
+    job = (ROOT / "scripts" / "foreign_arms.sbatch").read_text()
+    assert "1) EXPLORATORY_ARGS=(--exploratory) ;;" in job and '"${EXPLORATORY_ARGS[@]}"' in job

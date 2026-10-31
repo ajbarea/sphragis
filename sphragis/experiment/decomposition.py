@@ -260,6 +260,11 @@ FOREIGN_POOL_SHA256: str = "75d9f7f37e1faafb863f0fd3bcc3508506309e3c2e4edbe9b631
 #: family: it separates the organization from Chromium's domain (research log, 2026-10-30).
 EXPLORATORY_FOREIGN_SOURCE = "fuchsia"
 
+# `holdout.pool_digest` of the exploratory source's pool as the stop rule found it covering, cleared
+# of Qt's copies (research log, 2026-10-20; `foreign-pool-coverage-fuchsia.json`), fixed before
+# the test window is fetched. Its arm trains on that pool alone.
+EXPLORATORY_POOL_SHA256: str = "a17c70972046f23d811d3b3a8f04107fcdf59eec4cf6fe6af0de7195c601aacc"
+
 #: H2's K: the registered grid's cap, where its simulated null misses nominal at 97.5% by under half
 #: a Monte Carlo SE; its critical value is calibrated from that null (`partition_sensitivity.py
 #: --calibrate`; research log, 2026-10-30).
@@ -280,6 +285,13 @@ def require_registered_source(source: str, *, exploratory: bool = False) -> None
         return
     if source != FOREIGN_SOURCE:
         raise ValueError(f"H2's registered foreign source is {FOREIGN_SOURCE}, not {source}")
+
+
+def registered_pool(source: str, *, exploratory: bool = False) -> str:
+    """The digest of `source`'s cleared pool, the only pool its arms train on, refused unless
+    `require_registered_source` admits the source (the exploratory arm's with `exploratory`)."""
+    require_registered_source(source, exploratory=exploratory)
+    return EXPLORATORY_POOL_SHA256 if exploratory else FOREIGN_POOL_SHA256
 
 
 # The GitHub replication family in registration order (registered-decisions.md, "GitHub

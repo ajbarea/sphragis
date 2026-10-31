@@ -296,8 +296,12 @@ secondary, none binding a verdict:
   trains a second foreign arm on the same runs (`decomposition.EXPLORATORY_FOREIGN_SOURCE`).
   Sibling minus Fuchsia is read beside sibling minus Chromium, on the likelihood score: Chromium
   is a browser and Qt a toolkit, so a contrast that holds against both rests less on one domain.
-  Its pool is cleared by the same stop rule and its digest fixed in code before the test window
-  is fetched; the steps that clear, train and read it accept the exploratory source then.
+  Its pool is cleared by the same stop rule, and its digest is fixed in code before the test
+  window is fetched (`decomposition.EXPLORATORY_POOL_SHA256`, the stop rule's in
+  `foreign-pool-coverage-fuchsia.json`). The steps that clear, train and read it take
+  `--exploratory` (`clear_foreign_pool.py`, `rq1_pilot.py` through `foreign_arms.sbatch
+  EXPLORATORY=1`, `partition_pilot.py`), each refusing any other source or pool; its read takes no K
+  and no simulation, and is recorded exploratory.
 
 ### Leakage threshold: 2% at Jaccard 0.7 or above
 

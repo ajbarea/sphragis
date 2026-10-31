@@ -97,7 +97,7 @@ These predate the H1 and H2 decomposition and stay as the record the registered 
 | `estimands.py` | What the estimand choice costs, on a run that has already happened. |
 | `decoding_check.sbatch` | Re-evaluates a saved calibration adapter at a chosen temperature and repetition penalty, to test whether the decoder amplifies a planted convention. |
 | `decoder_check.sbatch` | Rescores a stored H1 partition run at an explicit repetition penalty, its adapters reused, so the decoder is the only change. |
-| `foreign_arms.sbatch` | Adds H2's two matched foreign arms to a decoder-checked partition run, reusing its halves' adapters. |
+| `foreign_arms.sbatch` | Adds H2's two matched foreign arms to a decoder-checked partition run, reusing its halves' adapters; `EXPLORATORY=1` trains the exploratory source's (Fuchsia's). |
 | `determinism_check.sbatch` | Four passes of the base model over the same prompts, to locate run-to-run variation in greedy decoding. |
 | `prompt_format_probe.sbatch` | Measures how much of the pilot's base-model floor is the prompt format. |
 | `contamination_battery.sbatch` | The contamination battery, run on the windows `contamination_windows.py` assembles. |

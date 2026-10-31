@@ -11097,3 +11097,16 @@ at either level (Bradley 1978); the H1 gate refuses bounds powered at another cr
 its K's; power at a realised test size reads the cell with its K's critical p, as the read does
 at any size; and a GitHub replication member, never calibrated, is simulated at one cell by
 default and reported with the four outcomes.
+
+### Fuchsia's exploratory arm wired (2026-10-30)
+
+`# research(2026-10)`. Decision 5 above, past its guard: Fuchsia's cleared pool digest is fixed
+in code as the stop rule recorded it (`decomposition.EXPLORATORY_POOL_SHA256`, read from
+`foreign-pool-coverage-fuchsia.json`, which a test asserts), and `decomposition.registered_pool`
+gives each source the one pool its arms may train on. `clear_foreign_pool.py`, `rq1_pilot.py`
+(through `foreign_arms.sbatch EXPLORATORY=1`) and `partition_pilot.py` take `--exploratory`, refuse
+any other source or pool, and record the flag; the read takes no `--sizing` or `--sensitivity`,
+and every confirmatory step still refuses Fuchsia: the simulation by `require_registered_source`,
+the K source and the gates by cell, since no simulation of Fuchsia's cell can be made. Next: clear the
+pool, copy it to TIGRIS, train the arms on Qt's 22 development runs and score them, then read
+sibling minus Fuchsia beside sibling minus Chromium.

@@ -6,8 +6,8 @@ exact or near copy of an example in the other organization's unsealed windows, c
 This writes that prefix pool as a derived corpus file recording both sources
 (`load.write_derived_file`), for `rq1_pilot.py --foreign-pool`. It runs the coverage's own code
 (`foreign_pool_coverage.prefix_pool`, `unsealed`) on the inputs its artifact names, and writes
-nothing unless the pool's digest is the stop rule's and the registered `FOREIGN_POOL_SHA256`.
-Reads no outcome.
+nothing unless the pool's digest is the stop rule's and the registered one
+(`decomposition.registered_pool`; `--exploratory` for Fuchsia's arm). Reads no outcome.
 
     uv run --no-sync --no-active python scripts/clear_foreign_pool.py \\
         --coverage datasets/results/foreign-pool-coverage-chromium.json \\
@@ -31,11 +31,7 @@ from foreign_pool_coverage import counts, prefix_pool, unsealed  # noqa: E402
 
 from sphragis.corpus.load import refined_examples, write_derived_file  # noqa: E402
 from sphragis.durable import write_json_atomic  # noqa: E402
-from sphragis.experiment.decomposition import (  # noqa: E402
-    FOREIGN_POOL_SHA256,
-    FOREIGN_SPANS,
-    require_registered_source,
-)
+from sphragis.experiment.decomposition import FOREIGN_SPANS, registered_pool  # noqa: E402
 from sphragis.experiment.holdout import pool_digest  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
 
@@ -45,13 +41,16 @@ parser.add_argument("--root", type=Path, required=True, help="the source's built
 parser.add_argument("--against", required=True, help="ORG=ROOT: the organization cleared against")
 parser.add_argument("--pool", type=Path, required=True, help="the cleared pool's derived file")
 parser.add_argument("--out", type=Path, required=True, help="the clearing's artifact")
+parser.add_argument(
+    "--exploratory", action="store_true", help="H2's exploratory source, beside the registered one"
+)
 
 
-def stop_rule(coverage: dict[str, Any], org: str) -> dict[str, Any]:
+def stop_rule(coverage: dict[str, Any], org: str, *, exploratory: bool = False) -> dict[str, Any]:
     """The coverage's stop rule, refused unless it covered, against `org`, at the registered
-    source and digest."""
+    source and digest (the exploratory source's with `exploratory`)."""
     try:
-        require_registered_source(coverage["source"])
+        digest = registered_pool(coverage["source"], exploratory=exploratory)
     except ValueError as error:
         raise SystemExit(str(error)) from error
     stop = coverage.get("stop_rule") or {}
@@ -59,7 +58,7 @@ def stop_rule(coverage: dict[str, Any], org: str) -> dict[str, Any]:
         raise SystemExit("the coverage's stop rule found no covering prefix")
     if stop["against"] != org:
         raise SystemExit(f"the stop rule cleared against {stop['against']}, not {org}")
-    if stop["digest"] != FOREIGN_POOL_SHA256:
+    if stop["digest"] != digest:
         raise SystemExit(f"the stop rule's pool is {stop['digest']}, not the registered one")
     return stop
 
@@ -88,7 +87,7 @@ def main() -> None:
         raise SystemExit("--against takes ORG=ROOT")
     org, against_root = args.against.split("=", 1)
     coverage = json.loads(args.coverage.read_text())
-    stop = stop_rule(coverage, org)
+    stop = stop_rule(coverage, org, exploratory=args.exploratory)
     source = coverage["source"]
     span = FOREIGN_SPANS[source]
     order = [entry["project"] for entry in json.loads(Path(stop["order"]).read_text())["order"]]
@@ -104,6 +103,7 @@ def main() -> None:
         args.out,
         {
             "source": source,
+            "exploratory": args.exploratory,
             "coverage": str(args.coverage),
             "projects": list(order[: stop["projects"]]),
             "against": {"org": org, "examples": stop["against_examples"]},
