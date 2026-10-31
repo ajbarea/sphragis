@@ -1,0 +1,31 @@
+{
+  "source": "fuchsia",
+  "exploratory": true,
+  "coverage": "datasets/results/foreign-pool-coverage-fuchsia.json",
+  "projects": [
+    "fuchsia"
+  ],
+  "against": {
+    "org": "qt",
+    "examples": 9449
+  },
+  "cleared_pool": {
+    "examples": 5552,
+    "in_language": 1348,
+    "other": 4204,
+    "digest": "a17c70972046f23d811d3b3a8f04107fcdf59eec4cf6fe6af0de7195c601aacc"
+  },
+  "file": "/home/ajbar/ajsoftworks/sphragis-data-local/fuchsia/cleared/fuchsia.jsonl",
+  "provenance": {
+    "generated_at": "2026-10-31T01:39:49.369911+00:00",
+    "git": {
+      "commit": "7e106f142b911a9010f93fdcc26d41117a142412",
+      "branch": "HEAD"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

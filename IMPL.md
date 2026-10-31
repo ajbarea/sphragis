@@ -8,31 +8,29 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **This branch (`registered/design-1030`, issue #232): five registered-design decisions, AJ 2026-10-30.**
-  (1) H2 at K = 40, its critical value calibrated from its simulated null (Bradley's liberal band,
-  Morris et al. MCSE); (2) H1 co-primary: `logprob_per_token:other` beside s, H1 passes only if
-  both pass (IUT); (3) four outcomes per cell (Lakens, SPPS 2017) beside the
-  unchanged pass rule; (4) mixed cells: per-cell verdicts plus the at-least-r-of-3 partial
-  conjunction, low power at r = 3 stated; (5) Fuchsia as an exploratory second foreign arm.
-  Order: [a] simulation code (`--metric logprob_per_token:other`, per-trial p, `--calibrate`) and
-  the other score's SESOI, so TIGRIS runs can go when nodes return (drained 10-30 11:29);
-  [b] verdict labels, co-primary gate (`coprimary_read`; own K source via `k_coverage.py
-  --registered-runs`, calibrated critical p applied in the gate and pilot), H2_RUNS, exploratory
-  guard; [c] registered-decisions.md, research-log entry. Review: rounds 1 to 4 (2 Blocking, 18
-  Should-fix) fixed; round 5 next. Next: [d] by-chain
-  other pilots (local, flock): `partition_pilot.py <run_files of
-  partition-pilot-<org>-likelihood-chains.json> --admissible
-  datasets/results/admissible-partitions-<org>.json --org <org> --metric logprob_per_token:other
-  --chains datasets/results/relation-chains-<org>.json --hypotheses 2 --bootstrap-seed 7 --out
-  datasets/results/partition-pilot-<org>-likelihood-split-other-chains.json`; [e] TIGRIS (`make
-  submit`): H2 `ORG=qt FOREIGN_SOURCE=chromium METRIC=logprob_per_token CHAINS=1 RUNS=40
-  CALIBRATE=1`, then `k_coverage.py --registered-runs 40`; per org `ORG=<org>
-  METRIC=logprob_per_token:other CHAINS=1 RUNS=<cell K: openstack 10, wikimedia 20, qt 10> CELLS="2
-  4 6"` (CALIBRATE=1 if its null misses), then `k_coverage.py --registered-runs <K>`; and
-  `METRIC=logprob_per_token CHAINS=1 RUNS=<K> CELLS="2 4 6"`; [f] Fuchsia: pool clearing, digest
-  constant, `--exploratory` in clear_foreign_pool/rq1_pilot/partition_pilot, arms; H2's test read
-  over partitions (applies its critical p); [g] P4 (papers) rules and tables from artifacts, `make
-  overleaf`. Review until clean at each PR.
+- **Issue #232, five registered-design decisions (AJ 2026-10-30).** Code and rules merged (#233,
+  five review rounds, last clean). Branch `results/design-1030-runs` (worktree `design-runs`, PR
+  #235): the non-identifier score's by-chain pilots committed (research log, 2026-10-30). TIGRIS,
+  pinned: H2 calibrated at K = 40 (smoke 691129 -> 691131,
+  `...-foreignchromium-logprob_per_token-chains- k40-calibrated.json`); whole score at six cells
+  (smoke 691130 -> 691135 openstack K 10, 691136 wikimedia K 20, 691137 qt K 10,
+  `RUN_TAG=rp1.0-cells6`); co-primary at its cell's K (smoke 691145 -> 691146 openstack, 691147
+  wikimedia, 691148 qt, `...-logprob_per_token-other-chains- k<K>.json`). When they land: `make
+  pull-logs`, copy results, then `k_coverage.py --pilot <pilot> --org <org> --registered-runs <K>
+  --grid <sim> --out k-coverage-<org>-likelihood-split-other- chains.json` per org (a miss needs a
+  `CALIBRATE=1` rerun) and for H2 (`k-coverage-qt- foreignchromium-likelihood-chains.json`, the
+  name `k_coverage.py` takes for a chain read); research-log tables via `scripts/log_tables.py
+  sensitivity|k-coverage <artifact>`; then P4 (papers `org-house-style/`: Table I, registered
+  decisions, stale H2 text) and `make overleaf`. A number that moves a registered decision goes to
+  AJ first. Fuchsia's exploratory arm: wired (#234); pool cleared at its registered digest and
+  copied to TIGRIS (`~/ajsoftworks/sphragis-data/fuchsia-pool/cleared/`, sha256 equal at both
+  ends); arms and scoring on Qt's 22 runs submitted pinned at 7e106f1 (jobs 691192 to 691235,
+  listed in `sphragis-data-local/fuchsia/arms-jobs.txt`). When they land: copy the 22
+  `likelihood-partition-qt-p<seed>[-s<n>]-n1850-foreignfuchsia-rp1.0.json` files, then
+  `partition_pilot.py --hypothesis H2 --foreign-source fuchsia --exploratory --org qt --metric
+  logprob_per_token --admissible datasets/results/admissible-partitions-qt.json --chains
+  datasets/results/relation-chains-qt.json <files> --out
+  datasets/results/partition-pilot-qt-foreignfuchsia-likelihood-chains.json` (and by change).
 - **H2's development pilot and simulation (issue #228): done; P4 waits on the registration call.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects

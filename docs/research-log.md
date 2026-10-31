@@ -11098,6 +11098,32 @@ its K's; power at a realised test size reads the cell with its K's critical p, a
 at any size; and a GitHub replication member, never calibrated, is simulated at one cell by
 default and reported with the four outcomes.
 
+### The non-identifier score's development pilots by chain (2026-10-30)
+
+`# research(2026-10)`. The co-primary score (`logprob_per_token:other`, entry above) read over each
+organization's 22 development partition runs with relation chains as the drawn unit, the Gerrit
+test read's (`partition_pilot.py --metric logprob_per_token:other --chains`, two Holm levels,
+bootstrap seed 7; `partition-pilot-<org>-likelihood-split-other-chains.json`). Development
+readings only, binding nothing:
+
+| organization | estimate | 97.5% interval | 95% interval | reading |
+|---|---|---|---|---|
+| OpenStack | +0.0100 | [+0.0002, +0.0222] | [+0.0012, +0.0203] | supported at both |
+| Wikimedia | +0.0045 | [-0.0006, +0.0103] | [-0.0000, +0.0094] | inconclusive at both |
+| Qt | +0.0056 | [+0.0013, +0.0099] | [+0.0018, +0.0094] | supported at both |
+
+Each pilot's own sizing gives K = 10. These pilots are the inputs the co-primary simulations at
+each cell's K (OpenStack 10, Wikimedia 20, Qt 10) calibrate on; their K sources follow from those
+simulations (`k_coverage.py --registered-runs`). Submitted the same day on TIGRIS, pinned at
+f33389c: H2's calibrated simulation at K = 40 (job 691131, after smoke 691129) and the whole
+score at six H1 cells per organization (`RUN_TAG=rp1.0-cells6`, jobs 691135 to 691137, after
+smoke 691130); then, pinned at 7a6e262 (tag `cluster-pin-7a6e262`), which commits these pilots,
+the non-identifier score at each cell's K (jobs 691146 to 691148, after smoke 691145). Qt's pilot
+was written again afterwards with its 22 generation runs beside it, so its outcome-neutral record
+reads them (22 of 22 recorded and holding; the first copy had found none); every other field,
+the estimate and spread the simulation reads included, is unchanged, beside the `exploratory`
+field (false) the reader now writes.
+
 ### Fuchsia's exploratory arm wired (2026-10-30)
 
 `# research(2026-10)`. Decision 5 above, past its guard: Fuchsia's cleared pool digest is fixed
@@ -11107,6 +11133,8 @@ gives each source the one pool its arms may train on. `clear_foreign_pool.py`, `
 (through `foreign_arms.sbatch EXPLORATORY=1`) and `partition_pilot.py` take `--exploratory`, refuse
 any other source or pool, and record the flag; the read takes no `--sizing` or `--sensitivity`,
 and every confirmatory step still refuses Fuchsia: the simulation by `require_registered_source`,
-the K source and the gates by cell, since no simulation of Fuchsia's cell can be made. Next: clear the
-pool, copy it to TIGRIS, train the arms on Qt's 22 development runs and score them, then read
-sibling minus Fuchsia beside sibling minus Chromium.
+the K source and the gates by cell, since no simulation of Fuchsia's cell can be made. The same day the
+pool was cleared at that digest (`clear_foreign_pool.py --exploratory`;
+`foreign-pool-cleared-fuchsia.json`), copied to TIGRIS with its sha256 equal at both ends, and
+the arms and their scoring submitted on Qt's 22 development runs (TIGRIS jobs 691192 to 691235,
+pinned at 7e106f1). Next: read sibling minus Fuchsia beside sibling minus Chromium.

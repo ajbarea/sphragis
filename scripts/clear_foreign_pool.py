@@ -15,6 +15,12 @@ nothing unless the pool's digest is the stop rule's and the registered one
         --against qt=datasets/gerrit-granted \\
         --pool ~/ajsoftworks/sphragis-data-local/chromium-pool/cleared/chromium.jsonl \\
         --out datasets/results/foreign-pool-cleared-chromium.json
+    uv run --no-sync --no-active python scripts/clear_foreign_pool.py --exploratory \\
+        --coverage datasets/results/foreign-pool-coverage-fuchsia.json \\
+        --root ~/ajsoftworks/sphragis-data-local/fuchsia/listing \\
+        --against qt=datasets/gerrit-granted \\
+        --pool ~/ajsoftworks/sphragis-data-local/fuchsia/cleared/fuchsia.jsonl \\
+        --out datasets/results/foreign-pool-cleared-fuchsia.json
 """
 
 from __future__ import annotations
