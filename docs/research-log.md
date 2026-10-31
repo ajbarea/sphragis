@@ -11121,7 +11121,8 @@ smoke 691130); then, pinned at 7a6e262 (tag `cluster-pin-7a6e262`), which commit
 the non-identifier score at each cell's K (jobs 691146 to 691148, after smoke 691145). Qt's pilot
 was written again afterwards with its 22 generation runs beside it, so its outcome-neutral record
 reads them (22 of 22 recorded and holding; the first copy had found none); every other field,
-the estimate and spread the simulation reads included, is unchanged.
+the estimate and spread the simulation reads included, is unchanged, beside the `exploratory`
+field (false) the reader now writes.
 
 ### Fuchsia's exploratory arm wired (2026-10-30)
 
