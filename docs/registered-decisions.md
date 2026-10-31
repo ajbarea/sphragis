@@ -225,8 +225,8 @@ hypothesis the gate reads, on the same draws, at the same levels:
   simulated null (a co-primary score's K, Number of runs) enters with its p scaled by α over its
   critical p (its critical p capped at α), so at the r = k step, which reads α, it counts exactly
   where its own reading does; each r < k reads α / (k - r + 1), where the scaling is an
-  approximation, since the critical p was calibrated at α alone, and every r rests on those steps. The organizations are disjoint corpora, so the
-  cells are independent. A failed every-organization rule then still says how many show it.
+  approximation, since the critical p was calibrated at α alone; and r = k is claimed only when
+  every smaller r is too. The organizations are disjoint corpora, so the cells are independent. A failed every-organization rule then still says how many show it.
 - **Without AI-assisted targets.** The primary estimate recomputed without examples whose change's
   merged commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s rule, read
   at fetch time for the test window). Trailers are voluntary, so this bounds nothing; it shows
