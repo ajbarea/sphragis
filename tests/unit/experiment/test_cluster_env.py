@@ -1627,3 +1627,22 @@ def test_a_chain_simulation_draws_chains_from_its_chain_pilot_under_its_own_name
     (tmp_path / "bad").mkdir()
     refused = _run_job("partition_sensitivity.sbatch", tmp_path / "bad", **{**env, "CHAINS": "2"})
     assert refused.returncode != 0 and "CHAINS must be 0 or 1" in refused.stderr
+
+
+def test_a_coprimary_simulation_reads_its_own_pilot_and_names_its_calibration_and_cells(
+    tmp_path: Path,
+) -> None:
+    env = {"METRIC": "logprob_per_token:other", "CHAINS": "1", "PILOT": "", "PLACEBO": ""}
+    env |= {"ORG": "qt", "CALIBRATE": "1", "CELLS": "2 4 6"}
+    done = _run_job("partition_sensitivity.sbatch", tmp_path, **env)
+    assert done.returncode == 0, done.stderr
+    call = (tmp_path / "home" / "uv.calls").read_text()
+    assert "partition-pilot-qt-likelihood-split-other-chains.json" in call
+    assert "--metric logprob_per_token:other" in call
+    assert "-logprob_per_token-other-chains-calibrated.json" in call
+    assert "--calibrate" in call and "--cells 2 4 6" in call
+    (tmp_path / "bad").mkdir()
+    refused = _run_job(
+        "partition_sensitivity.sbatch", tmp_path / "bad", **{**env, "CALIBRATE": "y"}
+    )
+    assert refused.returncode != 0 and "CALIBRATE must be 0 or 1" in refused.stderr

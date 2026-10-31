@@ -61,10 +61,14 @@ from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.corpus.windows import WINDOWS
+from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.cells import cell_of, cluster_of
 from sphragis.experiment.decomposition import (
+    COPRIMARY_METRIC,
     FAMILY_ALPHA,
     FOREIGN_SOURCES,
+    H2_RUNS,
+    REPLICATION_FAMILY,
     SESOI,
     halves,
     is_cpp,
@@ -122,7 +126,10 @@ parser.add_argument("--redraw", type=float, help="exact match: BINARY_REDRAW; co
 parser.add_argument("--hypothesis-power", type=float, default=0.95)
 # The admitted set is fixed at Stage 1 submission: one bound per possible count of H1 cells.
 parser.add_argument(
-    "--cells", type=int, nargs="+", help="H1 cells intersected (1 2 3 by default); H2 is one"
+    "--cells",
+    type=int,
+    nargs="+",
+    help="H1 cells intersected (2 4 6 by default, 1 for a replication member); H2 is one",
 )
 # Monte Carlo error of a power estimate at 1,000 trials: about 0.007 near 0.95, 0.004 near 0.983.
 # Trials share seeds across bisection steps, so power is compared on common random numbers.
@@ -150,7 +157,11 @@ parser.add_argument("--partitions", type=int, default=400, help="admissible part
 parser.add_argument("--max-seed", type=int, default=2_000, help="stop searching past this seed")
 # The per-example score simulated: exact match, binary, or the reference's mean log-probability
 # per token, continuous (research log, 2026-10-09). The pilot and placebo must be scored on it.
-parser.add_argument("--metric", choices=("exact_match", "logprob_per_token"), default="exact_match")
+parser.add_argument(
+    "--metric",
+    choices=("exact_match", "logprob_per_token", COPRIMARY_METRIC),
+    default="exact_match",
+)
 parser.add_argument(
     "--chains",
     type=Path,
@@ -160,6 +171,13 @@ parser.add_argument(
 # null alone, without the detectable-effect bisection.
 parser.add_argument("--runs", type=int, help="K to simulate in place of the pilot's sizing")
 parser.add_argument("--null-only", action="store_true", help="the null's rates only, no bisection")
+# H2 at K = 40 holds its null at 95% but not at 97.5% (research log, 2026-10-29), so its critical
+# value is calibrated from the simulated null at each spread point (research log, 2026-10-30).
+parser.add_argument(
+    "--calibrate",
+    action="store_true",
+    help="read a cell supported at p below the null's alpha-quantile, never above alpha",
+)
 parser.add_argument(
     "--foreign-source",
     choices=FOREIGN_SOURCES,
@@ -277,7 +295,9 @@ def plan_cell(
             f"the pilot is {hypothesis}'s cell against {source}, not against {foreign_source}"
         )
     if hypothesis == "H1":
-        cells = cells or [1, 2, 3]
+        # Each admitted organization is two H1 cells, one per co-primary score; a GitHub
+        # replication member is read alone, as one cell (`registered_read`).
+        cells = cells or ([1] if org in REPLICATION_FAMILY else [2, 4, 6])
         if min(cells) < 1:
             raise ValueError("--cells counts H1 cells, at least one")
         return cells, int(projected), None
@@ -438,6 +458,7 @@ def trial(job: tuple) -> dict:
     intervals = {c: percentile_interval(draws, c) for c in levels}
     out = {
         "estimate": estimate,
+        "p": one_sided_p(draws),
         "supported": {c: lo > 0.0 for c, (lo, _) in intervals.items()},
         "high": {c: hi for c, (_, hi) in intervals.items()},
         "absent": {c: lo > -_SESOI and hi < _SESOI for c, (lo, hi) in intervals.items()},
@@ -564,6 +585,23 @@ def _trials(executor, pool, args, lift, sigma_run, levels, check=False, count=No
     )
 
 
+def critical_p(null: list[dict], level: float) -> float:
+    """The one-sided p below which a cell reads supported, calibrated on `null`'s studies: their
+    alpha-quantile, so no more than alpha of them fall below it (Loh 1987; research log,
+    2026-10-30). `supported` also requires the interval, so calibration only ever tightens it."""
+    if not null:
+        raise ValueError("a critical p needs null studies to calibrate on")
+    alpha = (1.0 - level) / 2.0
+    ps = sorted(t["p"] for t in null)
+    return ps[int(alpha * len(ps))]
+
+
+def supported(t: dict, level: float, critical: dict[float, float] | None) -> bool:
+    """Whether trial `t` reads supported at `level`: its interval, and with a calibrated critical
+    p, its p below that too."""
+    return t["supported"][level] and (critical is None or t["p"] < critical[level])
+
+
 def _cached_trials(
     at_lift: dict[float, list[dict]], executor, pool, args, lift, sigma_run, levels
 ) -> list[dict]:
@@ -631,8 +669,18 @@ def main() -> None:
     k_source = f"{args.pilot}: sizing.runs" if args.runs is None else "--runs"
     args.runs = sized if args.runs is None else args.runs
     hypothesis, foreign_source = cell_of(pilot)
+    # A critical value is calibrated only where registered: H2's, at its registered K, and an H1
+    # cell's on the co-primary score, should its null miss nominal at the cell's K (research
+    # log, 2026-10-30); the whole score's H1 cells read their interval.
+    if hypothesis == "H2" and args.metric == COPRIMARY_METRIC:
+        raise SystemExit("the co-primary score is H1's; H2 is read on the whole score")
+    if args.calibrate and hypothesis == "H1" and args.metric != COPRIMARY_METRIC:
+        raise SystemExit("--calibrate is registered for H2 and H1's co-primary score alone")
+    if args.calibrate and hypothesis == "H2" and args.runs != H2_RUNS:
+        raise SystemExit(f"H2 is calibrated at its registered K = {H2_RUNS}, not {args.runs}")
     cell_power = {str(k): args.hypothesis_power ** (1 / k) for k in sorted(set(args.cells))}
-    if max(args.trials, args.null_trials) > CALIBRATION_SEED_OFFSET:
+    nulls = args.null_trials * (2 if args.calibrate else 1)
+    if max(args.trials, nulls) > CALIBRATION_SEED_OFFSET:
         raise SystemExit(f"trial seeds would reach the calibration's at {CALIBRATION_SEED_OFFSET}")
     if args.partitions < 2 * K_MAX:
         raise SystemExit(f"--partitions {args.partitions}: two disjoint sets of {K_MAX} are drawn")
@@ -718,6 +766,7 @@ def main() -> None:
         "xi": sesoi,
         "runs": args.runs,
         "null_only": args.null_only,
+        "calibrated": args.calibrate,
         "levels": levels,
         "trials": args.trials,
         "null_trials": args.null_trials,
@@ -748,12 +797,27 @@ def main() -> None:
                 f"{sigma_run:.4f} (realised {calibration['spread']:.4f})",
                 flush=True,
             )
-            null = _trials(
-                executor, pool, args, 0.0, sigma_run, levels, True, count=args.null_trials
+            # Calibrating reads twice the null studies: the first half sets the critical p, and
+            # the second, independent of it, measures the calibrated test's rate.
+            studies = _trials(
+                executor,
+                pool,
+                args,
+                0.0,
+                sigma_run,
+                levels,
+                True,
+                count=args.null_trials * (2 if args.calibrate else 1),
             )
+            null, fresh = studies[: args.null_trials], studies[args.null_trials :]
+            critical = {c: critical_p(null, c) for c in levels} if args.calibrate else None
             entry: dict = {
                 "calibration": calibration,
                 "null_false_positive": {c: fmean(t["supported"][c] for t in null) for c in levels},
+                "critical_p": critical,
+                "null_false_positive_calibrated": None
+                if critical is None
+                else {c: fmean(supported(t, c, critical) for t in fresh) for c in levels},
                 "null_reads_absent": {c: fmean(t["absent"][c] for t in null) for c in levels},
                 "reproducibility_failure": fmean(t["disagree"] for t in null),
                 "by_level": {},
@@ -774,7 +838,7 @@ def main() -> None:
                         trials = _cached_trials(
                             at_lift, executor, pool, args, mid, sigma_run, levels
                         )
-                        if fmean(t["supported"][level] for t in trials) >= target_power:
+                        if fmean(supported(t, level, critical) for t in trials) >= target_power:
                             high = mid
                         else:
                             low = mid
@@ -799,7 +863,14 @@ def main() -> None:
                     print(
                         f"{label} (sigma_run {sigma_run:.4f}) at {level}, {cells} cell(s), power "
                         f"{target_power:.4f}: detects {effect:+.4f}; null FP "
-                        f"{entry['null_false_positive'][level]:.3f}, bounded "
+                        f"{entry['null_false_positive'][level]:.3f}"
+                        + (
+                            ""
+                            if critical is None
+                            else f" (calibrated p < {critical[level]:.5f}: "
+                            f"{entry['null_false_positive_calibrated'][level]:.5f})"
+                        )
+                        + ", bounded "
                         f"{at['null_reads_bounded']:.3f}; reproducibility failure "
                         f"{entry['reproducibility_failure']:.3f}",
                         flush=True,

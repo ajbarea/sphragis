@@ -386,6 +386,17 @@ def require_test_read(
         report["k_from"].get("spread_targets"), simulation.get("spread_targets")
     ):
         raise ValueError(f"{org}: its simulation was calibrated on another pilot than K's")
+    # A critical p calibrated from the null at a registered K is the K's and its simulation's
+    # alike, at every level read (`partitions.registered_coverage`).
+    if bool(report["k_from"].get("calibrated")) != bool(simulation.get("calibrated")):
+        raise ValueError(f"{org}: its K and its simulation disagree on a calibrated critical p")
+    if report["k_from"].get("calibrated"):
+        try:
+            critical = by_level(report["k_from"].get("critical_p") or {})
+        except ValueError as error:
+            raise ValueError(f"{org}: critical p: {error}") from error
+        if set(critical) != set(read_at):
+            raise ValueError(f"{org}: its critical p is not at the levels it reads")
     if (report["resamples"], report["bootstrap_seed"]) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
         raise ValueError(
             f"{org}: read at {report['resamples']} resamples, seed {report['bootstrap_seed']}; "

@@ -15,6 +15,11 @@ full simulation at the pilot's own K); every K up to the first that holds must b
 
 From a pilot read under chains the artifact is `k-coverage-<org>-likelihood-chains.json`; a name
 that does not say the pilot's unit is refused, since the docs and the papers pick a K by its name.
+
+Where the registration fixes K rather than the grid (research log, 2026-10-30), `--registered-runs`
+reads the one simulation at that K (`partitions.registered_coverage`): H2's cell at `H2_RUNS`, and
+an H1 cell's co-primary score at the K its whole score took, its pilot that score's own. Where the
+null misses there, the simulation must be calibrated, and the artifact carries its critical p.
 """
 
 from __future__ import annotations
@@ -29,13 +34,21 @@ from sphragis.experiment.cells import (
     cluster_of,
     cluster_unit_of,
 )
-from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, coverage_runs
+from sphragis.experiment.decomposition import COPRIMARY_METRIC, H2_RUNS
+from sphragis.experiment.partitions import (
+    COVERAGE_NULL_TRIALS,
+    coverage_runs,
+    registered_coverage,
+)
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--pilot", type=Path, required=True, help="the development pilot K came from")
 parser.add_argument("--org", required=True)
 parser.add_argument("--grid", type=Path, nargs="+", required=True, help="its simulations by K")
+parser.add_argument(
+    "--registered-runs", type=int, help="the K the registration fixes: one simulation, no search"
+)
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -58,7 +71,30 @@ def main() -> None:
     if chains is not None:
         cluster = {**cluster, "sha256": chains}
     try:
-        k = coverage_runs(pilot, grid, org=args.org, name=str(args.pilot))
+        if args.registered_runs is None:
+            k = coverage_runs(pilot, grid, org=args.org, name=str(args.pilot))
+        else:
+            registered = (
+                args.registered_runs == H2_RUNS
+                if pilot.get("hypothesis") == "H2"
+                else pilot.get("metric") == COPRIMARY_METRIC
+            )
+            if not registered:
+                raise ValueError(
+                    f"K = {args.registered_runs} is registered only for H2, at {H2_RUNS}, and for "
+                    f"an H1 cell's {COPRIMARY_METRIC} score"
+                )
+            if len(grid) != 1:
+                raise ValueError("--registered-runs reads one simulation, at that K")
+            ((file, simulation),) = grid
+            k = registered_coverage(
+                pilot,
+                simulation,
+                org=args.org,
+                name=str(args.pilot),
+                file=file,
+                runs=args.registered_runs,
+            )
     except (KeyError, TypeError, ValueError) as error:
         raise SystemExit(f"not sized: {error}") from error
     out = {

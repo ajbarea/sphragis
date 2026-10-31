@@ -71,6 +71,9 @@ K_MAX = 40
 # at every Holm level, each rate over this many null studies.
 K_GRID = (10, 12, 15, 20, 25, 30, 35, 40)
 COVERAGE_NULL_TRIALS = 4_000
+# A calibrated critical p is refused if its test reads above this many times alpha on null
+# studies independent of those that set it: Bradley's (1978) liberal bound.
+BRADLEY_LIBERAL = 1.5
 # Every run scores the organization's deduplicated held-out examples. Only the per-half
 # boilerplate stage can still remove one in one partition and not another; above this share of
 # examples missing from any run, the runs are refused rather than read on a shrunken set. A
@@ -356,6 +359,97 @@ def coverage_runs(
     }
 
 
+def registered_coverage(
+    pilot: Mapping[str, Any],
+    simulation: Mapping[str, Any],
+    *,
+    org: str,
+    name: str,
+    file: str,
+    runs: int,
+) -> dict[str, Any]:
+    """The coverage rule's reading at a K the registration fixes rather than the grid finds.
+
+    H2's K is the grid's cap and H1's co-primary score is read at its cell's K (research log,
+    2026-10-30), so no search is run: `simulation`, of `org` on the pilot's metric and cell,
+    calibrated on this pilot, in its cluster unit, with `COVERAGE_NULL_TRIALS` null studies, at
+    `runs`, says whether the null holds there. Where it does not, the simulation must have
+    calibrated its critical p (`partition_sensitivity.py --calibrate`), which the reading carries;
+    where it does, it must not have, since only a miss is calibrated.
+    """
+    cell = cell_of(pilot)
+    unit, chains = cluster_of(pilot)
+    targets = spread_targets(pilot)
+    metric = pilot.get("metric", "exact_match")
+    levels = [level_key(c) for c in pilot["levels"]]
+    nominal = {c: one_sided_alpha(c) for c in levels}
+    checks = (
+        (simulation.get("org") == org, f"simulates {simulation.get('org')}, not {org}"),
+        (simulation.get("metric", "exact_match") == metric, f"is not on {metric}"),
+        (cell_of(simulation) == cell, f"simulates {cell_of(simulation)}, not {cell}"),
+        (cluster_of(simulation) == (unit, chains), "was not drawn as the pilot was"),
+        (
+            same_calibration(simulation.get("spread_targets"), targets),
+            f"was calibrated on another pilot than {name}",
+        ),
+        (
+            simulation.get("null_trials") == COVERAGE_NULL_TRIALS,
+            f"has {simulation.get('null_trials')} null studies, not {COVERAGE_NULL_TRIALS}",
+        ),
+        (simulation.get("runs") == runs, f"is at K = {simulation.get('runs')!r}, not {runs}"),
+    )
+    for holds, reason in checks:
+        if not holds:
+            raise ValueError(f"{file} {reason}")
+    entry = simulation["by_target"][REGISTERED_SPREAD_TARGET]
+    read = by_level(entry["null_false_positive"])
+    if set(read) != set(levels):
+        raise ValueError(f"{file}: null rates at {sorted(read)}, the pilot reads {levels}")
+    within = all(read[c] <= nominal[c] for c in levels)
+    calibrated = bool(simulation.get("calibrated"))
+    if within == calibrated:
+        raise ValueError(
+            f"{file}: the null {'holds' if within else 'misses'} nominal at K = {runs}, and the "
+            f"simulation is {'' if calibrated else 'not '}calibrated; only a miss is calibrated"
+        )
+    critical = by_level(entry["critical_p"]) if calibrated else None
+    if critical is not None and set(critical) != set(levels):
+        raise ValueError(f"{file}: critical p at {sorted(critical)}, the pilot reads {levels}")
+    # The rate the calibrated test reads on the second, independent null half: above Bradley's
+    # liberal bound, 1.5 alpha, at either level, the calibration did not carry over.
+    measured = by_level(entry["null_false_positive_calibrated"]) if calibrated else None
+    if measured is not None:
+        if set(measured) != set(levels):
+            raise ValueError(f"{file}: calibrated rates at {sorted(measured)}, not {levels}")
+        loose = [c for c in levels if measured[c] > BRADLEY_LIBERAL * nominal[c]]
+        if loose:
+            raise ValueError(
+                f"{file}: the calibrated test reads {[measured[c] for c in loose]} on the second "
+                f"null half at {loose}, above {BRADLEY_LIBERAL} alpha"
+            )
+    return {
+        "reproducibility_runs": None,
+        "coverage_runs": None,
+        "registered_runs": runs,
+        "runs": runs,
+        "nominal": {str(c): a for c, a in nominal.items()},
+        "grid": [
+            {
+                "runs": runs,
+                "file": file,
+                "null_false_positive": {str(c): r for c, r in read.items()},
+                "within_nominal": within,
+            }
+        ],
+        "calibrated": calibrated,
+        "critical_p": None if critical is None else {str(c): v for c, v in critical.items()},
+        "null_false_positive_calibrated": None
+        if measured is None
+        else {str(c): v for c, v in measured.items()},
+        "spread_targets": targets,
+    }
+
+
 def partition_run_windows(
     run: Mapping[str, Any], *, position: int, admissible: Sequence[int], train_size: int
 ) -> set[str]:
@@ -454,11 +548,13 @@ def h1_over_partitions(
     metric: str = "exact_match",
     sesoi: float = SESOI,
     contrast: Contrast = project_clusters,
+    critical: Mapping[float, float] | None = None,
 ) -> dict[str, Any]:
     """One organization's H1 cell over its first `runs_fixed` partition runs, in admissible order;
     with `contrast`, another cell read the same way (`h2_contrast`).
 
     `sesoi` is the metric's own: the readings and the reproducibility margin compare against it.
+    `critical`, the critical p its K source calibrated, tightens its verdicts (`read_intervals`).
 
     Runs computed past K are reported, each on its own examples, and never enter the cell: not
     its estimate, not its interval, not the set of examples it is read on.
@@ -490,7 +586,13 @@ def h1_over_partitions(
         "reproducibility": reproducibility(per_run, xi=sesoi),
         "runs_computed": len(runs),
         "runs_left_out": left_out,
-        **read_intervals(intervals, registered, sesoi=sesoi),
+        **read_intervals(
+            intervals,
+            registered,
+            sesoi=sesoi,
+            p=one_sided_p(draws),
+            critical=None if critical is None else by_level(critical),
+        ),
         # The inputs of the readings across organizations, beside the pass rule.
         "p_one_sided": one_sided_p(draws),
         "bootstrap_se": stdev(draws),

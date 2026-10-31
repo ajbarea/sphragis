@@ -8,6 +8,31 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **This branch (`registered/design-1030`, issue #232): five registered-design decisions, AJ 2026-10-30.**
+  (1) H2 at K = 40, its critical value calibrated from its simulated null (Bradley's liberal band,
+  Morris et al. MCSE); (2) H1 co-primary: `logprob_per_token:other` beside s, H1 passes only if
+  both pass (IUT); (3) four outcomes per cell (Lakens, SPPS 2017) beside the
+  unchanged pass rule; (4) mixed cells: per-cell verdicts plus the at-least-r-of-3 partial
+  conjunction, low power at r = 3 stated; (5) Fuchsia as an exploratory second foreign arm.
+  Order: [a] simulation code (`--metric logprob_per_token:other`, per-trial p, `--calibrate`) and
+  the other score's SESOI, so TIGRIS runs can go when nodes return (drained 10-30 11:29);
+  [b] verdict labels, co-primary gate (`coprimary_read`; own K source via `k_coverage.py
+  --registered-runs`, calibrated critical p applied in the gate and pilot), H2_RUNS, exploratory
+  guard; [c] registered-decisions.md, research-log entry. Review: rounds 1 to 4 (2 Blocking, 18
+  Should-fix) fixed; round 5 next. Next: [d] by-chain
+  other pilots (local, flock): `partition_pilot.py <run_files of
+  partition-pilot-<org>-likelihood-chains.json> --admissible
+  datasets/results/admissible-partitions-<org>.json --org <org> --metric logprob_per_token:other
+  --chains datasets/results/relation-chains-<org>.json --hypotheses 2 --bootstrap-seed 7 --out
+  datasets/results/partition-pilot-<org>-likelihood-split-other-chains.json`; [e] TIGRIS (`make
+  submit`): H2 `ORG=qt FOREIGN_SOURCE=chromium METRIC=logprob_per_token CHAINS=1 RUNS=40
+  CALIBRATE=1`, then `k_coverage.py --registered-runs 40`; per org `ORG=<org>
+  METRIC=logprob_per_token:other CHAINS=1 RUNS=<cell K: openstack 10, wikimedia 20, qt 10> CELLS="2
+  4 6"` (CALIBRATE=1 if its null misses), then `k_coverage.py --registered-runs <K>`; and
+  `METRIC=logprob_per_token CHAINS=1 RUNS=<K> CELLS="2 4 6"`; [f] Fuchsia: pool clearing, digest
+  constant, `--exploratory` in clear_foreign_pool/rq1_pilot/partition_pilot, arms; H2's test read
+  over partitions (applies its critical p); [g] P4 (papers) rules and tables from artifacts, `make
+  overleaf`. Review until clean at each PR.
 - **H2's development pilot and simulation (issue #228): done; P4 waits on the registration call.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects

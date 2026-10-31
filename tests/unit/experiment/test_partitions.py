@@ -748,3 +748,82 @@ def test_an_h2_pilot_is_sized_only_by_its_own_grid() -> None:
             coverage_runs(
                 pilot, [_grid_point(10, 0.001, 0.002, **other)], org="wikimedia", name="p"
             )
+
+
+def test_a_registered_k_reads_one_simulation_and_calibrates_only_a_miss() -> None:
+    """H2's K and the co-primary's are fixed, not searched (research log, 2026-10-30)."""
+    from sphragis.experiment.partitions import registered_coverage
+
+    held = registered_coverage(
+        _COVERAGE_PILOT,
+        _grid_point(40, 0.012, 0.024)[1],
+        org="wikimedia",
+        name="p",
+        file="f",
+        runs=40,
+    )
+    assert (held["runs"], held["calibrated"], held["critical_p"]) == (40, False, None)
+    assert held["grid"][0]["within_nominal"] is True
+    critical = {"0.975": 0.011, "0.95": 0.025}
+    missed = _grid_point(40, 0.01325, 0.0245, calibrated=True)[1]
+    measured = {"0.975": 0.0128, "0.95": 0.0251}
+    missed["by_target"]["sizing_bound_90"]["critical_p"] = critical
+    missed["by_target"]["sizing_bound_90"]["null_false_positive_calibrated"] = measured
+    read = registered_coverage(
+        _COVERAGE_PILOT, missed, org="wikimedia", name="p", file="f", runs=40
+    )
+    assert (read["calibrated"], read["critical_p"]) == (True, critical)
+    assert read["null_false_positive_calibrated"] == measured
+    assert read["grid"][0]["within_nominal"] is False
+
+
+@pytest.mark.parametrize(("strict", "loose"), [(0.0188, 0.0251), (0.0128, 0.0376)])
+def test_a_calibration_that_does_not_carry_to_the_second_null_half_is_refused(
+    strict: float, loose: float
+) -> None:
+    """Above Bradley's liberal bound, 1.5 alpha, on the half that did not set the critical p."""
+    from sphragis.experiment.partitions import registered_coverage
+
+    missed = _grid_point(40, 0.01325, 0.0245, calibrated=True)[1]
+    entry = missed["by_target"]["sizing_bound_90"]
+    entry["critical_p"] = {"0.975": 0.011, "0.95": 0.025}
+    entry["null_false_positive_calibrated"] = {"0.975": strict, "0.95": loose}
+    with pytest.raises(ValueError, match="second null half"):
+        registered_coverage(_COVERAGE_PILOT, missed, org="wikimedia", name="p", file="f", runs=40)
+    # At the bound itself the test still holds.
+    entry["null_false_positive_calibrated"] = {"0.975": 0.01875, "0.95": 0.0375}
+    registered_coverage(_COVERAGE_PILOT, missed, org="wikimedia", name="p", file="f", runs=40)
+
+
+@pytest.mark.parametrize(
+    ("simulation", "runs", "match"),
+    [
+        (
+            _grid_point(40, 0.01325, 0.0245)[1],
+            40,
+            "misses nominal at K = 40, and the simulation is not calibrated",
+        ),
+        (
+            _grid_point(40, 0.012, 0.024, calibrated=True)[1],
+            40,
+            "holds nominal at K = 40, and the simulation is calibrated",
+        ),
+        (_grid_point(35, 0.012, 0.024)[1], 40, "is at K = 35, not 40"),
+        (_grid_point(40, 0.012, 0.024, org="qt")[1], 40, "simulates qt"),
+        (_grid_point(40, 0.012, 0.024, null_trials=40)[1], 40, "40 null studies"),
+        (
+            _grid_point(40, 0.012, 0.024, spread_targets={"sizing_bound_90": 1.0})[1],
+            40,
+            "calibrated on another pilot",
+        ),
+    ],
+)
+def test_a_registered_k_refuses_a_simulation_it_cannot_read(
+    simulation: dict, runs: int, match: str
+) -> None:
+    from sphragis.experiment.partitions import registered_coverage
+
+    with pytest.raises(ValueError, match=match):
+        registered_coverage(
+            _COVERAGE_PILOT, simulation, org="wikimedia", name="p", file="f", runs=runs
+        )

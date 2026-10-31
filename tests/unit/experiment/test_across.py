@@ -358,3 +358,13 @@ def test_a_summary_that_cannot_be_computed_is_reported_unavailable(
             {o: c["estimate"] for o, c in cells.items()},
             {o: c["bootstrap_se"] for o, c in cells.items()},
         )
+
+
+def test_a_calibrated_critical_p_must_lie_within_alpha_for_a_cell_given() -> None:
+    cells = {"a": _h1(0.02, 0.005, 0.001), "b": _h1(0.01, 0.005, 0.002)}
+    for critical in ({"a": 0.02}, {"a": 0.0}, {"c": 0.01}):
+        with pytest.raises(ValueError, match="critical p"):
+            across_organizations(_filed(cells), confidence=0.975, critical=critical)
+    out = across_organizations(_filed(cells), confidence=0.975, critical={"a": 0.0005})
+    # a's p 0.001 is scaled to 0.025 against 0.0125; only b counts.
+    assert out["partial_conjunction"]["at_least"] == 1

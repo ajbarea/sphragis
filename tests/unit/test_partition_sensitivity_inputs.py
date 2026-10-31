@@ -83,6 +83,8 @@ def _likelihood(tmp_path: Path, *extra: str) -> subprocess.CompletedProcess[str]
         (["--metric", "exact_match"], "the pilot is scored on logprob_per_token"),
         (["--metric", "logprob"], "invalid choice"),
         (["--metric", "logprob_per_token", "--runs", "45"], "outside"),
+        (["--metric", "logprob_per_token", "--calibrate"], "--calibrate is registered for H2"),
+        (["--metric", "logprob_per_token:other"], "the pilot is scored on logprob_per_token"),
     ],
 )
 def test_a_likelihood_simulation_refuses_inputs_it_cannot_read(
@@ -163,8 +165,34 @@ def test_each_metric_sets_its_workers_continuity_and_sesoi(monkeypatch: pytest.M
         registered,
         (0.02, 0.13),
     )
+    assert partition_sensitivity.worker_args([], "logprob_per_token:other", (0.0, 0.0))[2] == (
+        registered
+    )
     with pytest.raises(SystemExit, match="no registered SESOI"):
         partition_sensitivity.worker_args([], "logprob", (0.0, 0.0))
+    with pytest.raises(SystemExit, match="no registered SESOI"):
+        partition_sensitivity.worker_args([], "logprob_per_token:identifier", (0.0, 0.0))
+
+
+def test_the_calibrated_critical_p_holds_the_null_at_alpha_and_never_loosens() -> None:
+    """A hot null's alpha-quantile tightens the test; a cold one's never loosens the interval."""
+    partition_sensitivity = _module()
+    level = 0.975
+    hot = [{"p": i / 1000} for i in range(1000)]
+    hot[:20] = [{"p": 0.0}] * 20
+    critical = partition_sensitivity.critical_p(hot, level)
+    assert sum(t["p"] < critical for t in hot) / len(hot) <= 0.0125
+    # A cold null's quantile sits above alpha, and the interval still decides.
+    cold = [{"p": 0.5}] * 1000
+    assert partition_sensitivity.critical_p(cold, level) == 0.5
+    with pytest.raises(ValueError, match="needs null studies"):
+        partition_sensitivity.critical_p([], level)
+    at_alpha = {"p": 0.0125, "supported": {level: False}}
+    assert not partition_sensitivity.supported(at_alpha, level, {level: 0.5})
+    trial = {"p": 0.01, "supported": {level: True}}
+    assert partition_sensitivity.supported(trial, level, None)
+    assert not partition_sensitivity.supported(trial, level, {level: 0.01})
+    assert partition_sensitivity.supported(trial, level, {level: 0.011})
 
 
 def test_a_continuous_trial_shifts_by_its_lift_and_reads_against_its_sesoi() -> None:
@@ -295,7 +323,13 @@ def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_on_its_cpp_share(
     h1 = partition_sensitivity.plan_cell(
         {"run_files": run}, **{**PLAN, "foreign_source": None, "projected": 300.9}
     )
-    assert h1 == ([1, 2, 3], 300, None)
+    # One to three admitted organizations, each two cells on the co-primary scores.
+    assert h1 == ([2, 4, 6], 300, None)
+    # A GitHub replication member is read alone, as one cell (`registered_read`).
+    member = partition_sensitivity.plan_cell(
+        {"run_files": run}, **{**PLAN, "org": "apache", "foreign_source": None, "projected": 300.0}
+    )
+    assert member[0] == [1]
     h2 = {**H2_PILOT, "run_files": run}
     plan = {**PLAN, "foreign_source": "aosp", "projected": 300.0}
     # Two of the pilot's three changes carry a C++ example: 200 of the 300 projected.

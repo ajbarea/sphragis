@@ -27,7 +27,8 @@ source sphragis/experiment/cluster-env.sh
 ORG="${ORG:-openstack}"
 # PILOT: the pilot artifact K and the run spread come from, the organization's own by default;
 # a rerun under another decoder names its pilot and takes a RUN_TAG for its result.
-# METRIC: exact_match, or logprob_per_token with a likelihood pilot; the result is named for it.
+# METRIC: exact_match, or logprob_per_token with a likelihood pilot, or H1's co-primary
+# logprob_per_token:other with its non-identifier pilot; the result is named for it.
 METRIC="${METRIC:-exact_match}"
 # FOREIGN_SOURCE: H2's cell against that source, simulated from its own pilot
 # (partition_pilot.py --hypothesis H2), under a pilot and result name of its own.
@@ -40,7 +41,10 @@ fi
 case "$METRIC" in
   exact_match) PILOT_TAG="" ;;
   logprob_per_token) PILOT_TAG="-likelihood"; RESULT_SUFFIX="$RESULT_SUFFIX-$METRIC" ;;
-  *) echo "METRIC must be exact_match or logprob_per_token, not $METRIC" >&2; exit 1 ;;
+  logprob_per_token:other) PILOT_TAG="-likelihood-split-other"
+    RESULT_SUFFIX="$RESULT_SUFFIX-logprob_per_token-other" ;;
+  *) echo "METRIC must be exact_match, logprob_per_token or logprob_per_token:other, not $METRIC" >&2
+     exit 1 ;;
 esac
 # CHAINS=1: relation chains as the drawn unit (research log, 2026-10-21), from the organization's
 # chain artifact and its pilot read under chains, under a result name of its own.
@@ -60,6 +64,15 @@ case "${NULL_ONLY:-0}" in
   0) ;;
   *) echo "NULL_ONLY must be 0 or 1, not $NULL_ONLY" >&2; exit 1 ;;
 esac
+# CALIBRATE=1: the critical p calibrated from the simulated null, where registered (H2 at its K,
+# H1's co-primary score; research log, 2026-10-30), under a result name of its own.
+case "${CALIBRATE:-0}" in
+  1) COVERAGE_ARGS+=(--calibrate); RESULT_SUFFIX="$RESULT_SUFFIX-calibrated" ;;
+  0) ;;
+  *) echo "CALIBRATE must be 0 or 1, not $CALIBRATE" >&2; exit 1 ;;
+esac
+# CELLS="2 4 6": the H1 cell counts bounds are read at; the script's default otherwise.
+if [ -n "${CELLS:-}" ]; then read -r -a CELL_COUNTS <<< "$CELLS"; COVERAGE_ARGS+=(--cells "${CELL_COUNTS[@]}"); fi
 # SMOKE=1: a few trials end to end before the full run, under a result name of its own.
 case "${SMOKE:-0}" in
   1) SMOKE_ARGS=(--trials 20 --null-trials 40 --calibration-trials 4 --steps 3); RESULT_SUFFIX="$RESULT_SUFFIX-smoke" ;;

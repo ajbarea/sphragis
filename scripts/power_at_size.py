@@ -37,7 +37,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 import partition_sensitivity  # noqa: E402
-from partition_sensitivity import Pool, _init, pools, trials_at, worker_args  # noqa: E402
+from partition_sensitivity import Pool, _init, pools, supported, trials_at, worker_args  # noqa: E402
 
 from sphragis.experiment.cells import by_level, is_count, level_key, same_calibration  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
@@ -90,6 +90,23 @@ def registered_lifts(
     return target["calibration"]["sigma_run"], out
 
 
+def registered_critical(
+    report: Mapping[str, Any], simulation: Mapping[str, Any]
+) -> dict[float, float] | None:
+    """The critical p the report's read applies, per level, where its K calibrated one: its K's,
+    which must be the simulation's at the spread target the report read."""
+    k_from = report.get("k_from") or {}
+    if bool(k_from.get("calibrated")) != bool(simulation.get("calibrated")):
+        raise ValueError("the report's K and the simulation disagree on a calibrated critical p")
+    if not k_from.get("calibrated"):
+        return None
+    at_k = by_level(k_from.get("critical_p") or {})
+    target = simulation["by_target"][report["sensitivity"]["spread_target"]]
+    if by_level(target.get("critical_p") or {}) != at_k:
+        raise ValueError("the report's K applies another critical p than the simulation's")
+    return at_k
+
+
 def recorded_pilot(simulation: Mapping[str, Any]) -> str:
     """The file name of the pilot the simulation calibrated on, from its recorded inputs."""
     source = simulation.get("inputs", {}).get("calibration_changes", "")
@@ -113,11 +130,14 @@ def power_at(
     sigma_run: float,
     lifts: Mapping[float, Mapping[str, float]],
     simulation: Mapping[str, Any],
+    critical: Mapping[float, float] | None = None,
 ) -> dict[float, dict[str, float]]:
     """Each level's power at its registered lift on `changes` changes, with its Monte Carlo SE.
 
     The trials take the simulation's own seed, churn, resamples and K. One set of trials per
-    distinct lift reads every level, as the simulation's bisection does.
+    distinct lift reads every level, as the simulation's bisection does. With a `critical` p,
+    calibrated at the projected size, a trial reads supported only below it too, as the read
+    applies it at any size.
     """
     if not is_count(changes):
         raise ValueError(f"changes {changes!r} is not a positive whole number")
@@ -141,7 +161,7 @@ def power_at(
                 runs=simulation["runs"],
                 count=trials,
             )
-        power = fmean(t["supported"][c] for t in at_lift[lift])
+        power = fmean(supported(t, c, critical) for t in at_lift[lift])
         out[c] = {
             **registered,
             "power": power,
@@ -173,6 +193,7 @@ def main() -> None:
         if recorded_pilot(simulation) != args.pilot.name:
             raise ValueError(f"the simulation calibrated on {recorded_pilot(simulation)}")
         sigma_run, lifts = registered_lifts(report, simulation)
+        critical = registered_critical(report, simulation)
     except (KeyError, TypeError, ValueError) as error:
         raise SystemExit(f"{args.report}: {error}") from error
     # Old artifacts predate the field and are exact match.
@@ -219,6 +240,7 @@ def main() -> None:
             sigma_run=sigma_run,
             lifts=lifts,
             simulation=simulation,
+            critical=critical,
         )
     for c, at in by_level_.items():
         print(
@@ -237,6 +259,7 @@ def main() -> None:
         "cells": report["sensitivity"]["cells"],
         "levels": report["levels"],
         "sigma_run": sigma_run,
+        "critical_p": None if critical is None else {str(c): v for c, v in critical.items()},
         "trials": simulation["trials"],
         "resamples": simulation["resamples"],
         "seed": simulation_seed(simulation),
