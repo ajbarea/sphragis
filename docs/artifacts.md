@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 823 artifacts under
+repository. This page is generated from those scripts: 826 artifacts under
 75 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -643,6 +643,7 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | `partition-pilot-openstack-likelihood-split-end.json` |
 | `partition-pilot-openstack-likelihood-split-identifier-lexer-sure.json` |
 | `partition-pilot-openstack-likelihood-split-identifier.json` |
+| `partition-pilot-openstack-likelihood-split-other-chains.json` |
 | `partition-pilot-openstack-likelihood-split-other-lexer-sure.json` |
 | `partition-pilot-openstack-likelihood-split-other.json` |
 | `partition-pilot-openstack-likelihood-split-other_changed-lexer-sure.json` |
@@ -666,6 +667,7 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | `partition-pilot-qt-likelihood-split-end.json` |
 | `partition-pilot-qt-likelihood-split-identifier-lexer-sure.json` |
 | `partition-pilot-qt-likelihood-split-identifier.json` |
+| `partition-pilot-qt-likelihood-split-other-chains.json` |
 | `partition-pilot-qt-likelihood-split-other-lexer-sure.json` |
 | `partition-pilot-qt-likelihood-split-other.json` |
 | `partition-pilot-qt-likelihood-split-other_changed-lexer-sure.json` |
@@ -685,6 +687,7 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | `partition-pilot-wikimedia-likelihood-split-end.json` |
 | `partition-pilot-wikimedia-likelihood-split-identifier-lexer-sure.json` |
 | `partition-pilot-wikimedia-likelihood-split-identifier.json` |
+| `partition-pilot-wikimedia-likelihood-split-other-chains.json` |
 | `partition-pilot-wikimedia-likelihood-split-other-lexer-sure.json` |
 | `partition-pilot-wikimedia-likelihood-split-other.json` |
 | `partition-pilot-wikimedia-likelihood-split-other_changed-lexer-sure.json` |

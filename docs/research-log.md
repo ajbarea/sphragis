@@ -11097,3 +11097,24 @@ at either level (Bradley 1978); the H1 gate refuses bounds powered at another cr
 its K's; power at a realised test size reads the cell with its K's critical p, as the read does
 at any size; and a GitHub replication member, never calibrated, is simulated at one cell by
 default and reported with the four outcomes.
+
+### The non-identifier score's development pilots by chain (2026-10-30)
+
+`# research(2026-10)`. The co-primary score (`logprob_per_token:other`, entry above) read over each
+organization's 22 development partition runs with relation chains as the drawn unit, the Gerrit
+test read's (`partition_pilot.py --metric logprob_per_token:other --chains`, two Holm levels,
+bootstrap seed 7; `partition-pilot-<org>-likelihood-split-other-chains.json`). Development
+readings only, binding nothing:
+
+| organization | estimate | 97.5% interval | 95% interval | reading |
+|---|---|---|---|---|
+| OpenStack | +0.0100 | [+0.0002, +0.0222] | [+0.0012, +0.0203] | supported at both |
+| Wikimedia | +0.0045 | [-0.0006, +0.0103] | [-0.0000, +0.0094] | inconclusive at both |
+| Qt | +0.0056 | [+0.0013, +0.0099] | [+0.0018, +0.0094] | supported at both |
+
+Each pilot's own sizing gives K = 10. These pilots are the inputs the co-primary simulations at
+each cell's K (OpenStack 10, Wikimedia 20, Qt 10) calibrate on; their K sources follow from those
+simulations (`k_coverage.py --registered-runs`). Submitted the same day on TIGRIS, pinned at
+f33389c: H2's calibrated simulation at K = 40 (job 691131, after smoke 691129) and the whole
+score at six H1 cells per organization (`RUN_TAG=rp1.0-cells6`, jobs 691135 to 691137, after
+smoke 691130).
