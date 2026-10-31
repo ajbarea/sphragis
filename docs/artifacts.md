@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 826 artifacts under
+repository. This page is generated from those scripts: 827 artifacts under
 75 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -143,6 +143,7 @@ H2's registered foreign pool as the stop rule found it covering, written once fo
 | artifact |
 |---|
 | `foreign-pool-cleared-chromium.json` |
+| `foreign-pool-cleared-fuchsia.json` |
 
 ## `scripts/client_attribution.py`
 
@@ -1369,7 +1370,6 @@ These are committed artifacts that no `claim_result`, no `--out` example and no
 script name accounts for. Each is a measurement whose producer has to be read out
 of the research log rather than out of the code.
 
-- `foreign-pool-cleared-fuchsia.json`
 - `manifest-openstack-v2.json`
 - `rq1-qtfull-fp32-seeds.json`
 - `rq1-r256-seeds.json`

@@ -9,7 +9,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **Issue #232, five registered-design decisions (AJ 2026-10-30).** Code and rules merged (#233,
-  five review rounds, last clean). Branch `results/design-1030` (worktree `design-runs`): the
+  five review rounds, last clean). Branch `results/design-1030-runs` (worktree `design-runs`, PR #235): the
   non-identifier score's by-chain pilots committed (research log, 2026-10-30). TIGRIS, pinned:
   H2 calibrated at K = 40 (smoke 691129 -> 691131, `...-foreignchromium-logprob_per_token-chains-
   k40-calibrated.json`); whole score at six cells (smoke 691130 -> 691135 openstack K 10, 691136
@@ -18,7 +18,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   k<K>.json`). When they land: `make pull-logs`, copy results, then `k_coverage.py --pilot <pilot>
   --org <org> --registered-runs <K> --grid <sim> --out k-coverage-<org>-likelihood-split-other-
   chains.json` per org (a miss needs a `CALIBRATE=1` rerun) and for H2 (`k-coverage-qt-
-  foreignchromium-likelihood-chains-k40.json`); research-log tables via `sim_table.py`; then P4
+  foreignchromium-likelihood-chains.json`, the name `k_coverage.py` takes for a chain read); research-log tables via `sim_table.py`; then P4
   (papers `org-house-style/`: Table I, registered decisions, stale H2 text) and `make overleaf`.
   A number that moves a registered decision goes to AJ first. Fuchsia's exploratory arm: wired
   (#234); pool cleared at its registered digest and copied to TIGRIS

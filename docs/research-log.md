@@ -11117,8 +11117,11 @@ each cell's K (OpenStack 10, Wikimedia 20, Qt 10) calibrate on; their K sources 
 simulations (`k_coverage.py --registered-runs`). Submitted the same day on TIGRIS, pinned at
 f33389c: H2's calibrated simulation at K = 40 (job 691131, after smoke 691129) and the whole
 score at six H1 cells per organization (`RUN_TAG=rp1.0-cells6`, jobs 691135 to 691137, after
-smoke 691130); then, pinned at 7a6e262, which commits these pilots, the non-identifier score at
-each cell's K (jobs 691146 to 691148, after smoke 691145).
+smoke 691130); then, pinned at 7a6e262 (tag `cluster-pin-7a6e262`), which commits these pilots,
+the non-identifier score at each cell's K (jobs 691146 to 691148, after smoke 691145). Qt's pilot
+was written again afterwards with its 22 generation runs beside it, so its outcome-neutral record
+reads them (22 of 22 recorded and holding; the first copy had found none); every other field,
+the estimate and spread the simulation reads included, is unchanged.
 
 ### Fuchsia's exploratory arm wired (2026-10-30)
 

@@ -1,6 +1,7 @@
 {
   "hypothesis": "H1",
   "foreign_source": null,
+  "exploratory": false,
   "run_files": [
     "datasets/results/likelihood-partition-qt-p4-n1850-rp1.0.json",
     "datasets/results/likelihood-partition-qt-p7-s2-n1850-rp1.0.json",
@@ -49,113 +50,113 @@
   "outcome_neutral_runs": [
     {
       "file": "datasets/results/likelihood-partition-qt-p4-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p7-s2-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p11-s3-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p12-s4-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p13-s5-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p16-s6-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p18-s7-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p19-s8-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p20-s9-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p21-s10-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p25-s11-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p26-s12-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p27-s13-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p29-s14-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p32-s15-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p33-s16-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p35-s17-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p36-s18-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p37-s19-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p39-s20-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p41-s21-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     },
     {
       "file": "datasets/results/likelihood-partition-qt-p44-s22-n1850-rp1.0.json",
-      "recorded": false,
-      "holds": false
+      "recorded": true,
+      "holds": true
     }
   ],
   "org": "qt",
@@ -251,10 +252,10 @@
     "chains": 363
   },
   "provenance": {
-    "generated_at": "2026-10-31T00:48:14.896472+00:00",
+    "generated_at": "2026-10-31T01:59:44.058590+00:00",
     "git": {
-      "commit": "f33389c56959eb61f75f3d879f2b1f6803a6314d",
-      "branch": "results/design-1030"
+      "commit": "cacecd81c0d30a93ebe87101321f104c015c96a1",
+      "branch": "results/design-1030-runs"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
