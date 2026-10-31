@@ -450,9 +450,9 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   written permission (2026-10-14), so AOSP may enter again through the NoteDb route once it is
   granted and its data audit shows how
   Android's 2025 move to internal development changed its public review stream in the windows.
-- [ ] **A written "not human subjects research" determination** from RIT HSRO, to cite in the
-  ethics section. HSRO's director gave it in person on 2026-10-23, and the written form was asked for
-  the same day, with what becomes of IRB0000393 (research log, 2026-10-23).
+- [x] **A written "not human subjects research" determination** from RIT HSRO, to cite in the
+  ethics section. Given in person on 2026-10-23 and in writing on 2026-10-28: the study does not
+  fall under 45 CFR 46.102 or HSRO's oversight (protocol IRB0000393; research log, 2026-10-28).
 - [x] **GitHub's written confirmation** is not a gate (AJ, 2026-10-19; research log): the request of
   2026-10-10 to GitHub's privacy team drew only that inbox's automatic reply, and the family is read
   under its Acceptable Use Policies' research clause (section 7: public information, open-access
@@ -783,8 +783,8 @@ as the unit; the evidence says the codebase is.
 - [x] Foreign-source hosts need written permission (2026-10-14): Chromium granted first
   (2026-10-15), so the source is Chromium's pool once it covers every matched draw; V8's, read
   under the self-imposed cap, did not, and the pool is registered again over every code project
-  (research log, 2026-10-19). Open, AJ's: whether
-  IRB0000393 needs an amendment naming it.
+  (research log, 2026-10-19). No IRB0000393 amendment is needed: HSRO
+  determined on 2026-10-28 that the study is outside its oversight (research log, 2026-10-28).
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research
   log, 2026-09-27).

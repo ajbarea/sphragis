@@ -11138,3 +11138,18 @@ pool was cleared at that digest (`clear_foreign_pool.py --exploratory`;
 `foreign-pool-cleared-fuchsia.json`), copied to TIGRIS with its sha256 equal at both ends, and
 the arms and their scoring submitted on Qt's 22 development runs (TIGRIS jobs 691192 to 691235,
 pinned at 7e106f1). Next: read sibling minus Fuchsia beside sibling minus Chromium.
+
+### HSRO's determination in writing: not human-subjects research, protocol IRB0000393 (2026-10-28)
+
+`# research(2026-10)`. The written form of the 2026-10-23 answer, requested that day, arrived on
+2026-10-28 as Novelution's "IRB Determination Notice for IRB0000393" from Heather Foti, HSRO's
+director. Its words: HSRO "determined it does not fall under the federal definition of research with
+human subjects as defined at 45CFR46.102. Your project does not fall under the oversight of the
+HSRO." Protocol title: "Learning organizations' unwritten code review conventions from public code
+review data"; PI AJ Barea; determination date 10/28/2026. The signed letter (Form C) is attached to
+that email in AJ's RIT mailbox and is not copied into this public repository.
+
+This closes the determination the 2026-10-08 entry called due, and it is now citable: the Stage 1
+report's Ethics paragraph may state that RIT's HSRO determined on 2026-10-28 that the study is not
+human-subjects research (45 CFR 46.102; protocol IRB0000393). No amendment for a new source is
+needed, since the study sits outside HSRO's oversight.
