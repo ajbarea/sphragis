@@ -18,13 +18,12 @@ import torch
 from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.decomposition import (
-    FOREIGN_POOL_SHA256,
     FOREIGN_SOURCES,
     FOREIGN_SPANS,
     halves,
     is_cpp,
     matched_foreign_arms,
-    require_registered_source,
+    registered_pool,
 )
 from sphragis.experiment.holdout import (
     cleared_pool,
@@ -135,6 +134,11 @@ parser.add_argument(
 )
 parser.add_argument("--foreign-source", choices=FOREIGN_SOURCES, help="with --foreign-pool")
 parser.add_argument(
+    "--exploratory",
+    action="store_true",
+    help="with --foreign-source: H2's exploratory source, its arms beside the registered ones",
+)
+parser.add_argument(
     "--dry-run",
     action="store_true",
     help="report the split and exit, before any model is loaded: runs on a login node",
@@ -196,6 +200,8 @@ foreign: dict[str, str] = {}
 foreign_record: dict | None = None
 if bool(args.foreign_pool) != bool(args.foreign_source):
     raise SystemExit("--foreign-pool and --foreign-source come together")
+if args.exploratory and not args.foreign_source:
+    raise SystemExit("--exploratory comes with --foreign-source")
 if args.foreign_pool:
     if args.corpus or len(orgs) != 2 or orgs != halves(orgs[0].removesuffix("-a")):
         raise SystemExit("foreign arms are drawn for one organization's two halves under --root")
@@ -206,14 +212,14 @@ if args.foreign_pool:
     if not args.reuse_from:
         raise SystemExit("foreign arms are added to a stored run: pass its --reuse-from")
     try:
-        require_registered_source(args.foreign_source)
+        registered = registered_pool(args.foreign_source, exploratory=args.exploratory)
         pool = cleared_pool(
             args.foreign_pool, args.foreign_source, FOREIGN_SPANS[args.foreign_source]
         )
         # The pool the stop rule covered, cleared of Qt's copies, and no other.
-        if pool_digest(pool) != FOREIGN_POOL_SHA256:
+        if pool_digest(pool) != registered:
             raise ValueError(
-                f"{args.foreign_pool} is not the registered pool (sha256 {FOREIGN_POOL_SHA256})"
+                f"{args.foreign_pool} is not the registered pool (sha256 {registered})"
             )
         drawn, foreign = matched_foreign_arms(
             train_rows,
@@ -232,6 +238,7 @@ if args.foreign_pool:
             raise SystemExit(f"{arm}: {len(copied)} of {evaluated}'s held-out pairs in its draw")
     foreign_record = {
         "source": args.foreign_source,
+        "exploratory": args.exploratory,
         "pool": str(args.foreign_pool),
         "pool_sha256": pool_digest(pool),
         "pool_examples": len(pool),

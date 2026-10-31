@@ -2336,3 +2336,26 @@ def test_the_registered_pool_is_the_one_the_stop_rule_covered() -> None:
     )
     assert coverage["stop_rule"]["covers_every_draw"]
     assert coverage["stop_rule"]["digest"] == decomposition.FOREIGN_POOL_SHA256
+
+
+def test_the_exploratory_pool_is_the_one_its_stop_rule_covered() -> None:
+    source = decomposition.EXPLORATORY_FOREIGN_SOURCE
+    coverage = json.loads(
+        (
+            Path(__file__).resolve().parents[3]
+            / f"datasets/results/foreign-pool-coverage-{source}.json"
+        ).read_text()
+    )
+    assert coverage["source"] == source and coverage["stop_rule"]["against"] == "qt"
+    assert coverage["stop_rule"]["covers_every_draw"]
+    assert coverage["stop_rule"]["digest"] == decomposition.EXPLORATORY_POOL_SHA256
+
+
+def test_each_source_trains_on_its_own_registered_pool() -> None:
+    assert decomposition.registered_pool("chromium") == decomposition.FOREIGN_POOL_SHA256
+    assert decomposition.registered_pool("fuchsia", exploratory=True) == (
+        decomposition.EXPLORATORY_POOL_SHA256
+    )
+    for source, exploratory in (("fuchsia", False), ("chromium", True), ("aosp", True)):
+        with pytest.raises(ValueError, match="foreign source is"):
+            decomposition.registered_pool(source, exploratory=exploratory)

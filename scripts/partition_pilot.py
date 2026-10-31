@@ -137,6 +137,9 @@ parser.add_argument(
 # development window only: its bounds come from its own simulation, which this read sizes.
 parser.add_argument("--hypothesis", choices=("H1", "H2"), default="H1")
 parser.add_argument("--foreign-source", choices=FOREIGN_SOURCES, help="with --hypothesis H2")
+# H2's exploratory second foreign arm (`decomposition.EXPLORATORY_FOREIGN_SOURCE`), read beside the
+# registered one on the same runs and binding no verdict.
+parser.add_argument("--exploratory", action="store_true", help="with --foreign-source")
 parser.add_argument("--bootstrap-seed", type=int, default=TEST_BOOTSTRAP_SEED)
 # The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=TEST_RESAMPLES)
@@ -234,9 +237,18 @@ def main() -> None:
         raise SystemExit("--foreign-source comes with --hypothesis H2, and H2 needs it")
     if h2 and args.org != H2_ORGANIZATION:
         raise SystemExit(f"H2's cell is {H2_ORGANIZATION}'s, not {args.org}'s")
+    if args.exploratory and not h2:
+        raise SystemExit("--exploratory reads H2's exploratory arm: it comes with --hypothesis H2")
+    if args.exploratory and (args.sizing or args.sensitivity):
+        raise SystemExit(
+            "the exploratory arm sizes and simulates nothing: no --sizing or --sensitivity"
+        )
+    registered = None
     if h2:
         try:
-            decomposition.require_registered_source(args.foreign_source)
+            registered = decomposition.registered_pool(
+                args.foreign_source, exploratory=args.exploratory
+            )
         except ValueError as error:
             raise SystemExit(str(error)) from error
     if h2 and (args.replication or args.without or args.planted or args.sensitivity):
@@ -320,10 +332,9 @@ def main() -> None:
         }
     if h2 and (len(pools) != 1 or None in pools):
         raise SystemExit("an H2 cell's runs must all draw their arms from one recorded pool")
-    if h2 and pools != {decomposition.FOREIGN_POOL_SHA256}:
+    if h2 and pools != {registered}:
         raise SystemExit(
-            f"an H2 cell's arms drew from {pools.pop()}, not the registered pool "
-            f"{decomposition.FOREIGN_POOL_SHA256}"
+            f"an H2 cell's arms drew from {pools.pop()}, not the registered pool {registered}"
         )
     if windows == {"train -> test"}:
         window = "test"
@@ -593,6 +604,7 @@ def main() -> None:
     head = {
         "hypothesis",
         "foreign_source",
+        "exploratory",
         "run_files",
         "metric",
         "sesoi",
@@ -616,6 +628,7 @@ def main() -> None:
     report = {
         "hypothesis": args.hypothesis,
         "foreign_source": args.foreign_source,
+        "exploratory": args.exploratory,
         "run_files": [str(p) for p in args.runs],
         "metric": args.metric,
         "sesoi": sesoi,

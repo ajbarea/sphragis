@@ -1132,6 +1132,48 @@ def test_an_h2_development_read_is_sibling_against_matched_foreign_on_cpp(
     assert report["window"] == "development"
 
 
+def test_the_exploratory_arm_is_read_beside_the_registered_one_at_its_own_pool(
+    tmp_path, monkeypatch
+) -> None:
+    """Its runs draw from the exploratory pool; the read records itself exploratory."""
+    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", "chromium")
+    monkeypatch.setattr(decomposition, "EXPLORATORY_FOREIGN_SOURCE", "aosp")
+    monkeypatch.setattr(decomposition, "EXPLORATORY_POOL_SHA256", "p1")
+    out = tmp_path / "out.json"
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    _main(monkeypatch, [*argv, "--exploratory", "--resamples", "2000", "--out", str(out)])
+    report = json.loads(out.read_text())
+    assert (report["foreign_source"], report["exploratory"]) == ("aosp", True)
+    # Not as the registered source, nor at another pool.
+    with pytest.raises(SystemExit, match="registered foreign source is chromium, not aosp"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "o1.json")])
+    monkeypatch.setattr(decomposition, "EXPLORATORY_POOL_SHA256", "p9")
+    with pytest.raises(SystemExit, match="drew from p1, not the registered pool p9"):
+        _main(monkeypatch, [*argv, "--exploratory", "--out", str(tmp_path / "o2.json")])
+
+
+@pytest.mark.parametrize(
+    ("extra", "message"),
+    [
+        (["--sizing", "k.json"], "sizes and simulates nothing"),
+        (["--sensitivity", "s.json"], "sizes and simulates nothing"),
+    ],
+)
+def test_the_exploratory_arm_sizes_and_simulates_nothing(
+    tmp_path, monkeypatch, extra: list[str], message: str
+) -> None:
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    with pytest.raises(SystemExit, match=message):
+        _main(monkeypatch, [*argv, "--exploratory", *extra, "--out", str(tmp_path / "o.json")])
+
+
+def test_the_exploratory_flag_reads_h2_only(tmp_path, monkeypatch) -> None:
+    with pytest.raises(SystemExit, match="comes with --hypothesis H2"):
+        _main(
+            monkeypatch, [*_inputs(tmp_path, "qt"), "--exploratory", "--out", str(tmp_path / "o")]
+        )
+
+
 def test_an_h2_read_under_chains_draws_the_cells_cpp_changes_by_chain(
     tmp_path, monkeypatch
 ) -> None:

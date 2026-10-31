@@ -136,7 +136,7 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [x] **H2's source**: the first of Chromium, Fuchsia and AOSP whose pool over Qt's training months
   covers every draw (scope and stop rule in the research log, 2026-10-19). Chromium's covers with
   its first project, `chromium/src`, so Chromium is the source and `FOREIGN_SOURCE` is set
-  (research log, 2026-10-27); Fuchsia's also covers (2026-10-20) and is not used.
+  (research log, 2026-10-27); Fuchsia's also covers (2026-10-20) and trains H2's exploratory second arm (2026-10-30).
 
 ## Plan B — measurement
 

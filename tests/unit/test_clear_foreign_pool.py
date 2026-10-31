@@ -88,8 +88,22 @@ def test_only_the_registered_sources_covering_stop_rule_is_cleared(
 
 
 def test_the_registered_stop_rule_is_read(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(clear, "FOREIGN_POOL_SHA256", pool_digest(KEPT))
+    monkeypatch.setattr(decomposition, "FOREIGN_POOL_SHA256", pool_digest(KEPT))
     assert clear.stop_rule({"source": "chromium", "stop_rule": _stop()}, "qt") == _stop()
+
+
+def test_the_exploratory_source_is_cleared_only_as_exploratory_at_its_own_digest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fuchsia = {"source": "fuchsia", "stop_rule": _stop()}
+    with pytest.raises(SystemExit, match="not the registered one"):
+        clear.stop_rule(fuchsia, "qt", exploratory=True)
+    monkeypatch.setattr(decomposition, "EXPLORATORY_POOL_SHA256", pool_digest(KEPT))
+    assert clear.stop_rule(fuchsia, "qt", exploratory=True) == _stop()
+    with pytest.raises(SystemExit, match="registered foreign source is chromium"):
+        clear.stop_rule(fuchsia, "qt")
+    with pytest.raises(SystemExit, match="exploratory foreign source is fuchsia, not chromium"):
+        clear.stop_rule({"source": "chromium", "stop_rule": _stop()}, "qt", exploratory=True)
 
 
 def test_the_arms_read_the_cleared_file_inside_the_span(tmp_path: Path) -> None:
@@ -152,7 +166,7 @@ def test_the_written_pool_is_the_one_the_coverage_stop_rule_read(
     cover.main()
     stop = json.loads(coverage.read_text())["stop_rule"]
     assert stop["projects"] == 1 and stop["covers_every_draw"]
-    monkeypatch.setattr(clear, "FOREIGN_POOL_SHA256", stop["digest"])
+    monkeypatch.setattr(decomposition, "FOREIGN_POOL_SHA256", stop["digest"])
     out = tmp_path / "cleared" / "chromium.jsonl"
     out.parent.mkdir()
     monkeypatch.setattr(

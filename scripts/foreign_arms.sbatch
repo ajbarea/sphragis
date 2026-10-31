@@ -27,6 +27,13 @@ TRAIN_SIZE="${TRAIN_SIZE:?set TRAIN_SIZE of the stored run}"
 SEEDS="${SEEDS:?set SEEDS of the stored run}"
 FOREIGN_SOURCE="${FOREIGN_SOURCE:?set FOREIGN_SOURCE to the foreign source}"
 FOREIGN_POOL="${FOREIGN_POOL:?set FOREIGN_POOL to its cleared pool (clear_foreign_pool.py)}"
+# EXPLORATORY=1: H2's exploratory source (decomposition.EXPLORATORY_FOREIGN_SOURCE), its arms
+# trained beside the registered source's on the same stored run.
+case "${EXPLORATORY:-0}" in
+  1) EXPLORATORY_ARGS=(--exploratory) ;;
+  0) EXPLORATORY_ARGS=() ;;
+  *) echo "EXPLORATORY must be 0 or 1, not $EXPLORATORY" >&2; exit 1 ;;
+esac
 if [ -n "${PLANT:-}" ]; then
   echo "foreign arms are drawn for an unplanted run only" >&2
   exit 1
@@ -48,5 +55,6 @@ uv run --no-sync python scripts/rq1_pilot.py \
   --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-$NAME$RESULT_SUFFIX" \
   --reuse-from "$STORED" \
   --foreign-pool "$FOREIGN_POOL" --foreign-source "$FOREIGN_SOURCE" \
+  ${EXPLORATORY_ARGS[@]+"${EXPLORATORY_ARGS[@]}"} \
   --repetition-penalty "$REPETITION_PENALTY" \
   --out "$OUT"
