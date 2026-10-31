@@ -18,8 +18,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   the other score's SESOI, so TIGRIS runs can go when nodes return (drained 10-30 11:29);
   [b] verdict labels, co-primary gate (`coprimary_read`; own K source via `k_coverage.py
   --registered-runs`, calibrated critical p applied in the gate and pilot), H2_RUNS, exploratory
-  guard; [c] registered-decisions.md, research-log entry. Review: round 1 (1 Blocking + 6
-  Should-fix) and round 2 (1 Blocking + 4 Should-fix) fixed; round 3 next. Next: [d] by-chain
+  guard; [c] registered-decisions.md, research-log entry. Review: rounds 1 to 4 (2 Blocking, 18
+  Should-fix) fixed; round 5 next. Next: [d] by-chain
   other pilots (local, flock): `partition_pilot.py <run_files of
   partition-pilot-<org>-likelihood-chains.json> --admissible
   datasets/results/admissible-partitions-<org>.json --org <org> --metric logprob_per_token:other

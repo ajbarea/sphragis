@@ -222,9 +222,10 @@ hypothesis the gate reads, on the same draws, at the same levels:
   its Bonferroni form (Benjamini and Heller, Biometrics 2008): with each cell's one-sided
   bootstrap p-value (the share of draws at or below zero), reject for r when the r-th smallest
   times k - r + 1 is below the hypothesis's level. A cell whose critical p is calibrated from its
-  simulated null (a co-primary score's K, Number of runs) enters with its p scaled by α over its critical p, so it counts at α exactly where its
-  own reading does; at the smaller levels a larger r reads, the scaling is an approximation, since
-  the critical p was calibrated at α alone. The organizations are disjoint corpora, so the
+  simulated null (a co-primary score's K, Number of runs) enters with its p scaled by α over its
+  critical p (its critical p capped at α), so at the r = k step, which reads α, it counts exactly
+  where its own reading does; each r < k reads α / (k - r + 1), where the scaling is an
+  approximation, since the critical p was calibrated at α alone, and every r rests on those steps. The organizations are disjoint corpora, so the
   cells are independent. A failed every-organization rule then still says how many show it.
 - **Without AI-assisted targets.** The primary estimate recomputed without examples whose change's
   merged commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s rule, read

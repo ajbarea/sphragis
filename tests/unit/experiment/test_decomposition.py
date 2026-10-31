@@ -1862,6 +1862,10 @@ def test_a_calibrated_critical_p_overrules_a_supported_interval(admitted) -> Non
     out = _h1(reports, sims, coprimary=other, coprimary_sims=other_sims)
     assert out["verdicts"] == {"H1": "pass"}
     assert out["coprimary_across"]["partial_conjunction"]["at_least"] == 2
+    # A level whose null held has its quantile above alpha; the across reading caps it there.
+    other["openstack"]["k_from"]["critical_p"] = at_target["critical_p"] = {"0.95": 0.03}
+    out = _h1(reports, sims, coprimary=other, coprimary_sims=other_sims)
+    assert out["coprimary_across"]["partial_conjunction"]["at_least"] == 2
     del other_sims["openstack"]["calibrated"]
     with pytest.raises(ValueError, match="disagree on a calibrated p"):
         _h1(reports, sims, coprimary=other, coprimary_sims=other_sims)

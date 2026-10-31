@@ -11076,9 +11076,10 @@ copy except where stated.
    (`across.partial_conjunction`) makes its adjusted p-values non-decreasing in r, so at r = k it
    is stricter than the conjunction, whose plain Bonferroni form reduces to the largest p-value
    there (Wang and Owen, arXiv:1508.00934): it can report fewer than k when every cell passes.
-   A cell with a calibrated critical p enters with its p scaled by α over that critical p, so at
-   α it counts exactly where its own reading does; at the smaller levels a larger r reads it is
-   an approximation, since the critical p was set at α alone.
+   A cell with a calibrated critical p enters with its p scaled by α over that critical p (capped
+   at α), so at the r = k step, which reads α, it counts exactly where its own reading does; each
+   r < k reads α / (k - r + 1), where it is an approximation, since the critical p was set at α
+   alone.
 5. **Fuchsia trains an exploratory second foreign arm** for H2 on the same runs
    (`decomposition.EXPLORATORY_FOREIGN_SOURCE`), read beside Chromium's and binding no verdict, so
    the organization is not read against one domain alone. Its pool is cleared by the same stop rule

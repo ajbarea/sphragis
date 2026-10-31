@@ -606,12 +606,14 @@ def _h1_cells(
 
 
 def _critical_at(reports: Mapping[str, Mapping[str, Any]], level: float) -> dict[str, float]:
-    """Each calibrated report's critical p at `level`, from its K."""
+    """Each calibrated report's critical p at `level`, from its K: the test the cell applies, so
+    never above alpha (a level whose null held has its quantile at or above alpha)."""
+    alpha = one_sided_alpha(level)
     out = {}
     for org, report in reports.items():
         k_from = report.get("k_from") or {}
         if k_from.get("calibrated"):
-            out[org] = by_level(k_from.get("critical_p") or {})[level_key(level)]
+            out[org] = min(alpha, by_level(k_from.get("critical_p") or {})[level_key(level)])
     return out
 
 
