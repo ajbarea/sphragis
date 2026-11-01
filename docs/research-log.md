@@ -11152,3 +11152,30 @@ that email in AJ's RIT mailbox and is not copied into this public repository.
 This closes the determination the 2026-10-08 entry called due. No amendment for a new source is
 needed, since the study sits outside HSRO's oversight. The Stage 1 report does not mention it (AJ,
 2026-10-31: no lines on what the study does not need); a venue form that asks gets this answer.
+
+### Fuchsia's exploratory arm read beside Chromium's (2026-11-01)
+
+`# research(2026-11)`. Decision 5's second foreign arm (entry 2026-10-30, "Fuchsia's exploratory
+arm wired"), read on Qt's 22 development partition runs: sibling minus Fuchsia on the likelihood
+score, by relation chain (the Gerrit test read's unit) and by change, two Holm levels, bootstrap
+seed 7 (`partition_pilot.py --hypothesis H2 --foreign-source fuchsia --exploratory`;
+`partition-pilot-qt-foreignfuchsia-likelihood[-chains].json`, read with its 22 generation runs
+beside it, so all 22 outcome-neutral batteries are recorded and hold). Chromium's development
+pilot (2026-10-29) is set beside it. Development readings, exploratory, binding nothing:
+
+| foreign arm | unit | estimate | 97.5% interval | 95% interval | reading |
+|---|---|---|---|---|---|
+| Fuchsia | chain | +0.0202 | [+0.0038, +0.0361] | [+0.0060, +0.0340] | supported at both |
+| Fuchsia | change | +0.0202 | [+0.0044, +0.0357] | [+0.0066, +0.0335] | supported at both |
+| Chromium | chain | +0.0107 | [-0.0041, +0.0248] | [-0.0023, +0.0229] | inconclusive at both |
+| Chromium | change | +0.0107 | [-0.0030, +0.0243] | [-0.0013, +0.0227] | inconclusive at both |
+
+Against Fuchsia, Qt's sibling adapter leads by about twice what it leads by against Chromium, and
+the spread over runs is smaller (run SD 0.0083 against 0.0104). Neither upper bound is below δ
+(0.0161), so neither reading is bounded. The registered contrast stays sibling minus Chromium; this
+reading moves no registered decision. It suggests the development-window gap between sibling and
+foreign arms depends on the foreign organization, which is what the second arm was registered to
+show (Chromium a browser, Fuchsia an operating system, Qt a toolkit). The pilot prints a sizing
+(K = 10) because the reader always computes one; Fuchsia's read takes no K and no simulation, so
+it is not used. The 22 generation runs stay on the cluster (Qt's generation text is not
+published); the 22 likelihood rescorings are committed.
