@@ -1,0 +1,266 @@
+{
+  "hypothesis": "H2",
+  "foreign_source": "fuchsia",
+  "exploratory": true,
+  "run_files": [
+    "datasets/results/likelihood-partition-qt-p4-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p7-s2-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p11-s3-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p12-s4-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p13-s5-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p16-s6-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p18-s7-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p19-s8-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p20-s9-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p21-s10-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p25-s11-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p26-s12-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p27-s13-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p29-s14-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p32-s15-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p33-s16-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p35-s17-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p36-s18-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p37-s19-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p39-s20-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p41-s21-n1850-foreignfuchsia-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p44-s22-n1850-foreignfuchsia-rp1.0.json"
+  ],
+  "metric": "logprob_per_token",
+  "sesoi": 0.016142401360357633,
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-qt.json",
+  "k_source": "all runs",
+  "k_from": null,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "outcome_neutral_runs": [
+    {
+      "file": "datasets/results/likelihood-partition-qt-p4-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p7-s2-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p11-s3-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p12-s4-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p13-s5-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p16-s6-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p18-s7-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p19-s8-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p20-s9-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p21-s10-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p25-s11-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p26-s12-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p27-s13-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p29-s14-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p32-s15-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p33-s16-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p35-s17-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p36-s18-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p37-s19-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p39-s20-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p41-s21-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p44-s22-n1850-foreignfuchsia-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    }
+  ],
+  "org": "qt",
+  "bootstrap_seed": 7,
+  "estimate": 0.020206977267512305,
+  "per_run": [
+    0.022637448006225247,
+    0.03476699327581331,
+    0.02031906537538683,
+    0.0002230256342823922,
+    0.023509253735992552,
+    0.007435900141104346,
+    0.0363876491905577,
+    0.028231494666397877,
+    0.018360381265494802,
+    0.016378468312369387,
+    0.027434571576090944,
+    0.018616932634444278,
+    0.020829080431330388,
+    0.026466394286679434,
+    0.022017977304887276,
+    0.00787145750541235,
+    0.019327849285418586,
+    0.02035026328695158,
+    0.012283766346937092,
+    0.018478420094148712,
+    0.021016075459534017,
+    0.021611032069811603
+  ],
+  "runs": 22,
+  "changes": 223,
+  "reproducibility": {
+    "runs": 22,
+    "variance_of_mean": 3.14830094070498e-06,
+    "critical_value": 3.391642782621208e-05,
+    "holds": true
+  },
+  "runs_computed": 22,
+  "runs_left_out": [],
+  "intervals": {
+    "0.975": {
+      "low": 0.0038421785974957585,
+      "high": 0.03605124918081168
+    },
+    "0.95": {
+      "low": 0.006013873935442104,
+      "high": 0.03403564171928837
+    }
+  },
+  "verdicts": {
+    "0.975": "supported",
+    "0.95": "supported"
+  },
+  "four_way": {
+    "0.975": "supported",
+    "0.95": "supported"
+  },
+  "calibrated": false,
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.0031,
+  "bootstrap_se": 0.007073693617453896,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 800,
+  "dropped": 0,
+  "cell_examples": 425,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.00832241675810035,
+    "sd_upper": 0.010481458241792122,
+    "confidence": 0.9,
+    "formula": 3.239166796614316,
+    "runs": 10,
+    "clamped": "min"
+  },
+  "without": {},
+  "lexer_sure": null,
+  "cluster_unit": {
+    "unit": "chain",
+    "file": "datasets/results/relation-chains-qt.json",
+    "sha256": "c70927f47979fe748cc80b1cc35cece7a6c997238e199f529f196a43fa2a9296",
+    "changes": 403,
+    "chains": 363
+  },
+  "provenance": {
+    "generated_at": "2026-11-01T11:58:43.245889+00:00",
+    "git": {
+      "commit": "b33ba17939b2caad00569b4e14f8c24f7775d3ff",
+      "branch": "results/fuchsia-pilot"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
