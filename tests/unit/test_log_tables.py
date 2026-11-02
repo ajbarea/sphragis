@@ -43,6 +43,21 @@ TABLES = {
     "H2, Qt against Chromium, at K = 40 by chain": lambda: log_tables.sensitivity(
         RESULTS / "partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json"
     ),
+    "Six-cell, s′ and calibrated H2 sizing": lambda: log_tables.sizing(
+        [
+            RESULTS / f"partition-sensitivity-{name}.json"
+            for name in (
+                "openstack-rp1.0-cells6-logprob_per_token-chains-k10",
+                "wikimedia-rp1.0-cells6-logprob_per_token-chains-k20",
+                "qt-rp1.0-cells6-logprob_per_token-chains-k10",
+                "openstack-rp1.0-logprob_per_token-other-chains-k10",
+                "wikimedia-rp1.0-logprob_per_token-other-chains-k20",
+                "wikimedia-rp1.0-logprob_per_token-other-chains-k20-calibrated",
+                "qt-rp1.0-logprob_per_token-other-chains-k10",
+                "qt-rp1.0-foreignchromium-logprob_per_token-chains-k40-calibrated",
+            )
+        ]
+    ),
     "Qt's K": lambda: log_tables.k_coverage(RESULTS / "k-coverage-qt-likelihood.json"),
     "Qt's K by chain": lambda: log_tables.k_coverage(
         RESULTS / "k-coverage-qt-likelihood-chains.json"

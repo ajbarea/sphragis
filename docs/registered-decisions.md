@@ -399,21 +399,25 @@ calibration would then not carry over; the gate refuses bounds powered at anothe
 than the one its K applies. Its K source is that simulation read at K = 40 (`k_coverage.py
 --registered-runs`), which carries the critical p. H2's test read over partitions is not built yet,
 so the gate that will read H2's cell with it is not either. Its detectable effects are those of
-that calibrated simulation; uncalibrated, K = 40 detects +0.0109
-and +0.0103 nats per token at the two levels (research log, 2026-10-30), below δ.
+that calibrated simulation, +0.0109 and +0.0103 nats per token at the two levels (research log,
+2026-11-02), below δ.
 
 ### Stated power: sensitivity, not power at an observed effect
 
-Sized before the co-primary scores, at three cells, each at power 0.983. At that power, its projected test size and K
-runs, read under relation chains, OpenStack's H1 cell detects a half-split contrast of +0.0120 and
-+0.0112 nats per token at the two Holm levels, Wikimedia's +0.0074 and +0.0069 and Qt's +0.0083
-and +0.0077, at the per-run spread K was sized on
-(`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`, `by_cells` 3). Each is below
-the SESOI, the margin a bounded reading is judged against (Pass rule), and under a true null every
-simulated interval lies inside the SESOI band at both levels. With the co-primary scores (Pass
-rule) each H1 cell is sized at six cells, and the non-identifier score's cells are simulated from
-their own development pilots, both before the seal and not yet run; H2's cell at K = 40 is
-simulated with its critical value calibrated (H2's K, above), not yet run either. Wikimedia's test size is a lower bound if test-window arrivals hold at the
+H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1/6) = 0.9915, so all six
+pass together at 0.95, and H2's one cell at 0.95. Each cell is simulated at that power, its
+projected test size and its registered K, read under relation chains at the per-run spread K was
+sized on: s at six cells (`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`),
+s′ from its own development pilot at its s cell's K
+(`...-logprob_per_token-other-chains-k<K>[-calibrated].json`), H2 at K = 40 calibrated. At the
+two Holm levels, H1 on s detects a half-split contrast of +0.0124 and +0.0115 nats per token on
+OpenStack, +0.0080 and +0.0074 on Wikimedia and +0.0085 and +0.0079 on Qt; on s′, +0.0096 and
++0.0090, +0.0078 and +0.0073 (calibrated) and +0.0054 and +0.0050; H2's are under H2's K, above
+(research log, 2026-11-02, printed by `scripts/log_tables.py sizing`). Each is below the SESOI, the margin a bounded reading is judged
+against (Pass rule), and under a true null every simulated interval lies inside the SESOI band at
+both levels. Wikimedia's s′ null exceeded nominal at K = 20, so its cell, like H2's, takes a
+critical p calibrated to its simulated null (H2's K, above); OpenStack's and Qt's s′ nulls hold
+nominal. Wikimedia's test size is a lower bound if test-window arrivals hold at the
 training rate (checked at fetch), and its bounds are then conservative. Power from a pilot's own
 estimate is biased upward, so no power at an observed effect is stated.
 
