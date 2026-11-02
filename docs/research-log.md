@@ -11172,10 +11172,12 @@ pilot (2026-10-29) is set beside it. Development readings, exploratory, binding 
 
 Against Fuchsia, Qt's sibling adapter leads by about twice what it leads by against Chromium, and
 the spread over runs is smaller (run SD 0.0083 against 0.0104). Neither upper bound is below δ
-(0.0161), so neither reading is bounded. The registered contrast stays sibling minus Chromium; this
-reading moves no registered decision. It suggests the development-window gap between sibling and
-foreign arms depends on the foreign organization, which is what the second arm was registered to
-show (Chromium a browser, Fuchsia an operating system, Qt a toolkit). The pilot prints a sizing
+(0.0161), and a cell is read bounded only once its simulation is registered, which neither arm's
+development read has. The registered contrast stays sibling minus Chromium; this reading moves no
+registered decision. The second arm was registered so that a contrast holding against both a
+browser and an operating system rests less on one domain (registered decisions, "A second foreign
+organization for H2"). No artifact contrasts the two foreign arms with each other, so these reads
+say nothing on whether the gap depends on the foreign organization. The pilot prints a sizing
 (K = 10) because the reader always computes one; Fuchsia's read takes no K and no simulation, so
 it is not used. The 22 generation runs stay on the cluster (Qt's generation text is not
 published); the 22 likelihood rescorings are committed.
