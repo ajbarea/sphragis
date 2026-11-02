@@ -25,12 +25,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   AJ first. Fuchsia's exploratory arm: wired (#234); pool cleared at its registered digest and
   copied to TIGRIS (`~/ajsoftworks/sphragis-data/fuchsia-pool/cleared/`, sha256 equal at both
   ends); arms and scoring on Qt's 22 runs submitted pinned at 7e106f1 (jobs 691192 to 691235,
-  listed in `sphragis-data-local/fuchsia/arms-jobs.txt`). When they land: copy the 22
-  `likelihood-partition-qt-p<seed>[-s<n>]-n1850-foreignfuchsia-rp1.0.json` files, then
-  `partition_pilot.py --hypothesis H2 --foreign-source fuchsia --exploratory --org qt --metric
-  logprob_per_token --admissible datasets/results/admissible-partitions-qt.json --chains
-  datasets/results/relation-chains-qt.json <files> --out
-  datasets/results/partition-pilot-qt-foreignfuchsia-likelihood-chains.json` (and by change).
+  listed in `sphragis-data-local/fuchsia/arms-jobs.txt`), all 44 completed 11-01. Read 11-01
+  (research log, "Fuchsia's exploratory arm read beside Chromium's"): +0.0202 by chain, supported at
+  both levels, against Chromium's inconclusive +0.0107; exploratory, binding nothing.
 - **H2's development pilot and simulation (issue #228): done; P4 waits on the registration call.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects
