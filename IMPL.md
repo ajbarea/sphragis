@@ -8,26 +8,17 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **Issue #232, five registered-design decisions (AJ 2026-10-30).** Code and rules merged (#233,
-  five review rounds, last clean). Branch `results/design-1030-runs` (worktree `design-runs`, PR
-  #235): the non-identifier score's by-chain pilots committed (research log, 2026-10-30). TIGRIS,
-  pinned: H2 calibrated at K = 40 (smoke 691129 -> 691131,
-  `...-foreignchromium-logprob_per_token-chains- k40-calibrated.json`); whole score at six cells
-  (smoke 691130 -> 691135 openstack K 10, 691136 wikimedia K 20, 691137 qt K 10,
-  `RUN_TAG=rp1.0-cells6`); co-primary at its cell's K (smoke 691145 -> 691146 openstack, 691147
-  wikimedia, 691148 qt, `...-logprob_per_token-other-chains- k<K>.json`). When they land: `make
-  pull-logs`, copy results, then `k_coverage.py --pilot <pilot> --org <org> --registered-runs <K>
-  --grid <sim> --out k-coverage-<org>-likelihood-split-other- chains.json` per org (a miss needs a
-  `CALIBRATE=1` rerun) and for H2 (`k-coverage-qt- foreignchromium-likelihood-chains.json`, the
-  name `k_coverage.py` takes for a chain read); research-log tables via `scripts/log_tables.py
-  sensitivity|k-coverage <artifact>`; then P4 (papers `org-house-style/`: Table I, registered
-  decisions, stale H2 text) and `make overleaf`. A number that moves a registered decision goes to
-  AJ first. Fuchsia's exploratory arm: wired (#234); pool cleared at its registered digest and
-  copied to TIGRIS (`~/ajsoftworks/sphragis-data/fuchsia-pool/cleared/`, sha256 equal at both
-  ends); arms and scoring on Qt's 22 runs submitted pinned at 7e106f1 (jobs 691192 to 691235,
-  listed in `sphragis-data-local/fuchsia/arms-jobs.txt`), all 44 completed 11-01. Read 11-01
-  (research log, "Fuchsia's exploratory arm read beside Chromium's"): +0.0202 by chain, supported at
-  both levels, against Chromium's inconclusive +0.0107; exploratory, binding nothing.
+- **Issue #232, five registered-design decisions (AJ 2026-10-30).** Code and rules (#233), the
+  non-identifier pilots (#235) and Fuchsia's exploratory read (#238; +0.0202 by chain, supported at
+  both levels, against Chromium's inconclusive +0.0107, binding nothing) are merged. The sized runs
+  (research log, 2026-11-02, "Six-cell, s′ and calibrated H2 simulations"): every H1 cell on s and
+  s′ and H2 at K = 40 calibrated detect below δ; Wikimedia's s′ cell missed its null at K = 20 and
+  was calibrated as registered (727473); OpenStack's and Qt's s′ hold uncalibrated. Next: P4's
+  numbers PR (papers `org-house-style/`): Table I six-cell detects on s and s′, H2's calibrated
+  detect, the 50-data sample-size sentence, Fuchsia's reading under "Data read before this
+  report" (registered after Chromium's development contrast came back inconclusive), harvest claims
+  for each; then `make overleaf`. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws, H1 at
+  K = 10 against H2 at K = 40. A number that moves a registered decision goes to AJ first.
 - **H2's development pilot and simulation (issue #228): done; P4 waits on the registration call.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects
