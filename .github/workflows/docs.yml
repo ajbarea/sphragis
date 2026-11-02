@@ -31,12 +31,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('docs-pr-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,6 +49,8 @@ jobs:
         with:
           version: 0.11.5
           enable-cache: true
+          prune-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install dependencies
         run: uv sync --frozen
@@ -96,6 +99,7 @@ jobs:
       name: github-pages
       url: '${{ steps.deployment.outputs.page_url }}'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       # Ten minutes is the ceiling, not a choice: the action clamps to its maximum of
       # 600000ms, which is also its default, and anything larger logs "timeout value is

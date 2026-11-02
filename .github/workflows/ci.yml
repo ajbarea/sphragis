@@ -16,10 +16,15 @@ permissions:
 env:
   RUFF_OUTPUT_FORMAT: github
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   lint:
     name: Lint (ruff + ty)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,6 +35,8 @@ jobs:
         with:
           version: 0.11.5
           enable-cache: true
+          prune-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
       - name: Verify lockfile is in sync with pyproject.toml
         run: uv lock --check
       - name: Install dependencies
@@ -47,6 +54,7 @@ jobs:
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -64,6 +72,8 @@ jobs:
           # Without a per-version suffix the matrix jobs race for one cache key and
           # the losers log "Unable to reserve cache".
           cache-suffix: py${{ matrix.python-version }}
+          prune-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: uv sync --frozen --python ${{ matrix.python-version }}
       - name: Run tests
