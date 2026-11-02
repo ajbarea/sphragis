@@ -1107,14 +1107,14 @@ def test_a_held_scoped_grant_refuses_the_notedb_route_before_the_network(
 
 def _forbid_network_subprocess(monkeypatch: pytest.MonkeyPatch) -> None:
     """After this, a `git fetch` or `ls-remote` fails the test; local bookkeeping still runs."""
-    real_run = notedb.subprocess.run
+    real_run = notedb._run_reaped
 
     def guarded(cmd: list[str], *a: Any, **kw: Any) -> subprocess.CompletedProcess[bytes]:
         if any(verb in cmd for verb in ("fetch", "ls-remote")):
             raise AssertionError(f"a network git command ran despite refused permission: {cmd!r}")
         return real_run(cmd, *a, **kw)
 
-    monkeypatch.setattr(notedb.subprocess, "run", guarded)
+    monkeypatch.setattr(notedb, "_run_reaped", guarded)
 
 
 def test_git_refuses_an_unpermitted_host_before_touching_the_network(
@@ -1213,13 +1213,13 @@ def test_a_network_git_call_disables_http_redirects(
     server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     calls: list[list[str]] = []
-    real_run = notedb.subprocess.run
+    real_run = notedb._run_reaped
 
     def spy(cmd: list[str], *a: Any, **kw: Any) -> subprocess.CompletedProcess[bytes]:
         calls.append(list(cmd))
         return real_run(cmd, *a, **kw)
 
-    monkeypatch.setattr(notedb.subprocess, "run", spy)
+    monkeypatch.setattr(notedb, "_run_reaped", spy)
     repo = _repo(server, tmp_path)
     notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
     fetch_calls = [c for c in calls if "fetch" in c]
@@ -1236,13 +1236,13 @@ def test_isolated_env_carries_the_suites_git_allow_protocol_through(
     assert os.environ.get("GIT_ALLOW_PROTOCOL") == "file", "conftest sets this for the session"
     repo = _repo(server, tmp_path)
     calls: list[dict[str, Any]] = []
-    real_run = notedb.subprocess.run
+    real_run = notedb._run_reaped
 
     def spy(cmd: list[str], *a: Any, **kw: Any) -> subprocess.CompletedProcess[bytes]:
         calls.append(kw)
         return real_run(cmd, *a, **kw)
 
-    monkeypatch.setattr(notedb.subprocess, "run", spy)
+    monkeypatch.setattr(notedb, "_run_reaped", spy)
     repo.git("rev-parse", "--is-bare-repository")
     assert calls, "the local command should have run"
     assert calls[-1]["env"].get("GIT_ALLOW_PROTOCOL") == "file"
@@ -1303,6 +1303,39 @@ def test_lazy_fetch_probe_leaves_no_scratch_directory_behind(
 
 
 # SIGTERM cleanup
+
+
+def test_a_sigterm_while_git_is_spawned_leaves_no_process_writing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A SIGTERM landing inside `Popen`'s construction, after the fork, used to raise out of the
+    constructor with the child still running, which then wrote into the scratch repository while
+    it was deleted (Errno 39 on CI, Python 3.14). The signal is raised deterministically right
+    after the fork; neither the child nor its own child may write afterwards."""
+    late = tmp_path / "late"
+    late.mkdir()
+    real_popen = subprocess.Popen
+
+    def popen_then_sigterm(*args: Any, **kwargs: Any) -> Any:
+        process = real_popen(*args, **kwargs)
+        signal.raise_signal(signal.SIGTERM)
+        return process
+
+    monkeypatch.setattr(subprocess, "Popen", popen_then_sigterm)
+    script = f'(sleep 0.3; touch "{late}/grandchild") & sleep 0.3; touch "{late}/child"; wait'
+    with pytest.raises(KeyboardInterrupt), notedb._raise_on_sigterm():
+        notedb._run_reaped(["sh", "-c", script], capture_output=True)
+    time.sleep(0.8)
+    assert list(late.iterdir()) == [], "a git process outlived the SIGTERM and wrote afterwards"
+
+
+def test_run_reaped_returns_what_subprocess_run_would(tmp_path: Path) -> None:
+    done = notedb._run_reaped(
+        ["sh", "-c", "cat; echo err >&2; exit 3"], input=b"in", capture_output=True
+    )
+    assert (done.returncode, done.stdout, done.stderr) == (3, b"in", b"err\n")
+    with pytest.raises(subprocess.CalledProcessError):
+        notedb._run_reaped(["sh", "-c", "exit 1"], check=True)
 
 
 def test_sigterm_during_a_git_fetch_leaves_no_scratch_repository(

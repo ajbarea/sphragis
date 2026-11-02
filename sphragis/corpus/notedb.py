@@ -47,7 +47,7 @@ import threading
 import time
 from collections import Counter
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from functools import cache
@@ -311,9 +311,7 @@ class GitError(RuntimeError):
 
 def _git_version() -> str:
     return (
-        subprocess.run(["git", "--version"], capture_output=True, check=True)
-        .stdout.decode()
-        .strip()
+        _run_reaped(["git", "--version"], capture_output=True, check=True).stdout.decode().strip()
     )
 
 
@@ -330,9 +328,9 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
     with _scratch("sphragis-lazy-probe-") as name:
         root = Path(name)
         server = root / "server.git"
-        subprocess.run(["git", "init", "--quiet", "--bare", str(server)], check=True)
+        _run_reaped(["git", "init", "--quiet", "--bare", str(server)], check=True)
         blob = (
-            subprocess.run(
+            _run_reaped(
                 ["git", "--git-dir", str(server), "hash-object", "-w", "--stdin"],
                 input=b"probe\n",
                 capture_output=True,
@@ -342,7 +340,7 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
             .strip()
         )
         tree = (
-            subprocess.run(
+            _run_reaped(
                 ["git", "--git-dir", str(server), "mktree"],
                 input=f"100644 blob {blob}\tf\n".encode(),
                 capture_output=True,
@@ -358,7 +356,7 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
             "GIT_COMMITTER_EMAIL": "probe@example.invalid",
         }
         commit = (
-            subprocess.run(
+            _run_reaped(
                 ["git", "--git-dir", str(server), "commit-tree", tree, "-m", "probe"],
                 capture_output=True,
                 check=True,
@@ -367,14 +365,14 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
             .stdout.decode()
             .strip()
         )
-        subprocess.run(
+        _run_reaped(
             ["git", "--git-dir", str(server), "update-ref", "refs/heads/main", commit],
             check=True,
         )
         for key, value in (("uploadpack.allowFilter", "true"),):
-            subprocess.run(["git", "--git-dir", str(server), "config", key, value], check=True)
+            _run_reaped(["git", "--git-dir", str(server), "config", key, value], check=True)
         clone = root / "clone.git"
-        subprocess.run(
+        _run_reaped(
             [
                 "git",
                 "clone",
@@ -387,7 +385,7 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
             check=True,
             env=_isolated_env(),
         )
-        probed = subprocess.run(
+        probed = _run_reaped(
             ["git", "--git-dir", str(clone), "cat-file", "-p", blob],
             capture_output=True,
             env=env,
@@ -588,7 +586,7 @@ class Repo:
         check: bool = True,
     ) -> subprocess.CompletedProcess[bytes]:
         command = ["git", *_NO_MAILMAP, *(["--git-dir", str(self.path)] if cwd else []), *args]
-        done = subprocess.run(command, input=stdin, capture_output=True, env=_isolated_env(env))
+        done = _run_reaped(command, input=stdin, capture_output=True, env=_isolated_env(env))
         if check and done.returncode != 0:
             raise GitError(
                 f"git {' '.join(args[:3])} exited {done.returncode}: "
@@ -2001,6 +1999,65 @@ def _uninterruptible(*signals: int) -> Iterator[None]:
             signal.signal(sig, handler)
         for sig in held:
             signal.raise_signal(sig)
+
+
+def _run_reaped(
+    command: Sequence[str],
+    *,
+    input: bytes | None = None,
+    capture_output: bool = False,
+    check: bool = False,
+    env: Mapping[str, str] | None = None,
+) -> subprocess.CompletedProcess[bytes]:
+    """`subprocess.run` for a git command inside a scratch repository: on any exception, SIGTERM
+    included, no process it started is left running.
+
+    A signal landing inside `Popen`'s construction after the fork raises out of the constructor
+    with the child unreferenced and alive, and git's own helpers (`index-pack`, a remote helper)
+    outlive a killed parent; either way something kept writing into the scratch repository while
+    its cleanup deleted it (Errno 39). So the child is spawned with the signals held and in a
+    process group of its own, and on any exception the whole group is killed and waited for.
+    """
+    pipe = subprocess.PIPE if capture_output else None
+    process: subprocess.Popen[bytes] | None = None
+    try:
+        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+            process = subprocess.Popen(
+                command,
+                stdin=subprocess.PIPE if input is not None else None,
+                stdout=pipe,
+                stderr=pipe,
+                env=env,
+                process_group=0,
+            )
+        stdout, stderr = process.communicate(input)
+    except BaseException:
+        if process is not None:
+            _kill_group(process)
+        raise
+    done = subprocess.CompletedProcess(list(command), process.returncode, stdout, stderr)
+    if check:
+        done.check_returncode()
+    return done
+
+
+def _kill_group(process: subprocess.Popen[bytes], grace: float = 5.0) -> None:
+    """SIGKILL `process`'s group, reap the child, and wait (up to `grace` seconds) until no member
+    of the group is left, signals held so a second one cannot cut the wait short."""
+    with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+        with suppress(ProcessLookupError):
+            os.killpg(process.pid, signal.SIGKILL)
+        process.wait()
+        deadline = time.monotonic() + grace
+        while time.monotonic() < deadline:
+            try:
+                os.killpg(process.pid, 0)
+            except ProcessLookupError:
+                break
+            time.sleep(0.01)
+        for stream in (process.stdin, process.stdout, process.stderr):
+            if stream is not None:
+                stream.close()
 
 
 @contextmanager
