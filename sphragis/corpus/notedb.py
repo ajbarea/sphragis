@@ -42,12 +42,13 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 import threading
 import time
 from collections import Counter
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from functools import cache
@@ -311,9 +312,7 @@ class GitError(RuntimeError):
 
 def _git_version() -> str:
     return (
-        subprocess.run(["git", "--version"], capture_output=True, check=True)
-        .stdout.decode()
-        .strip()
+        _run_reaped(["git", "--version"], capture_output=True, check=True).stdout.decode().strip()
     )
 
 
@@ -330,9 +329,9 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
     with _scratch("sphragis-lazy-probe-") as name:
         root = Path(name)
         server = root / "server.git"
-        subprocess.run(["git", "init", "--quiet", "--bare", str(server)], check=True)
+        _run_reaped(["git", "init", "--quiet", "--bare", str(server)], check=True)
         blob = (
-            subprocess.run(
+            _run_reaped(
                 ["git", "--git-dir", str(server), "hash-object", "-w", "--stdin"],
                 input=b"probe\n",
                 capture_output=True,
@@ -342,7 +341,7 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
             .strip()
         )
         tree = (
-            subprocess.run(
+            _run_reaped(
                 ["git", "--git-dir", str(server), "mktree"],
                 input=f"100644 blob {blob}\tf\n".encode(),
                 capture_output=True,
@@ -358,7 +357,7 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
             "GIT_COMMITTER_EMAIL": "probe@example.invalid",
         }
         commit = (
-            subprocess.run(
+            _run_reaped(
                 ["git", "--git-dir", str(server), "commit-tree", tree, "-m", "probe"],
                 capture_output=True,
                 check=True,
@@ -367,14 +366,14 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
             .stdout.decode()
             .strip()
         )
-        subprocess.run(
+        _run_reaped(
             ["git", "--git-dir", str(server), "update-ref", "refs/heads/main", commit],
             check=True,
         )
         for key, value in (("uploadpack.allowFilter", "true"),):
-            subprocess.run(["git", "--git-dir", str(server), "config", key, value], check=True)
+            _run_reaped(["git", "--git-dir", str(server), "config", key, value], check=True)
         clone = root / "clone.git"
-        subprocess.run(
+        _run_reaped(
             [
                 "git",
                 "clone",
@@ -387,7 +386,7 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
             check=True,
             env=_isolated_env(),
         )
-        probed = subprocess.run(
+        probed = _run_reaped(
             ["git", "--git-dir", str(clone), "cat-file", "-p", blob],
             capture_output=True,
             env=env,
@@ -588,7 +587,7 @@ class Repo:
         check: bool = True,
     ) -> subprocess.CompletedProcess[bytes]:
         command = ["git", *_NO_MAILMAP, *(["--git-dir", str(self.path)] if cwd else []), *args]
-        done = subprocess.run(command, input=stdin, capture_output=True, env=_isolated_env(env))
+        done = _run_reaped(command, input=stdin, capture_output=True, env=_isolated_env(env))
         if check and done.returncode != 0:
             raise GitError(
                 f"git {' '.join(args[:3])} exited {done.returncode}: "
@@ -967,7 +966,7 @@ def _branch_tips(repo: Repo, refs: Sequence[str]) -> tuple[dict[str, float], lis
         repo.log.extend(probe.log)
         return tips, present
     finally:
-        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+        with _uninterruptible():
             shutil.rmtree(probe_dir, ignore_errors=True)
 
 
@@ -1943,14 +1942,68 @@ def month_bounds(month: str) -> tuple[str, str]:
     return f"{month}-01", f"{following}-01"
 
 
+#: The signals that end a run: a terminal or tmux hangup, `kill`/`timeout`, Ctrl-C. Each one
+#: unwinds the run (`_raise_on_sigterm`) and is held while a scratch repository is made or
+#: deleted, or a git process group is spawned or killed (`_uninterruptible`). SIGHUP belongs here
+#: because git runs in a process group of its own (`_run_reaped`): a hangup sent to the job's
+#: group no longer reaches git, so Python has to unwind and kill git's group itself.
+TERMINATING = (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)
+
+
+def _not_ignored(signals: Sequence[int]) -> list[int]:
+    """`signals` minus those set to `SIG_IGN`: `nohup` ignores SIGHUP and a background job SIGINT
+    so the run outlives a logout or a Ctrl-C meant for another job. Installing a handler over the
+    ignore would end the run on that signal, and git would no longer inherit the ignore."""
+    return [sig for sig in signals if signal.getsignal(sig) is not signal.SIG_IGN]
+
+
+@dataclass
+class _Unwind:
+    """State shared by nested `_raise_on_sigterm` blocks: only the outermost installs handlers.
+    `restoring` is set while the outermost block puts the previous handlers back."""
+
+    depth: int = 0
+    fired: bool = False
+    restoring: bool = False
+    held: list[int] = field(default_factory=list)
+
+
+_UNWIND = _Unwind()
+
+
+def _restore(previous: Mapping[int, Any] | Mapping[signal.Signals, Any]) -> None:
+    """Reinstall every handler in `previous`, even when one that is already back fires and raises
+    before the rest are: a raise partway would otherwise leave a signal on a stale handler."""
+    pending = dict(previous)
+    try:
+        while pending:
+            sig = next(iter(pending))
+            signal.signal(sig, pending[sig])
+            del pending[sig]
+    finally:
+        for sig, handler in pending.items():
+            signal.signal(sig, handler)
+
+
 @contextmanager
 def _raise_on_sigterm() -> Iterator[None]:
-    """Turn a SIGTERM into an exception for the duration, then restore the previous handler.
+    """Turn the first terminating signal (`TERMINATING`: SIGTERM, SIGINT and SIGHUP) into an
+    exception for the duration, then restore the previous handlers. A signal the process was
+    started with ignored stays ignored (`_not_ignored`).
 
     The git fetch path holds its scratch repository in a `TemporaryDirectory`, whose cleanup
-    runs on any exception unwound through it, SIGTERM included -- but only if SIGTERM raises
-    rather than the default terminate-the-process action, which skips every `finally` on the
-    stack and leaves the scratch repository, and the raw identities in it, on disk.
+    runs on any exception unwound through it, but only if the signal raises rather than taking
+    its default terminate-the-process action, which skips every `finally` on the stack and
+    leaves the scratch repository, and the raw identities in it, on disk.
+
+    One-shot: the first signal raises `KeyboardInterrupt`; a later one that lands while an
+    exception is in flight (an `except`, `finally` or `__exit__` unwinding) is recorded, not
+    raised, since a second raise could cut the unwind short before a git group is killed or the
+    scratch repository deleted. A later one with no exception in flight raises again: the first
+    was swallowed (a finalizer drops what it raises), so nothing is unwinding. If the block exits
+    normally, the recorded signals are delivered to the restored handlers; if it exits by an
+    exception, they are dropped, having asked for the unwind that is happening. Nested blocks
+    share the outermost one's handlers.
 
     A no-op outside the main thread: `signal.signal` can only be called there, and a caller
     running `fetch_month` off the main thread receives no OS signals of its own to convert
@@ -1959,29 +2012,59 @@ def _raise_on_sigterm() -> Iterator[None]:
     if threading.current_thread() is not threading.main_thread():
         yield
         return
+    if _UNWIND.depth:
+        _UNWIND.depth += 1
+        try:
+            yield
+        finally:
+            _UNWIND.depth -= 1
+        return
 
     def handler(signum: int, frame: Any) -> None:
-        raise KeyboardInterrupt("SIGTERM")
+        if _UNWIND.restoring or (_UNWIND.fired and sys.exception() is not None):
+            if signum not in _UNWIND.held:
+                _UNWIND.held.append(signum)
+            return
+        _UNWIND.fired = True
+        raise KeyboardInterrupt(signal.Signals(signum).name)
 
-    previous = signal.signal(signal.SIGTERM, handler)
+    # Each previous handler is read before ours goes in, inside the `try`: a signal landing
+    # partway through the install then still finds every installed handler restored.
+    previous: dict[int, Any] = {}
+    _UNWIND.depth = 1
+    unwinding = True
     try:
+        for sig in _not_ignored(TERMINATING):
+            previous[sig] = signal.getsignal(sig)
+            signal.signal(sig, handler)
         yield
+        unwinding = False
     finally:
-        signal.signal(signal.SIGTERM, previous)
+        _UNWIND.restoring = True  # the handler only records while the previous ones go back
+        try:
+            _restore(previous)
+        finally:
+            # A restored handler that raises (Ctrl-C once SIGINT is back) must not leave the
+            # state behind: a stale depth would make every later block install nothing.
+            held, _UNWIND.held = _UNWIND.held, []
+            _UNWIND.depth, _UNWIND.fired, _UNWIND.restoring = 0, False, False
+        if not unwinding:
+            for sig in held:
+                signal.raise_signal(sig)
 
 
 @contextmanager
 def _uninterruptible(*signals: int) -> Iterator[None]:
-    """Hold `signals` for the duration and deliver them once it ends, so a signal cannot abort
-    work partway through and still takes effect afterwards.
+    """Hold `signals` (default `TERMINATING`) for the duration and deliver them once it ends, so
+    a signal cannot abort work partway through and still takes effect afterwards.
 
-    Used around the scratch repository's cleanup: `_raise_on_sigterm` turns one SIGTERM into a
+    Used around the scratch repository's cleanup: `_raise_on_sigterm` turns one signal into a
     clean unwind, but the unwind itself -- `shutil.rmtree` of a directory holding raw identities
     -- is exactly the work a second, impatient signal must not be allowed to interrupt, leaving
     a partially deleted scratch repository behind. Held signals are delivered on exit, once each, to
-    the handlers restored there; CPython runs pending handlers in signal-number order, and the
-    first that raises ends the delivery. So one sent during a cleanup partway through a run
-    still stops it.
+    the handlers restored there (all of them, `_restore`); CPython runs pending handlers in
+    signal-number order, and the first that raises ends the delivery. So one sent during a
+    cleanup partway through a run still stops it.
     A no-op outside the main thread, for the same reason `_raise_on_sigterm` is.
     """
     if threading.current_thread() is not threading.main_thread():
@@ -1993,14 +2076,88 @@ def _uninterruptible(*signals: int) -> Iterator[None]:
         if signum not in held:
             held.append(signum)
 
-    previous = {sig: signal.signal(sig, hold) for sig in signals}
+    previous: dict[int, Any] = {}
     try:
+        for sig in _not_ignored(signals or TERMINATING):
+            previous[sig] = signal.getsignal(sig)
+            signal.signal(sig, hold)
         yield
     finally:
-        for sig, handler in previous.items():
-            signal.signal(sig, handler)
+        _restore(previous)
         for sig in held:
             signal.raise_signal(sig)
+
+
+def _run_reaped(
+    command: Sequence[str],
+    *,
+    input: bytes | None = None,
+    capture_output: bool = False,
+    check: bool = False,
+    env: Mapping[str, str] | None = None,
+) -> subprocess.CompletedProcess[bytes]:
+    """`subprocess.run` for a git command inside a scratch repository: on any exception, a
+    terminating signal included, no process it started is left running.
+
+    A signal landing inside `Popen`'s construction after the fork raises out of the constructor
+    with the child unreferenced and alive, and git's own helpers (`index-pack`, a remote helper)
+    outlive a killed parent; either way something kept writing into the scratch repository while
+    its cleanup deleted it (Errno 39). So the child is spawned with the signals held and in a
+    process group of its own, and on any exception the whole group is killed and waited for.
+    Its own group also keeps a signal sent to the job's group from reaching git, so a caller
+    converts `TERMINATING` with `_raise_on_sigterm`; a SIGKILL to Python cannot be caught and
+    leaves git running.
+    """
+    pipe = subprocess.PIPE if capture_output else None
+    process: subprocess.Popen[bytes] | None = None
+    try:
+        with _uninterruptible():
+            process = subprocess.Popen(
+                command,
+                stdin=subprocess.PIPE if input is not None else None,
+                stdout=pipe,
+                stderr=pipe,
+                env=env,
+                process_group=0,
+            )
+        stdout, stderr = process.communicate(input)
+    except BaseException:
+        if process is not None:
+            _kill_group(process)
+        raise
+    done = subprocess.CompletedProcess(list(command), process.returncode, stdout, stderr)
+    if check:
+        done.check_returncode()
+    return done
+
+
+def _kill_group(process: subprocess.Popen[bytes], grace: float = 5.0) -> None:
+    """SIGKILL `process`'s group, reap the child, and wait (up to `grace` seconds) until no member
+    of the group is left, signals held so a second one cannot cut the wait short. A group still
+    alive at the deadline is named on stderr, since the scratch cleanup after it may then fail."""
+    with _uninterruptible():
+        with suppress(ProcessLookupError):
+            os.killpg(process.pid, signal.SIGKILL)
+        process.wait()
+        deadline = time.monotonic() + grace
+        while True:
+            try:
+                os.killpg(process.pid, 0)
+            except ProcessLookupError:
+                break
+            except PermissionError:
+                pass  # a member we may not signal is still a member
+            if time.monotonic() >= deadline:
+                print(
+                    f"notedb: git process group {process.pid} still has members {grace:g} s "
+                    "after SIGKILL; the scratch repository's cleanup may fail",
+                    file=sys.stderr,
+                )
+                break
+            time.sleep(0.01)
+        for stream in (process.stdin, process.stdout, process.stderr):
+            if stream is not None:
+                stream.close()
 
 
 @contextmanager
@@ -2014,12 +2171,12 @@ def _scratch(prefix: str, dir: Path | None = None) -> Iterator[str]:
     with _raise_on_sigterm():
         scratch: tempfile.TemporaryDirectory[str] | None = None
         try:
-            with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+            with _uninterruptible():
                 scratch = tempfile.TemporaryDirectory(prefix=prefix, dir=dir)
             yield scratch.name
         finally:
             if scratch is not None:
-                with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                with _uninterruptible():
                     scratch.cleanup()
 
 
