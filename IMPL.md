@@ -15,8 +15,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   registered-decisions "Stated power" quotes it.
   P4's numbers are merged, papers#123 (cb5e201; five review rounds and a verify pass, reports in
   `sphragis-data-local/p4-review/papers123-*.md`), harvest 87 verified against this main
-  checkout, and on Overleaf (`make overleaf PAPER=org-house-style`, facd216). Next: the
-  share-ready pass. Verify: `uv run pytest tests/unit/test_log_tables.py`, `harvest.py --check`
+  checkout, and on Overleaf (`make overleaf PAPER=org-house-style`, facd216). Next: a
+  share-ready pass on P4 (papers `org-house-style/`): a one-figure design overview and a short
+  glossary, reviewed until clean. Verify: `uv run pytest tests/unit/test_log_tables.py`, `harvest.py --check`
   here and in papers. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
 - **H2's development pilot and simulation (issue #228): done.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
@@ -92,10 +93,11 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    recorded by setting `H2_WITHDRAWN`; (c) the matched foreign
    sampler is `holdout.matched_foreign_draw` (2026-10-14); the two foreign adapters per run in the
    partition jobs take `FOREIGN_SOURCE=chromium` and the cleared pool from the job's
-   environment; the H2 development read needs H2 bounds in
-   `detectable_effects`, which only the H2 simulation supplies; (d) Qt's terms arrived 2026-10-15 and its host is in `REST_PERMITTED`: its fetch, freeze, split check,
-   development pilot for K and both cells' simulation, then the H2 test read over partitions
-   through `require_test_read`.
+   environment; the H2 development read and its simulation are done (PRs #229, #230, #246),
+   so `detectable_effects` has H2's bounds; (d) Qt's terms arrived 2026-10-15 and its host
+   is in `REST_PERMITTED`: its fetch, freeze, split check, development pilot for K and both
+   cells' simulation are done; what remains is the H2 test read over partitions through
+   `require_test_read`.
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
@@ -114,8 +116,8 @@ A test window below its projected size is read with `power_at_size.py` run on it
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. The paper ends its body on page 6 again (papers#112) and is mirrored to the lab's
-Overleaf project (`make overleaf PAPER=org-house-style`; Overleaf c418573 = papers 6e595c7, #113:
-Chromium as H2's foreign source, its pool's widening disclosed, body on six pages). `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
+Overleaf project (`make overleaf PAPER=org-house-style`; Overleaf facd216 = papers cb5e201,
+papers#123: the six-cell, s′ and calibrated H2 figures, body on six pages). `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before. A host is read only as its registry admits
 it: Qt's REST API at the terms granted 2026-10-15, Chromium's, AOSP's and Fuchsia's under Chrome
 Infra's rate answer of the same day (`REST_PERMITTED`); over git, AOSP alone

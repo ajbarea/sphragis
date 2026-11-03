@@ -172,7 +172,8 @@ def spread_targets(pilot: Mapping[str, Any]) -> dict[str, float]:
     """The per-run spreads a partition simulation is calibrated to, from a development pilot.
 
     Each point is named for what it is; a test read checks its simulation's against the ones
-    recomputed from the pilot its K came from, so both rest on the same pilot.
+    recomputed from the development pilot its K source was made from, so both rest on the same
+    pilot.
     """
     estimates = list(pilot["per_run"]) + list(pilot["runs_left_out"])
     targets = {
