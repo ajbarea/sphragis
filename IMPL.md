@@ -75,8 +75,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    `ADMITTED_ORGANIZATIONS` (`FOREIGN_SOURCE` is set earlier, before the first H2 development
    contrast, item 3(b)). With Qt admitted, H2 is confirmatory against Chromium's pool. Once the
    set is frozen, `decomposition_gate` refuses every read: no decomposition-sensitivity artifact
-   bounds Wikimedia's H1 cell or Qt's H2 cell (`detectable_effects` reads H1's bounds for
-   OpenStack and Qt only). `h1_test_gate` refuses until H2's test read over partitions is built. Qt can be admitted until 2026-11-20 with its cells'
+   bounds Wikimedia's H1 cell or Qt's H2 cell (`detectable_effects` returns only H1 bounds, and
+   the fullest artifact, `decomposition-sensitivity.json`, has them for OpenStack and Qt). `h1_test_gate` refuses until H2's test read over partitions is built. Qt can be admitted until 2026-11-20 with its cells'
    bounds simulated and committed by then (PR #246 did). Chromium is not admitted (no split
    qualified by 2026-10-23) and supplies H2's foreign pool.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
@@ -95,7 +95,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    sampler is `holdout.matched_foreign_draw` (2026-10-14); the two foreign adapters per run in the
    partition jobs take `FOREIGN_SOURCE=chromium` and the cleared pool from the job's
    environment; the H2 development read and its simulation are done (PRs #229, #230, #246),
-   though `detectable_effects` still reads only H1's bounds, for OpenStack and Qt (item 2); (d) Qt's terms arrived 2026-10-15 and its host
+   though `detectable_effects` still returns only H1's bounds (item 2); (d) Qt's terms arrived 2026-10-15 and its host
    is in `REST_PERMITTED`: its fetch, freeze, split check, development pilot for K and both
    cells' simulation are done; what remains is the H2 test read over partitions through
    `require_test_read`.
