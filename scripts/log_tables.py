@@ -97,7 +97,7 @@ def sizing(paths: list[Path]) -> str:
             label = f"H2 {NAMES[report['org']]} vs {FOREIGN[report['foreign_source']]}, {score}"
         else:
             label = f"H1 {NAMES[report['org']]}, {score}"
-        if report["calibrated"]:
+        if report.get("calibrated"):
             label += ", calibrated"
         target = report["by_target"]["sizing_bound_90"]
         cells = [label, str(report["runs"])]

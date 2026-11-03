@@ -8,23 +8,19 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **Issue #232, five registered-design decisions (AJ 2026-10-30). PAUSED 2026-11-02 18:15.**
+- **Issue #232, five registered-design decisions (AJ 2026-10-30).**
   Slice: PR #246 (branch `results/sims-1101`, worktree `sims-1101`), the sized runs (research log,
   2026-11-02, "Six-cell, s′ and calibrated H2 simulations"): every H1 cell on s and s′ and H2 at
-  K = 40 calibrated detect below δ; Wikimedia's s′ calibrated as registered (727473).
-  Done: 81189f5 pushed, PR open; review round 1 NOT CLEAN (no blocking; report
-  `sphragis-data-local/p4-review/sphragis246-round1.md`), all 7 findings fixed in a second commit
-  ("the sizing table printed from its artifacts", `log_tables.py sizing` + its test,
-  registered-decisions "Stated power" current). That commit was left running its hook at the pause.
-  Resume: `git log -2`; if it landed, push it alone (`git push origin <sha>:refs/heads/results/sims-1101`),
-  else restage the four files and recommit; commit this IMPL.md. Next: fresh Opus review round 2
-  (`.../sphragis246-round2.md`) with round 1's report as the open list, until clean; squash merge.
-  Then P4's numbers (papers worktree `p4-numbers`, branch `p4/numbers-1102`, pushed): Table I on s
-  and s′, sample size, Fuchsia line; harvest 87 verified against this worktree through the symlink
-  `papers/.claude/worktrees/sphragis` (now -> `sims-1101`; repoint to the main checkout after #246
-  merges and pull it). Then build (body must end p6), issue + PR, review until clean, merge after
-  #246, `make overleaf PAPER=org-house-style`. Verify: `uv run pytest tests/unit/test_log_tables.py`,
-  papers `harvest.py --check`. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
+  K = 40 calibrated detect below δ; Wikimedia's s′ calibrated as registered (727473). The table is
+  printed by `log_tables.py sizing` and guarded in `test_log_tables.py`; registered-decisions
+  "Stated power" quotes it. Review: round 1 (7 findings) and round 2 (1 should-fix, 3 nits) fixed;
+  reports in `sphragis-data-local/p4-review/sphragis246-round*.md`. Next: a fresh Opus round until
+  clean, squash merge, then repoint `papers/.claude/worktrees/sphragis` to the main checkout and
+  pull it. P4's numbers are papers#123 (issue #122, branch `p4/numbers-1102`): Table I on s and
+  s′, the sample size, the Fuchsia line; body 6 of 6, harvest 87 verified. It merges after #246,
+  reviewed until clean, then `make overleaf PAPER=org-house-style`. Verify:
+  `uv run pytest tests/unit/test_log_tables.py`, `harvest.py --check` here and in papers.
+  Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
 - **H2's development pilot and simulation (issue #228): done; P4 waits on the registration call.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects

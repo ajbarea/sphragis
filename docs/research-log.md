@@ -11192,7 +11192,7 @@ the 44 Fuchsia arm and scoring jobs' logs of 2026-11-01):
 
 - H1 on the whole score at six cells (`RUN_TAG=rp1.0-cells6`, f33389c): OpenStack K = 10 (TIGRIS
   691135), Wikimedia K = 20 (691136), Qt K = 10 (691137). Each cell is sized at power
-  0.95^(1/6) = 0.9915, so that all six pass together at 0.95.
+  0.95^(1/6) = 0.9915, so that all six pass together at 0.95 or more.
 - H1 on the non-identifier score s′ at its s cell's K, pinned at 7a6e262 (tag `cluster-pin-7a6e262`):
   OpenStack (691146), Wikimedia (691147), Qt (691148). Wikimedia's null missed nominal (below), so,
   as registered, it was rerun calibrated (smoke 727472, full run 727473).

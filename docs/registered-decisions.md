@@ -405,7 +405,7 @@ that calibrated simulation, +0.0109 and +0.0103 nats per token at the two levels
 ### Stated power: sensitivity, not power at an observed effect
 
 H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1/6) = 0.9915, so all six
-pass together at 0.95, and H2's one cell at 0.95. Each cell is simulated at that power, its
+pass together at 0.95 or more (the product understates it, Power above), and H2's one cell at 0.95. Each cell is simulated at that power, its
 projected test size and its registered K, read under relation chains at the per-run spread K was
 sized on: s at six cells (`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`),
 s′ from its own development pilot at its s cell's K

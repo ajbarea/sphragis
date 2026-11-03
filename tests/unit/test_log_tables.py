@@ -85,3 +85,10 @@ def test_the_log_quotes_each_table_as_its_artifact_prints_it(name: str) -> None:
     # Whole: a row the log adds after the table fails as a changed one does.
     whole = re.compile(rf"(?m)^{re.escape(table)}\n(?!\|)")
     assert whole.search(LOG + "\n"), f"{name}: the log's table differs from\n{table}"
+
+
+def test_sizing_reads_a_run_made_before_calibration_existed() -> None:
+    path = RESULTS / "partition-sensitivity-qt-rp1.0-logprob_per_token-chains.json"
+    row = log_tables.sizing([path]).splitlines()[-1]
+    assert row.startswith("| H1 Qt, s | 10 |")
+    assert "calibrated" not in row
