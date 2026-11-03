@@ -9,24 +9,21 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **Issue #232, five registered-design decisions (AJ 2026-10-30).**
-  PR #246, the sized runs (research log, 2026-11-02, "Six-cell, s′ and calibrated H2
-  simulations"): every H1 cell on s and s′ and H2 at K = 40 calibrated detect below δ; Wikimedia's
-  s′ calibrated as registered (727473). The table is printed by `log_tables.py sizing` and guarded
-  in `test_log_tables.py`; registered-decisions "Stated power" quotes it. Reviewed in five rounds,
-  the fifth clean (`sphragis-data-local/p4-review/sphragis246-round*.md`).
-  Next: P4's numbers, papers#123 (issue #122, branch `p4/numbers-1102`): Table I on s and s′, the
-  sample size, the Fuchsia line; body 6 of 6, harvest 87 verified. After #246 is on main, point
-  `papers/.claude/worktrees/sphragis` at the main checkout, rerun papers CI, review until clean,
-  merge, `make overleaf PAPER=org-house-style`. Verify: `uv run pytest tests/unit/test_log_tables.py`,
+  PR #246, the sized runs, is merged (0d12cc3; research log, 2026-11-02, "Six-cell, s′ and
+  calibrated H2 simulations"): every H1 cell on s and s′ and H2 at K = 40 calibrated detect below δ.
+  The table is printed by `log_tables.py sizing` and guarded in `test_log_tables.py`;
+  registered-decisions "Stated power" quotes it.
+  Next: P4's numbers, papers#123 (issue #122, branch `p4/numbers-1102`, worktree
+  `papers/.claude/worktrees/p4-numbers`), harvest 87 verified against this main checkout: review
+  rounds until clean (reports in `sphragis-data-local/p4-review/papers123-round*.md`), merge,
+  `make overleaf PAPER=org-house-style`. Verify: `uv run pytest tests/unit/test_log_tables.py`,
   `harvest.py --check` here and in papers. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
-- **H2's development pilot and simulation (issue #228): done; P4 waits on the registration call.**
+- **H2's development pilot and simulation (issue #228): done.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects
   below δ at every spread point, +0.0109 at the sizing bound at 97.5% (K = 10: +0.0174), with its
-  null 0.01325 against 0.0125 at that point. Next, once the registration takes H2's K (K = 40 with
-  the miss disclosed, or H2 exploratory): H2's K and detectable effect into P4's Table I
-  (papers `org-house-style/`, `harvest.py` claims of their own) and registered-decisions "Stated
-  power", then `make overleaf`.
+  null 0.01325 against 0.0125 at that point. The registration took K = 40 with a calibrated
+  critical p (#232, PR #246); its detectable effect enters P4's Table II through papers#123.
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from

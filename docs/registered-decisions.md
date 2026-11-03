@@ -146,7 +146,8 @@ the cell count its bound is simulated for and the spread target it is read at co
 registration, never the command line: a Gerrit organization's from the design of the admitted
 organizations, frozen by one commit before any test window (the Holm levels of its confirmatory
 hypotheses, a simulation of its H1 cells), a GitHub member's from the replication family (97.5%
-alone, one cell), and for both the spread K was sized on ("Stated power"). The simulation must have
+alone, one cell), and for both the 90% upper bound of the development pilot's per-run spread
+(`sizing_bound_90`, "Stated power"). The simulation must have
 been calibrated on the same development pilot K came from. The read, its K and its bounds resample
 the registered cluster unit (a Gerrit organization's relation chains, a GitHub member's changes),
 and by chain all three draw the same chains, which each records by a digest of what a read takes
@@ -406,8 +407,8 @@ that calibrated simulation, +0.0109 and +0.0103 nats per token at the two levels
 
 H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1/6) = 0.9915, so all six
 pass together at 0.95 or more (the product understates it, Power above), and H2's one cell at 0.95. Each cell is simulated at that power, its
-projected test size and its registered K, read under relation chains at the per-run spread K was
-sized on: s at six cells (`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`),
+projected test size and its registered K, read under relation chains at the 90% upper bound of
+its own development pilot's per-run spread: s at six cells (`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`),
 s′ from its own development pilot at its s cell's K
 (`...-logprob_per_token-other-chains-k<K>[-calibrated].json`), H2 at K = 40 calibrated. At the
 two Holm levels, H1 on s detects a half-split contrast of +0.0124 and +0.0115 nats per token on
