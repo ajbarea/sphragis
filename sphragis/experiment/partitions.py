@@ -67,8 +67,8 @@ K_MIN = 10
 K_MAX = 40
 # The K coverage rule (research log 2026-10-09, committed before the grid ran): the reproducibility
 # K sizes agreement between aggregations, not the interval's coverage, so K rises to the first of
-# these at which a simulated null, at the bound K was sized on, passes no more often than nominal
-# at every Holm level, each rate over this many null studies.
+# these at which a simulated null, at the 90% upper bound of the pilot's per-run spread, passes
+# no more often than nominal at every Holm level, each rate over this many null studies.
 K_GRID = (10, 12, 15, 20, 25, 30, 35, 40)
 COVERAGE_NULL_TRIALS = 4_000
 # A calibrated critical p is refused if its test reads above this many times alpha on null
@@ -172,7 +172,8 @@ def spread_targets(pilot: Mapping[str, Any]) -> dict[str, float]:
     """The per-run spreads a partition simulation is calibrated to, from a development pilot.
 
     Each point is named for what it is; a test read checks its simulation's against the ones
-    recomputed from the pilot its K came from, so both rest on the same pilot.
+    recomputed from the development pilot its K source was made from, so both rest on the same
+    pilot.
     """
     estimates = list(pilot["per_run"]) + list(pilot["runs_left_out"])
     targets = {

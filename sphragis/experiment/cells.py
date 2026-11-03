@@ -22,8 +22,8 @@ MIN_RESAMPLES = 1_000
 TEST_RESAMPLES = 10_000
 TEST_BOOTSTRAP_SEED = 7
 # The points on a development pilot's per-run spread a partition simulation is calibrated to
-# (`partitions.spread_targets`), and the one a test-window read's bound is taken at: the spread K
-# was sized on ("Stated power", registered-decisions.md).
+# (`partitions.spread_targets`), and the one a test-window read's bound is taken at: the 90% upper
+# bound of the pilot's per-run spread ("Stated power", registered-decisions.md).
 SPREAD_TARGETS = ("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99")
 REGISTERED_SPREAD_TARGET = "sizing_bound_90"
 # The score H1 and H2 are read on: the reference's mean log-probability per token, a strictly
@@ -284,9 +284,9 @@ def require_test_read(
 
     "Reading the test window" (registered-decisions.md): read on the test window with check 5
     passed; K, a whole number, from the organization's own K coverage artifact (`k_from`); bounds
-    from its own simulation, run at that same K and calibrated on the pilot K was sized on
-    (`sensitivity`); at `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`; and at the levels, cell
-    count and spread target `expected` registers for the organization
+    from its own simulation, run at that same K and calibrated on the development pilot its K
+    source was made from (`sensitivity`); at `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`;
+    and at the levels, cell count and spread target `expected` registers for the organization
     (`decomposition.registered_read`), so none is chosen when the window is read. The pilot
     runs this on its report before writing it, and `replication_gate` and `h1_test_gate` on
     reading it, so both sides hold one rule. Returns the report's registered sensitivities
