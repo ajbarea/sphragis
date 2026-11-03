@@ -43,6 +43,21 @@ TABLES = {
     "H2, Qt against Chromium, at K = 40 by chain": lambda: log_tables.sensitivity(
         RESULTS / "partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json"
     ),
+    "Six-cell, s′ and calibrated H2 sizing": lambda: log_tables.sizing(
+        [
+            RESULTS / f"partition-sensitivity-{name}.json"
+            for name in (
+                "openstack-rp1.0-cells6-logprob_per_token-chains-k10",
+                "wikimedia-rp1.0-cells6-logprob_per_token-chains-k20",
+                "qt-rp1.0-cells6-logprob_per_token-chains-k10",
+                "openstack-rp1.0-logprob_per_token-other-chains-k10",
+                "wikimedia-rp1.0-logprob_per_token-other-chains-k20",
+                "wikimedia-rp1.0-logprob_per_token-other-chains-k20-calibrated",
+                "qt-rp1.0-logprob_per_token-other-chains-k10",
+                "qt-rp1.0-foreignchromium-logprob_per_token-chains-k40-calibrated",
+            )
+        ]
+    ),
     "Qt's K": lambda: log_tables.k_coverage(RESULTS / "k-coverage-qt-likelihood.json"),
     "Qt's K by chain": lambda: log_tables.k_coverage(
         RESULTS / "k-coverage-qt-likelihood-chains.json"
@@ -70,3 +85,26 @@ def test_the_log_quotes_each_table_as_its_artifact_prints_it(name: str) -> None:
     # Whole: a row the log adds after the table fails as a changed one does.
     whole = re.compile(rf"(?m)^{re.escape(table)}\n(?!\|)")
     assert whole.search(LOG + "\n"), f"{name}: the log's table differs from\n{table}"
+
+
+def test_sizing_reads_a_run_made_before_calibration_existed() -> None:
+    path = RESULTS / "partition-sensitivity-qt-rp1.0-logprob_per_token-chains.json"
+    row = log_tables.sizing([path]).splitlines()[-1]
+    assert row.startswith("| H1 Qt, s | 10 |")
+    assert "calibrated" not in row
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        # null-only: no detectable effects at the sizing bound
+        "partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k12-null.json",
+        # made before runs recorded their hypothesis
+        "partition-sensitivity-qt-rp1.0-logprob_per_token.json",
+    ],
+)
+def test_sizing_refuses_a_run_it_cannot_read_by_name(name: str) -> None:
+    with pytest.raises(
+        SystemExit, match=f"{re.escape(name)}: not a full partition-sensitivity run"
+    ):
+        log_tables.sizing([RESULTS / name])

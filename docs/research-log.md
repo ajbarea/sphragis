@@ -11181,3 +11181,48 @@ say nothing on whether the gap depends on the foreign organization. The pilot pr
 (K = 10) because the reader always computes one; Fuchsia's read takes no K and no simulation, so
 it is not used. The 22 generation runs stay on the cluster (Qt's generation text is not
 published); the 22 likelihood rescorings are committed.
+
+### Six-cell, s′ and calibrated H2 simulations: every detectable effect below δ, Wikimedia's s′ calibrated (2026-11-02)
+
+`# research(2026-11)`. The simulations the 2026-10-30 decisions called for, each at its cell's
+registered K (`partition_sensitivity.sbatch`, `CHAINS=1`, 1,000 trials and 4,000 null trials a
+spread point, seed 43; a calibrated run draws 4,000 more null trials, one set fixing the critical p
+and the other measuring the calibrated rate; logs in `datasets/logs/`, with the smoke runs' and
+the 44 Fuchsia arm and scoring jobs' logs of 2026-11-01):
+
+- H1 on the whole score at six cells (`RUN_TAG=rp1.0-cells6`, f33389c): OpenStack K = 10 (TIGRIS
+  691135), Wikimedia K = 20 (691136), Qt K = 10 (691137). Each cell is sized at power
+  0.95^(1/6) = 0.9915, so that all six pass together at 0.95 or more.
+- H1 on the non-identifier score s′ at its s cell's K, pinned at 7a6e262 (tag `cluster-pin-7a6e262`):
+  OpenStack (691146), Wikimedia (691147), Qt (691148). Wikimedia's null missed nominal (below), so,
+  as registered, it was rerun calibrated (smoke 727472, full run 727473).
+- H2, Qt against Chromium, at K = 40 calibrated (691131, f33389c), one cell at power 0.95.
+
+At the 90% sizing bound, in nats per token (`scripts/log_tables.py sizing` prints this table;
+`sensitivity` gives every spread point; the H1 figures are the six-cell column, and a calibrated
+run's detectable effects are at its calibrated critical p):
+
+| cell | K | detectable, 97.5% | detectable, 95% | null, 97.5% | null, 95% | critical p, 97.5% / 95% | calibrated null, 97.5% / 95% |
+|---|---|---|---|---|---|---|---|
+| H1 OpenStack, s | 10 | 0.0124 | 0.0115 | 0.0075 | 0.019 |  |  |
+| H1 Wikimedia, s | 20 | 0.0080 | 0.0074 | 0.011 | 0.02475 |  |  |
+| H1 Qt, s | 10 | 0.0085 | 0.0079 | 0.01175 | 0.025 |  |  |
+| H1 OpenStack, s′ | 10 | 0.0096 | 0.0090 | 0.00875 | 0.01925 |  |  |
+| H1 Wikimedia, s′ | 20 | 0.0077 | 0.0071 | 0.0155 | 0.02875 |  |  |
+| H1 Wikimedia, s′, calibrated | 20 | 0.0078 | 0.0073 | 0.0155 | 0.02875 | 0.0105 / 0.0208 | 0.009 / 0.01825 |
+| H1 Qt, s′ | 10 | 0.0054 | 0.0050 | 0.0115 | 0.02025 |  |  |
+| H2 Qt vs Chromium, s, calibrated | 40 | 0.0109 | 0.0103 | 0.01325 | 0.0245 | 0.0121 / 0.0255 | 0.01125 / 0.02275 |
+
+Every detectable effect is below δ (0.0161). `k_coverage.py --registered-runs` reads each s′ cell
+and H2 at its registered K (`k-coverage-<org>-likelihood-split-other-chains.json`,
+`k-coverage-qt-foreignchromium-likelihood-chains.json`). OpenStack's and Qt's s′ nulls hold nominal
+at both levels, so neither is calibrated. Wikimedia's s′ null misses at both (0.0155 against
+0.0125, 0.02875 against 0.025); its calibrated run puts the critical one-sided p at 0.0105 and
+0.0208, and the calibrated rate on fresh null studies is 0.009 and 0.01825, inside 1.5α. H2's
+critical p is 0.0121 and 0.0255, its calibrated rate 0.01125 and 0.02275. A critical p above α
+does not loosen the test: the gate applies the smaller of α and the critical p
+(`decomposition._critical_at`), so H2 at 95% reads at 0.025. Qt's whole-score null at
+95% equals nominal (0.025), which the coverage rule's "no more often than nominal" admits; its K
+stays the one fixed on 2026-10-22. Wikimedia's uncalibrated s′ run is committed beside the
+calibrated one as the record of the miss; the cell reads the calibrated one. These sizings move no registered decision: each K and
+calibration is the one the 2026-10-30 rules fix, and every cell can detect less than δ.

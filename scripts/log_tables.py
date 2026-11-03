@@ -4,6 +4,8 @@
         datasets/results/partition-sensitivity-qt-rp1.0-logprob_per_token-k15.json
     uv run --no-sync --no-active python scripts/log_tables.py k-coverage \\
         datasets/results/k-coverage-qt-likelihood.json
+    uv run --no-sync --no-active python scripts/log_tables.py sizing \\
+        datasets/results/partition-sensitivity-qt-rp1.0-cells6-logprob_per_token-chains-k10.json
     uv run --no-sync --no-active python scripts/log_tables.py split qt
     uv run --no-sync --no-active python scripts/log_tables.py split openstack wikimedia qt \\
         --lexer-sure
@@ -19,6 +21,7 @@ from pathlib import Path
 
 RESULTS = Path(__file__).resolve().parents[1] / "datasets" / "results"
 NAMES = {"openstack": "OpenStack", "wikimedia": "Wikimedia", "qt": "Qt"}
+FOREIGN = {"chromium": "Chromium", "fuchsia": "Fuchsia"}
 SPREAD_POINTS = ("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99")
 LEVELS = ("0.975", "0.95")
 #: Each part of s as the log names it (`likelihood.COMPONENTS`).
@@ -79,6 +82,45 @@ def k_coverage(path: Path) -> str:
     return _table([*header, "within nominal"], rows)
 
 
+def _pair(values: dict | None) -> str:
+    return "" if values is None else " / ".join(str(values[level]) for level in LEVELS)
+
+
+def sizing(paths: list[Path]) -> str:
+    """One row a cell at the 90% sizing bound: its detectable effects at the most cells it was
+    sized over, its null rates and, for a calibrated run, its critical p and calibrated rates.
+    It reads full partition-sensitivity runs that record their hypothesis and metric; a null-only
+    run, or one made before those fields, is refused by name."""
+    rows = []
+    for path in paths:
+        report = json.loads(path.read_text())
+        target = report.get("by_target", {}).get("sizing_bound_90", {})
+        if not ("hypothesis" in report and "metric" in report and target.get("by_level")):
+            raise SystemExit(f"{path.name}: not a full partition-sensitivity run sizing reads")
+        score = "s′" if report["metric"].endswith(":other") else "s"
+        if report["hypothesis"] == "H2":
+            label = f"H2 {NAMES[report['org']]} vs {FOREIGN[report['foreign_source']]}, {score}"
+        else:
+            label = f"H1 {NAMES[report['org']]}, {score}"
+        if report.get("calibrated"):
+            label += ", calibrated"
+        cells = [label, str(report["runs"])]
+        for level in LEVELS:
+            by_cells = target["by_level"][level]["by_cells"]
+            widest = max(by_cells, key=int)
+            cells.append(f"{by_cells[widest]['minimum_detectable_effect']:.4f}")
+        cells += [str(target["null_false_positive"][level]) for level in LEVELS]
+        cells += [
+            _pair(target.get("critical_p")),
+            _pair(target.get("null_false_positive_calibrated")),
+        ]
+        rows.append(cells)
+    header = ["cell", "K", *(f"detectable, {_percent(level)}" for level in LEVELS)]
+    header += [f"null, {_percent(level)}" for level in LEVELS]
+    header += ["critical p, 97.5% / 95%", "calibrated null, 97.5% / 95%"]
+    return _table(header, rows)
+
+
 def _reading(path: Path) -> str:
     report = json.loads(path.read_text())
     interval = report["intervals"]["0.95"]
@@ -116,6 +158,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 sub = parser.add_subparsers(dest="table", required=True)
 sub.add_parser("sensitivity").add_argument("artifact", type=Path)
 sub.add_parser("k-coverage").add_argument("artifact", type=Path)
+sub.add_parser("sizing").add_argument("artifacts", type=Path, nargs="+")
 split_parser = sub.add_parser("split")
 split_parser.add_argument("orgs", nargs="+", choices=sorted(NAMES))
 split_parser.add_argument("--lexer-sure", action="store_true")
@@ -127,6 +170,8 @@ def main() -> None:
         print(sensitivity(args.artifact))
     elif args.table == "k-coverage":
         print(k_coverage(args.artifact))
+    elif args.table == "sizing":
+        print(sizing(args.artifacts))
     else:
         print(split(args.orgs, lexer_sure=args.lexer_sure))
 
