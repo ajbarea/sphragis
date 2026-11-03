@@ -1950,12 +1950,21 @@ def month_bounds(month: str) -> tuple[str, str]:
 TERMINATING = (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)
 
 
+def _not_ignored(signals: Sequence[int]) -> list[int]:
+    """`signals` minus those set to `SIG_IGN`: `nohup` ignores SIGHUP and a background job SIGINT
+    so the run outlives a logout or a Ctrl-C meant for another job. Installing a handler over the
+    ignore would end the run on that signal, and git would no longer inherit the ignore."""
+    return [sig for sig in signals if signal.getsignal(sig) is not signal.SIG_IGN]
+
+
 @dataclass
 class _Unwind:
-    """State shared by nested `_raise_on_sigterm` blocks: only the outermost installs handlers."""
+    """State shared by nested `_raise_on_sigterm` blocks: only the outermost installs handlers.
+    `restoring` is set while the outermost block puts the previous handlers back."""
 
     depth: int = 0
     fired: bool = False
+    restoring: bool = False
     held: list[int] = field(default_factory=list)
 
 
@@ -1978,20 +1987,23 @@ def _restore(previous: Mapping[int, Any] | Mapping[signal.Signals, Any]) -> None
 
 @contextmanager
 def _raise_on_sigterm() -> Iterator[None]:
-    """Turn the first terminating signal (`TERMINATING`) into an exception for the duration, then
-    restore the previous handlers.
+    """Turn the first terminating signal (`TERMINATING`: SIGTERM, SIGINT and SIGHUP) into an
+    exception for the duration, then restore the previous handlers. A signal the process was
+    started with ignored stays ignored (`_not_ignored`).
 
     The git fetch path holds its scratch repository in a `TemporaryDirectory`, whose cleanup
     runs on any exception unwound through it, but only if the signal raises rather than taking
     its default terminate-the-process action, which skips every `finally` on the stack and
     leaves the scratch repository, and the raw identities in it, on disk.
 
-    One-shot: the first signal raises `KeyboardInterrupt`; any later one while the block is
-    active is recorded, not raised, since an unwind is already under way and a second raise
-    could cut it short before a git group is killed or the scratch repository deleted. If the
-    block then exits normally (the first exception was caught inside), the recorded signals are
-    delivered to the restored handlers; if it exits by an exception, they are dropped, having
-    asked for the unwind that is happening. Nested blocks share the outermost one's handlers.
+    One-shot: the first signal raises `KeyboardInterrupt`; a later one that lands while an
+    exception is in flight (an `except`, `finally` or `__exit__` unwinding) is recorded, not
+    raised, since a second raise could cut the unwind short before a git group is killed or the
+    scratch repository deleted. A later one with no exception in flight raises again: the first
+    was swallowed (a finalizer drops what it raises), so nothing is unwinding. If the block exits
+    normally, the recorded signals are delivered to the restored handlers; if it exits by an
+    exception, they are dropped, having asked for the unwind that is happening. Nested blocks
+    share the outermost one's handlers.
 
     A no-op outside the main thread: `signal.signal` can only be called there, and a caller
     running `fetch_month` off the main thread receives no OS signals of its own to convert
@@ -2009,24 +2021,29 @@ def _raise_on_sigterm() -> Iterator[None]:
         return
 
     def handler(signum: int, frame: Any) -> None:
-        if _UNWIND.fired:
+        if _UNWIND.restoring or (_UNWIND.fired and sys.exception() is not None):
             if signum not in _UNWIND.held:
                 _UNWIND.held.append(signum)
             return
         _UNWIND.fired = True
         raise KeyboardInterrupt(signal.Signals(signum).name)
 
-    previous: dict[int, Any] = {sig: signal.signal(sig, handler) for sig in TERMINATING}
+    # Each previous handler is read before ours goes in, inside the `try`: a signal landing
+    # partway through the install then still finds every installed handler restored.
+    previous: dict[int, Any] = {}
     _UNWIND.depth = 1
     unwinding = True
     try:
+        for sig in _not_ignored(TERMINATING):
+            previous[sig] = signal.getsignal(sig)
+            signal.signal(sig, handler)
         yield
         unwinding = False
     finally:
-        _UNWIND.fired = True  # the handler only records while the previous ones go back
+        _UNWIND.restoring = True  # the handler only records while the previous ones go back
         _restore(previous)
         held, _UNWIND.held = _UNWIND.held, []
-        _UNWIND.depth, _UNWIND.fired = 0, False
+        _UNWIND.depth, _UNWIND.fired, _UNWIND.restoring = 0, False, False
         if not unwinding:
             for sig in held:
                 signal.raise_signal(sig)
@@ -2055,8 +2072,11 @@ def _uninterruptible(*signals: int) -> Iterator[None]:
         if signum not in held:
             held.append(signum)
 
-    previous = {sig: signal.signal(sig, hold) for sig in signals or TERMINATING}
+    previous: dict[int, Any] = {}
     try:
+        for sig in _not_ignored(signals or TERMINATING):
+            previous[sig] = signal.getsignal(sig)
+            signal.signal(sig, hold)
         yield
     finally:
         _restore(previous)

@@ -22,6 +22,9 @@ from sphragis.corpus.build import build_from_change
 from sphragis.corpus.pacing import Pacer
 from sphragis.corpus.scrub import pseudonym
 
+#: Signal tests fail by name rather than kill the runner when a handler is missing.
+pytestmark = pytest.mark.usefixtures("stray_signals")
+
 SERVER_ID = "0f0f0f0f-1111-2222-3333-444455556666"
 OWNER, REVIEWER, SUBMITTER = 1000, 2000, 3000
 CHANGE_ID = "I" + "a" * 40
@@ -1402,7 +1405,8 @@ def test_a_second_interrupt_before_the_group_kill_is_held(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Outside `_raise_on_sigterm`, Ctrl-C raises through Python's own handler; a second Ctrl-C
-    landing just before the SIGKILL must not skip it (`_kill_group` holds signals)."""
+    landing inside `_kill_group`, once its hold is in, must not skip the SIGKILL. (One landing
+    before that hold still can; every production caller runs inside `_raise_on_sigterm`.)"""
     real_killpg = os.killpg
     sent: list[int] = []
 
@@ -1469,6 +1473,8 @@ def test_only_the_first_terminating_signal_raises() -> None:
 
 
 def test_a_signal_recorded_after_a_caught_first_is_delivered_on_exit() -> None:
+    """A second signal that lands while an exception is being handled is recorded; the block
+    then exits normally, and the recorded signal reaches the restored handler."""
     fired: list[int] = []
 
     def handler(signum: int, frame: Any) -> None:
@@ -1479,11 +1485,80 @@ def test_a_signal_recorded_after_a_caught_first_is_delivered_on_exit() -> None:
         with notedb._raise_on_sigterm():
             with suppress(KeyboardInterrupt):
                 signal.raise_signal(signal.SIGTERM)
-            signal.raise_signal(signal.SIGTERM)
+            try:
+                raise ValueError("an exception being handled")
+            except ValueError:
+                signal.raise_signal(signal.SIGTERM)
             assert fired == [], "the second signal must be recorded inside the block"
         assert fired == [signal.SIGTERM], "a recorded signal must reach the restored handler"
     finally:
         signal.signal(signal.SIGTERM, previous)
+
+
+def test_a_signal_after_a_swallowed_first_raises_again() -> None:
+    """A finalizer drops what it raises, so the first signal's exception can vanish with nothing
+    unwinding; a later signal with no exception in flight must raise, not be recorded."""
+    with pytest.raises(KeyboardInterrupt, match="SIGHUP"), notedb._raise_on_sigterm():
+        with suppress(KeyboardInterrupt):
+            signal.raise_signal(signal.SIGTERM)
+        signal.raise_signal(signal.SIGHUP)
+
+
+def test_an_ignored_signal_stays_ignored_through_both_contexts() -> None:
+    """`nohup` ignores SIGHUP, a background job SIGINT: neither context may install a handler
+    over the ignore, so the run survives the signal and the ignore is still there afterwards."""
+    previous = signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    try:
+        with notedb._raise_on_sigterm():
+            assert signal.getsignal(signal.SIGHUP) is signal.SIG_IGN
+            with notedb._uninterruptible():
+                assert signal.getsignal(signal.SIGHUP) is signal.SIG_IGN
+                signal.raise_signal(signal.SIGHUP)
+            signal.raise_signal(signal.SIGHUP)
+        assert signal.getsignal(signal.SIGHUP) is signal.SIG_IGN
+    finally:
+        signal.signal(signal.SIGHUP, previous)
+
+
+@pytest.mark.skipif(not Path("/proc/self/status").exists(), reason="reads /proc")
+def test_git_inherits_an_ignored_hangup() -> None:
+    """An ignore survives exec but a handler does not, so git, run under `nohup`, must still see
+    SIGHUP ignored: no handler may sit over the ignore while it is spawned."""
+    previous = signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    try:
+        with notedb._raise_on_sigterm():
+            done = notedb._run_reaped(
+                ["sh", "-c", "grep '^SigIgn:' /proc/self/status"], capture_output=True
+            )
+    finally:
+        signal.signal(signal.SIGHUP, previous)
+    ignored = int(done.stdout.split()[1], 16)
+    assert ignored & (1 << (signal.SIGHUP - 1)), "the child lost the inherited SIGHUP ignore"
+
+
+@pytest.mark.parametrize("context", ["_raise_on_sigterm", "_uninterruptible"])
+def test_a_signal_during_the_install_leaves_no_handler_behind(
+    monkeypatch: pytest.MonkeyPatch, context: str
+) -> None:
+    """A signal raising after the first handler goes in, before the rest do, must still find
+    every installed handler put back and the shared state reset."""
+    before = {sig: signal.getsignal(sig) for sig in notedb.TERMINATING}
+    real_signal = signal.signal
+    installed: list[int] = []
+
+    def interrupted(sig: int, handler: Any) -> Any:
+        old = real_signal(sig, handler)
+        installed.append(sig)
+        if len(installed) == 1:
+            raise KeyboardInterrupt("a signal landing partway through the install")
+        return old
+
+    monkeypatch.setattr(notedb.signal, "signal", interrupted)
+    with pytest.raises(KeyboardInterrupt, match="partway"), getattr(notedb, context)():
+        pass
+    monkeypatch.undo()
+    assert {sig: signal.getsignal(sig) for sig in notedb.TERMINATING} == before
+    assert notedb._Unwind() == notedb._UNWIND
 
 
 @pytest.mark.parametrize("signum", [signal.SIGHUP, signal.SIGINT])
@@ -1544,13 +1619,17 @@ def test_kill_group_waits_until_no_member_is_left(monkeypatch: pytest.MonkeyPatc
     def killpg(pgid: int, sig: int) -> None:
         if sig == 0:
             probes.append(pgid)
+            if len(probes) == 2:
+                raise PermissionError("a member we may not signal")
             if len(probes) < 4:
                 return
         raise ProcessLookupError
 
     monkeypatch.setattr(notedb.os, "killpg", killpg)
     notedb._kill_group(process)
-    assert len(probes) == 4, "the group must be polled until it is empty"
+    assert len(probes) == 4, (
+        "the group must be polled until it is empty, a member we may not signal counting as alive"
+    )
 
 
 def test_kill_group_names_a_group_alive_past_its_grace(

@@ -15,6 +15,9 @@ import pytest
 from sphragis.corpus import notedb
 from sphragis.corpus.pacing import Pacer
 
+#: Signal tests fail by name rather than kill the runner when a handler is missing.
+pytestmark = pytest.mark.usefixtures("stray_signals")
+
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location("aosp_census", ROOT / "scripts" / "aosp_census.py")
 assert _spec is not None and _spec.loader is not None

@@ -1188,8 +1188,8 @@ def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
     if bad:
         raise SystemExit(f"refusing --project {bad}: not a plain project path")
     refuse_mixed_routes(Path(args.root), args.org, "notedb", allow=args.allow_mixed_routes)
-    # `fetch_month` installs its own SIGTERM handling around the scratch repository it owns, so
-    # nothing extra is needed here.
+    # `fetch_month` converts SIGTERM, SIGINT and SIGHUP itself around the scratch repository it
+    # owns, so nothing extra is needed here.
     rows, record = fetch_month(
         args.org,
         args.project,

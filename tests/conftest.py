@@ -26,6 +26,7 @@ from __future__ import annotations
 import ipaddress
 import os
 import re
+import signal
 import socket
 import tomllib
 from collections.abc import Iterable, Iterator
@@ -313,3 +314,22 @@ def offline_refusals() -> Iterator[list[str]]:
     yield tripped
     tripped.extend(_VIOLATIONS[before:])
     del _VIOLATIONS[before:]
+
+
+@pytest.fixture
+def stray_signals() -> Iterator[list[int]]:
+    """Record SIGTERM and SIGHUP instead of letting their default action kill the test runner,
+    and fail the test if one arrived that no handler under test took. A signal-handling
+    regression then shows as a failed test, not as a runner that died without a report."""
+    stray: list[int] = []
+
+    def record(signum: int, frame: Any) -> None:
+        stray.append(signum)
+
+    previous = {sig: signal.signal(sig, record) for sig in (signal.SIGTERM, signal.SIGHUP)}
+    try:
+        yield stray
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
+    assert not stray, f"signals reached the runner unhandled: {stray}"
