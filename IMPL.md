@@ -73,11 +73,12 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    and simulation come before its test window.
 2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
    `ADMITTED_ORGANIZATIONS` (`FOREIGN_SOURCE` is set earlier, before the first H2 development
-   contrast, item 3(b)). With Qt admitted, H2 is confirmatory against Chromium, so
-   `decomposition_gate` refuses a Qt read until H2's bounds are simulated and `h1_test_gate`
-   refuses until H2's test read over partitions is built. Qt can be admitted until 2026-11-20, with its
-   cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
-   2026-10-23, so it is not set earlier.
+   contrast, item 3(b)). With Qt admitted, H2 is confirmatory against Chromium's pool, so
+   `decomposition_gate` refuses a Qt read until `detectable_effects`, which reads only H1's
+   bounds from the decomposition artifact today, gives it H2's, and `h1_test_gate` refuses until
+   H2's test read over partitions is built. Qt can be admitted until 2026-11-20 with its cells'
+   bounds simulated and committed by then (PR #246 did). Chromium is not admitted (no split
+   qualified by 2026-10-23) and supplies H2's foreign pool.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
    (a) done 2026-10-27: Chromium's pool covers every draw, first in the order, so
    `FOREIGN_SOURCE = "chromium"`; `partition_pilot.py`, `partition_sensitivity.py` and
@@ -94,20 +95,17 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    sampler is `holdout.matched_foreign_draw` (2026-10-14); the two foreign adapters per run in the
    partition jobs take `FOREIGN_SOURCE=chromium` and the cleared pool from the job's
    environment; the H2 development read and its simulation are done (PRs #229, #230, #246),
-   so `detectable_effects` has H2's bounds; (d) Qt's terms arrived 2026-10-15 and its host
+   though `detectable_effects` still reads only H1's bounds (item 2); (d) Qt's terms arrived 2026-10-15 and its host
    is in `REST_PERMITTED`: its fetch, freeze, split check, development pilot for K and both
    cells' simulation are done; what remains is the H2 test read over partitions through
    `require_test_read`.
-4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
+4. PR #246 sized every H1 cell at six cells, which assumes Qt is admitted. If Qt is not admitted
+   by 2026-11-20, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
    GitHub Pro (Student Pack) for required checks on papers `main`. Decided 2026-10-19: AJ reads
    Chrome Infra's answer as a rate covering Chromium, AOSP and Fuchsia; by that reading Chromium's
    pool, first in the order, is H2's source (2026-10-27).
-6. Dependabot alerts 2-4 (filelock) stay open though `main` pins the patched 4.2.1 (#203): the
-   graph update GitHub ran on that merge failed on its side ("fetching job details: missing
-   response") and cannot be rerun, so its graph still reads 3.32.6. The next push that changes
-   `uv.lock` updates it and closes them as fixed; nothing to bump or dismiss.
 
 ## Standing
 
