@@ -81,7 +81,7 @@ committed measurement with the script that wrote it.
 |---|---|
 | `docs/index.md` | the landing page |
 | `docs/protocol.md` | the question, H1 and H2, the pass rule, the seal |
-| `docs/registered-decisions.md` | every registered choice, and the measurement behind it |
+| `docs/registered-decisions.md` | every registered choice, the measurement behind it, and the data read before the Stage 1 report |
 | `docs/outcome-neutral.md` | what must hold for the study to be interpretable |
 | `docs/artifacts.md` | generated: every artifact under `datasets/results/` and its writer |
 | `docs/scripts.md` | what each script under `scripts/` does, and the order H1 is read in |

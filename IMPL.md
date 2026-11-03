@@ -17,8 +17,14 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   `sphragis-data-local/p4-review/papers123-*.md`), harvest 87 verified against this main
   checkout, and on Overleaf (`make overleaf PAPER=org-house-style`, facd216). Next: a
   share-ready pass on P4 (papers `org-house-style/`): a one-figure design overview and a short
-  glossary, reviewed until clean. Verify: `uv run pytest tests/unit/test_log_tables.py`, `harvest.py --check`
+  glossary, reviewed until clean. papers#126 (branch `p4/share-ready`) shortens P4's data-read
+  paragraph and names the itemized decision record, issue #250 (PR #251) (branch `docs/data-read-before`):
+  registered-decisions "Data read before this report", one row per change with its log entry. Verify: `uv run pytest tests/unit/test_log_tables.py`, `harvest.py --check`
   here and in papers. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
+  **Share-ready review clean (2026-11-03):** rounds 1-6 and two verify passes
+  (`sphragis-data-local/p4-review/share-ready-*.md`), the last 0 / 0 / 0. Merge order: this PR
+  (#251), then papers#126, then `make overleaf PAPER=org-house-style`. Next: papers#128 (unitless
+  decimal ranges), then the Reznik email draft (fleet queue item 4).
 - **H2's development pilot and simulation (issue #228): done.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects
