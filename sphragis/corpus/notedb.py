@@ -2041,9 +2041,13 @@ def _raise_on_sigterm() -> Iterator[None]:
         unwinding = False
     finally:
         _UNWIND.restoring = True  # the handler only records while the previous ones go back
-        _restore(previous)
-        held, _UNWIND.held = _UNWIND.held, []
-        _UNWIND.depth, _UNWIND.fired, _UNWIND.restoring = 0, False, False
+        try:
+            _restore(previous)
+        finally:
+            # A restored handler that raises (Ctrl-C once SIGINT is back) must not leave the
+            # state behind: a stale depth would make every later block install nothing.
+            held, _UNWIND.held = _UNWIND.held, []
+            _UNWIND.depth, _UNWIND.fired, _UNWIND.restoring = 0, False, False
         if not unwinding:
             for sig in held:
                 signal.raise_signal(sig)

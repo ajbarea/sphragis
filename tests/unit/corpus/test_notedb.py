@@ -1449,14 +1449,62 @@ def test_a_signal_landing_while_the_handlers_go_back_is_delivered_after(
         return real_signal(sig, new)
 
     try:
-        with notedb._raise_on_sigterm():
-            monkeypatch.setattr(notedb.signal, "signal", signalling)
+        try:
+            with notedb._raise_on_sigterm():
+                monkeypatch.setattr(notedb.signal, "signal", signalling)
+        except KeyboardInterrupt as raised:
+            pytest.fail(f"a signal during the restore raised instead of being recorded: {raised}")
         monkeypatch.undo()
         assert sent, "the signal must have landed during the restore"
         assert fired == [signal.SIGTERM], "it must reach the restored handler, once"
     finally:
         monkeypatch.undo()
         real_signal(signal.SIGTERM, previous)
+
+
+def test_an_interrupt_raised_by_a_restored_handler_still_resets_the_state(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ctrl-C landing once Python's own SIGINT handler is back raises out of the restore; the
+    shared state must still reset, or every later block would install nothing."""
+    real_signal = signal.signal
+    sent: list[int] = []
+
+    def signalling(sig: int, new: Any) -> Any:
+        old = real_signal(sig, new)
+        if sig == signal.SIGINT and new is signal.default_int_handler and not sent:
+            sent.append(sig)
+            signal.raise_signal(signal.SIGINT)
+        return old
+
+    # A fresh state object, put back afterwards, so a regression fails here and not in later tests.
+    monkeypatch.setattr(notedb, "_UNWIND", notedb._Unwind())
+    for exits_by_exception in (False, True):
+        sent.clear()
+        with (
+            pytest.MonkeyPatch.context() as patch,
+            pytest.raises(KeyboardInterrupt, match="^$"),
+            notedb._raise_on_sigterm(),
+        ):
+            patch.setattr(notedb.signal, "signal", signalling)
+            if exits_by_exception:
+                raise RuntimeError("the body failed")
+        assert sent, "the interrupt must have landed during the restore"
+        assert notedb._Unwind() == notedb._UNWIND, "the state was left behind"
+        with notedb._raise_on_sigterm():
+            assert signal.getsignal(signal.SIGTERM) is not signal.SIG_DFL, (
+                "the next block installed nothing"
+            )
+
+
+def test_a_first_signal_inside_an_except_still_raises() -> None:
+    """The first signal raises even while an exception is being handled (the fetch's retries run
+    inside `except GitError`); only a later one is recorded during an unwind."""
+    with pytest.raises(KeyboardInterrupt, match="SIGTERM"), notedb._raise_on_sigterm():
+        try:
+            raise RuntimeError("a retried failure")
+        except RuntimeError:
+            signal.raise_signal(signal.SIGTERM)
 
 
 def test_only_the_first_terminating_signal_raises() -> None:
@@ -1488,7 +1536,10 @@ def test_a_signal_recorded_after_a_caught_first_is_delivered_on_exit() -> None:
             try:
                 raise ValueError("an exception being handled")
             except ValueError:
-                signal.raise_signal(signal.SIGTERM)
+                try:
+                    signal.raise_signal(signal.SIGTERM)
+                except KeyboardInterrupt as raised:
+                    pytest.fail(f"the second signal raised instead of being recorded: {raised}")
             assert fired == [], "the second signal must be recorded inside the block"
         assert fired == [signal.SIGTERM], "a recorded signal must reach the restored handler"
     finally:
