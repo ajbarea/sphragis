@@ -5023,6 +5023,9 @@ treats 70,000 as a full corpus.
 android-review does; codereview.qt-project.org serves `Disallow: /` with `Crawl-Delay: 3`, and
 review.opendev.org `Crawl-delay: 2`. The pipeline paces all four at one request a second. What this
 means for collection is recorded in the re-registration entry of 2026-09-22, not here.
+(Noted 2026-11-03: this scoping ran overnight, from the selection rule written on the evening of
+2026-09-22 to its artifact stamped early on 2026-09-23, so these reads are the ones the 2026-09-23
+entries date to that day.)
 
 **One matching trap for later analyses.** Chromium writes C++ as `.cc` and Qt as `.cpp`; they share
 only `.h`. The separability probe and `--content` restrict by suffix, so a Chromium-Qt C++ cell
@@ -5792,8 +5795,8 @@ ledgers, three of the day's runs needed a retry for blob or history fetches.
   entered by hand for one untraced lazy fetch during manual inspection, plus 7 fetches and 21
   requests for one end-to-end run of `fetch --via git` and `build` over 2024-11 (a check, not kept
   as an artifact); chromium.googlesource.com, 1 fetch, 3 requests.
-  (Noted 2026-11-04: the two ref listings under **Probes**, on v8/v8 and on chromium/src, also
-  reached chromium.googlesource.com; this ledger counts the route's own fetches only.)
+  (Noted 2026-11-03: the two ref listings under **Probes**, on v8/v8 and on chromium/src, also
+  reached chromium.googlesource.com and are not counted here.)
 - 2026-09-25, rerun: android.googlesource.com only. The artifact's run made 26 operations and 62
   HTTP requests. Counting the attempts that failed on the bugs above and the diagnostic runs, the
   day's run ledgers (kept locally, not committed: they are per-run scratch output) hold 155
