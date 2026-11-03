@@ -5792,6 +5792,8 @@ ledgers, three of the day's runs needed a retry for blob or history fetches.
   entered by hand for one untraced lazy fetch during manual inspection, plus 7 fetches and 21
   requests for one end-to-end run of `fetch --via git` and `build` over 2024-11 (a check, not kept
   as an artifact); chromium.googlesource.com, 1 fetch, 3 requests.
+  (Noted 2026-11-04: the two ref listings under **Probes**, on v8/v8 and on chromium/src, also
+  reached chromium.googlesource.com; this ledger counts the route's own fetches only.)
 - 2026-09-25, rerun: android.googlesource.com only. The artifact's run made 26 operations and 62
   HTTP requests. Counting the attempts that failed on the bugs above and the diagnostic runs, the
   day's run ledgers (kept locally, not committed: they are per-run scratch output) hold 155
