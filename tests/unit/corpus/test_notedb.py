@@ -1466,7 +1466,8 @@ def test_an_interrupt_raised_by_a_restored_handler_still_resets_the_state(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Ctrl-C landing once Python's own SIGINT handler is back raises out of the restore; the
-    shared state must still reset, or every later block would install nothing."""
+    shared state must still reset, or every later block would install nothing. The second pass
+    unwinds a first SIGTERM, so `fired` is set, and a hangup is recorded in `held` first."""
     real_signal = signal.signal
     sent: list[int] = []
 
@@ -1474,6 +1475,7 @@ def test_an_interrupt_raised_by_a_restored_handler_still_resets_the_state(
         old = real_signal(sig, new)
         if sig == signal.SIGINT and new is signal.default_int_handler and not sent:
             sent.append(sig)
+            signal.raise_signal(signal.SIGHUP)  # still ours, so recorded during the restore
             signal.raise_signal(signal.SIGINT)
         return old
 
@@ -1488,7 +1490,7 @@ def test_an_interrupt_raised_by_a_restored_handler_still_resets_the_state(
         ):
             patch.setattr(notedb.signal, "signal", signalling)
             if exits_by_exception:
-                raise RuntimeError("the body failed")
+                signal.raise_signal(signal.SIGTERM)
         assert sent, "the interrupt must have landed during the restore"
         assert notedb._Unwind() == notedb._UNWIND, "the state was left behind"
         with notedb._raise_on_sigterm():
@@ -1605,9 +1607,11 @@ def test_a_signal_during_the_install_leaves_no_handler_behind(
         return old
 
     monkeypatch.setattr(notedb.signal, "signal", interrupted)
-    with pytest.raises(KeyboardInterrupt, match="partway"), getattr(notedb, context)():
-        pass
-    monkeypatch.undo()
+    try:
+        with pytest.raises(KeyboardInterrupt, match="partway"), getattr(notedb, context)():
+            pass
+    finally:
+        monkeypatch.undo()
     assert {sig: signal.getsignal(sig) for sig in notedb.TERMINATING} == before
     assert notedb._Unwind() == notedb._UNWIND
 
