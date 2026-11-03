@@ -25,7 +25,7 @@ from sphragis.corpus import rules
 #: route's first fetch will record.
 PINNED = {
     "BUILD_RULES": ("3d29d529390c1eea", rules.BUILD_SOURCES),
-    "FETCH_RULES": ("59a57284292e0c4b", rules.FETCH_SOURCES),
+    "FETCH_RULES": ("1323343825dd1ef8", rules.FETCH_SOURCES),
     "GITHUB_RULES": ("56b5374b852d17d7", rules.GITHUB_SOURCES),
 }
 

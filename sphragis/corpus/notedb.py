@@ -42,6 +42,7 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -965,7 +966,7 @@ def _branch_tips(repo: Repo, refs: Sequence[str]) -> tuple[dict[str, float], lis
         repo.log.extend(probe.log)
         return tips, present
     finally:
-        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+        with _uninterruptible():
             shutil.rmtree(probe_dir, ignore_errors=True)
 
 
@@ -1941,14 +1942,56 @@ def month_bounds(month: str) -> tuple[str, str]:
     return f"{month}-01", f"{following}-01"
 
 
+#: The signals that end a run: a terminal or tmux hangup, `kill`/`timeout`, Ctrl-C. Each one
+#: unwinds the run (`_raise_on_sigterm`) and is held while a scratch repository is made or
+#: deleted, or a git process group is spawned or killed (`_uninterruptible`). SIGHUP belongs here
+#: because git runs in a process group of its own (`_run_reaped`): a hangup sent to the job's
+#: group no longer reaches git, so Python has to unwind and kill git's group itself.
+TERMINATING = (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)
+
+
+@dataclass
+class _Unwind:
+    """State shared by nested `_raise_on_sigterm` blocks: only the outermost installs handlers."""
+
+    depth: int = 0
+    fired: bool = False
+    held: list[int] = field(default_factory=list)
+
+
+_UNWIND = _Unwind()
+
+
+def _restore(previous: Mapping[int, Any] | Mapping[signal.Signals, Any]) -> None:
+    """Reinstall every handler in `previous`, even when one that is already back fires and raises
+    before the rest are: a raise partway would otherwise leave a signal on a stale handler."""
+    pending = dict(previous)
+    try:
+        while pending:
+            sig = next(iter(pending))
+            signal.signal(sig, pending[sig])
+            del pending[sig]
+    finally:
+        for sig, handler in pending.items():
+            signal.signal(sig, handler)
+
+
 @contextmanager
 def _raise_on_sigterm() -> Iterator[None]:
-    """Turn a SIGTERM into an exception for the duration, then restore the previous handler.
+    """Turn the first terminating signal (`TERMINATING`) into an exception for the duration, then
+    restore the previous handlers.
 
     The git fetch path holds its scratch repository in a `TemporaryDirectory`, whose cleanup
-    runs on any exception unwound through it, SIGTERM included -- but only if SIGTERM raises
-    rather than the default terminate-the-process action, which skips every `finally` on the
-    stack and leaves the scratch repository, and the raw identities in it, on disk.
+    runs on any exception unwound through it, but only if the signal raises rather than taking
+    its default terminate-the-process action, which skips every `finally` on the stack and
+    leaves the scratch repository, and the raw identities in it, on disk.
+
+    One-shot: the first signal raises `KeyboardInterrupt`; any later one while the block is
+    active is recorded, not raised, since an unwind is already under way and a second raise
+    could cut it short before a git group is killed or the scratch repository deleted. If the
+    block then exits normally (the first exception was caught inside), the recorded signals are
+    delivered to the restored handlers; if it exits by an exception, they are dropped, having
+    asked for the unwind that is happening. Nested blocks share the outermost one's handlers.
 
     A no-op outside the main thread: `signal.signal` can only be called there, and a caller
     running `fetch_month` off the main thread receives no OS signals of its own to convert
@@ -1957,29 +2000,50 @@ def _raise_on_sigterm() -> Iterator[None]:
     if threading.current_thread() is not threading.main_thread():
         yield
         return
+    if _UNWIND.depth:
+        _UNWIND.depth += 1
+        try:
+            yield
+        finally:
+            _UNWIND.depth -= 1
+        return
 
     def handler(signum: int, frame: Any) -> None:
-        raise KeyboardInterrupt("SIGTERM")
+        if _UNWIND.fired:
+            if signum not in _UNWIND.held:
+                _UNWIND.held.append(signum)
+            return
+        _UNWIND.fired = True
+        raise KeyboardInterrupt(signal.Signals(signum).name)
 
-    previous = signal.signal(signal.SIGTERM, handler)
+    previous: dict[int, Any] = {sig: signal.signal(sig, handler) for sig in TERMINATING}
+    _UNWIND.depth = 1
+    unwinding = True
     try:
         yield
+        unwinding = False
     finally:
-        signal.signal(signal.SIGTERM, previous)
+        _UNWIND.fired = True  # the handler only records while the previous ones go back
+        _restore(previous)
+        held, _UNWIND.held = _UNWIND.held, []
+        _UNWIND.depth, _UNWIND.fired = 0, False
+        if not unwinding:
+            for sig in held:
+                signal.raise_signal(sig)
 
 
 @contextmanager
 def _uninterruptible(*signals: int) -> Iterator[None]:
-    """Hold `signals` for the duration and deliver them once it ends, so a signal cannot abort
-    work partway through and still takes effect afterwards.
+    """Hold `signals` (default `TERMINATING`) for the duration and deliver them once it ends, so
+    a signal cannot abort work partway through and still takes effect afterwards.
 
-    Used around the scratch repository's cleanup: `_raise_on_sigterm` turns one SIGTERM into a
+    Used around the scratch repository's cleanup: `_raise_on_sigterm` turns one signal into a
     clean unwind, but the unwind itself -- `shutil.rmtree` of a directory holding raw identities
     -- is exactly the work a second, impatient signal must not be allowed to interrupt, leaving
     a partially deleted scratch repository behind. Held signals are delivered on exit, once each, to
-    the handlers restored there; CPython runs pending handlers in signal-number order, and the
-    first that raises ends the delivery. So one sent during a cleanup partway through a run
-    still stops it.
+    the handlers restored there (all of them, `_restore`); CPython runs pending handlers in
+    signal-number order, and the first that raises ends the delivery. So one sent during a
+    cleanup partway through a run still stops it.
     A no-op outside the main thread, for the same reason `_raise_on_sigterm` is.
     """
     if threading.current_thread() is not threading.main_thread():
@@ -1991,12 +2055,11 @@ def _uninterruptible(*signals: int) -> Iterator[None]:
         if signum not in held:
             held.append(signum)
 
-    previous = {sig: signal.signal(sig, hold) for sig in signals}
+    previous = {sig: signal.signal(sig, hold) for sig in signals or TERMINATING}
     try:
         yield
     finally:
-        for sig, handler in previous.items():
-            signal.signal(sig, handler)
+        _restore(previous)
         for sig in held:
             signal.raise_signal(sig)
 
@@ -2009,19 +2072,22 @@ def _run_reaped(
     check: bool = False,
     env: Mapping[str, str] | None = None,
 ) -> subprocess.CompletedProcess[bytes]:
-    """`subprocess.run` for a git command inside a scratch repository: on any exception, SIGTERM
-    included, no process it started is left running.
+    """`subprocess.run` for a git command inside a scratch repository: on any exception, a
+    terminating signal included, no process it started is left running.
 
     A signal landing inside `Popen`'s construction after the fork raises out of the constructor
     with the child unreferenced and alive, and git's own helpers (`index-pack`, a remote helper)
     outlive a killed parent; either way something kept writing into the scratch repository while
     its cleanup deleted it (Errno 39). So the child is spawned with the signals held and in a
     process group of its own, and on any exception the whole group is killed and waited for.
+    Its own group also keeps a signal sent to the job's group from reaching git, so a caller
+    converts `TERMINATING` with `_raise_on_sigterm`; a SIGKILL to Python cannot be caught and
+    leaves git running.
     """
     pipe = subprocess.PIPE if capture_output else None
     process: subprocess.Popen[bytes] | None = None
     try:
-        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+        with _uninterruptible():
             process = subprocess.Popen(
                 command,
                 stdin=subprocess.PIPE if input is not None else None,
@@ -2043,16 +2109,26 @@ def _run_reaped(
 
 def _kill_group(process: subprocess.Popen[bytes], grace: float = 5.0) -> None:
     """SIGKILL `process`'s group, reap the child, and wait (up to `grace` seconds) until no member
-    of the group is left, signals held so a second one cannot cut the wait short."""
-    with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+    of the group is left, signals held so a second one cannot cut the wait short. A group still
+    alive at the deadline is named on stderr, since the scratch cleanup after it may then fail."""
+    with _uninterruptible():
         with suppress(ProcessLookupError):
             os.killpg(process.pid, signal.SIGKILL)
         process.wait()
         deadline = time.monotonic() + grace
-        while time.monotonic() < deadline:
+        while True:
             try:
                 os.killpg(process.pid, 0)
             except ProcessLookupError:
+                break
+            except PermissionError:
+                pass  # a member we may not signal is still a member
+            if time.monotonic() >= deadline:
+                print(
+                    f"notedb: git process group {process.pid} still has members {grace:g} s "
+                    "after SIGKILL; the scratch repository's cleanup may fail",
+                    file=sys.stderr,
+                )
                 break
             time.sleep(0.01)
         for stream in (process.stdin, process.stdout, process.stderr):
@@ -2071,12 +2147,12 @@ def _scratch(prefix: str, dir: Path | None = None) -> Iterator[str]:
     with _raise_on_sigterm():
         scratch: tempfile.TemporaryDirectory[str] | None = None
         try:
-            with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+            with _uninterruptible():
                 scratch = tempfile.TemporaryDirectory(prefix=prefix, dir=dir)
             yield scratch.name
         finally:
             if scratch is not None:
-                with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                with _uninterruptible():
                     scratch.cleanup()
 
 

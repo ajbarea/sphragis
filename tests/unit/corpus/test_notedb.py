@@ -11,6 +11,7 @@ import sys
 import tempfile
 import threading
 import time
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast
 
@@ -1338,16 +1339,243 @@ def test_run_reaped_returns_what_subprocess_run_would(tmp_path: Path) -> None:
         notedb._run_reaped(["sh", "-c", "exit 1"], check=True)
 
 
+def _helper_script(late: Path, ready: Path) -> str:
+    """A git stand-in that starts a helper of its own, says so, and has both write late."""
+    return (
+        f'(sleep 0.6; touch "{late}/grandchild") & touch "{ready}"; '
+        f'sleep 0.6; touch "{late}/child"; wait'
+    )
+
+
+def _signal_once_ready(ready: Path, signum: int) -> threading.Thread:
+    def fire() -> None:
+        deadline = time.monotonic() + 5
+        while not ready.exists() and time.monotonic() < deadline:
+            time.sleep(0.005)
+        time.sleep(0.05)
+        os.kill(os.getpid(), signum)
+
+    thread = threading.Thread(target=fire)
+    thread.start()
+    return thread
+
+
+def test_a_sigterm_while_git_runs_kills_its_helpers_too(tmp_path: Path) -> None:
+    """The signal lands in `communicate`, after git has started a helper of its own: the whole
+    group goes, not only the process `Popen` returned."""
+    late, ready = tmp_path / "late", tmp_path / "ready"
+    late.mkdir()
+    thread = _signal_once_ready(ready, signal.SIGTERM)
+    with pytest.raises(KeyboardInterrupt), notedb._raise_on_sigterm():
+        notedb._run_reaped(["sh", "-c", _helper_script(late, ready)], capture_output=True)
+    thread.join()
+    assert ready.exists(), "the helper must have started before the signal"
+    time.sleep(1.0)
+    assert list(late.iterdir()) == [], "git or its helper outlived the SIGTERM and wrote"
+
+
+def test_a_second_sigterm_while_the_group_is_killed_is_held(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real_wait = subprocess.Popen.wait
+    seconds: list[int] = []
+
+    def wait(self: subprocess.Popen[bytes], *args: Any, **kwargs: Any) -> int:
+        if not seconds:
+            seconds.append(signal.SIGTERM)
+            signal.raise_signal(signal.SIGTERM)
+        return real_wait(self, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess.Popen, "wait", wait)
+    late, ready = tmp_path / "late", tmp_path / "ready"
+    late.mkdir()
+    thread = _signal_once_ready(ready, signal.SIGTERM)
+    with pytest.raises(KeyboardInterrupt), notedb._raise_on_sigterm():
+        notedb._run_reaped(["sh", "-c", _helper_script(late, ready)], capture_output=True)
+    thread.join()
+    assert seconds, "the second signal must have been sent"
+    time.sleep(1.0)
+    assert list(late.iterdir()) == [], "a second signal cut the group kill short"
+
+
+def test_a_second_interrupt_before_the_group_kill_is_held(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Outside `_raise_on_sigterm`, Ctrl-C raises through Python's own handler; a second Ctrl-C
+    landing just before the SIGKILL must not skip it (`_kill_group` holds signals)."""
+    real_killpg = os.killpg
+    sent: list[int] = []
+
+    def killpg(pgid: int, sig: int) -> None:
+        if sig == signal.SIGKILL and not sent:
+            sent.append(sig)
+            signal.raise_signal(signal.SIGINT)
+        real_killpg(pgid, sig)
+
+    monkeypatch.setattr(notedb.os, "killpg", killpg)
+    late, ready = tmp_path / "late", tmp_path / "ready"
+    late.mkdir()
+    thread = _signal_once_ready(ready, signal.SIGINT)
+    with pytest.raises(KeyboardInterrupt):
+        notedb._run_reaped(["sh", "-c", _helper_script(late, ready)], capture_output=True)
+    thread.join()
+    assert sent, "the second interrupt must have been sent"
+    time.sleep(1.0)
+    assert list(late.iterdir()) == [], "a second interrupt skipped the group kill"
+
+
+def test_a_signal_landing_while_the_handlers_go_back_is_delivered_after(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A signal arriving while `_raise_on_sigterm` reinstalls the previous handlers on a normal
+    exit is recorded, not raised there, and reaches the restored handler once they are back."""
+    fired: list[int] = []
+
+    def handler(signum: int, frame: Any) -> None:
+        fired.append(signum)
+
+    real_signal = signal.signal
+    previous = real_signal(signal.SIGTERM, handler)
+    sent: list[int] = []
+
+    def signalling(sig: int, new: Any) -> Any:
+        if not sent:
+            sent.append(sig)
+            signal.raise_signal(signal.SIGTERM)
+        return real_signal(sig, new)
+
+    try:
+        with notedb._raise_on_sigterm():
+            monkeypatch.setattr(notedb.signal, "signal", signalling)
+        monkeypatch.undo()
+        assert sent, "the signal must have landed during the restore"
+        assert fired == [signal.SIGTERM], "it must reach the restored handler, once"
+    finally:
+        monkeypatch.undo()
+        real_signal(signal.SIGTERM, previous)
+
+
+def test_only_the_first_terminating_signal_raises() -> None:
+    """A second signal during the unwind, before any `_uninterruptible` window is entered, is
+    recorded rather than raised, and dropped when the block exits by the first one's exception."""
+    after: list[str] = []
+    with pytest.raises(KeyboardInterrupt, match="SIGTERM"), notedb._raise_on_sigterm():
+        try:
+            signal.raise_signal(signal.SIGTERM)
+        finally:
+            signal.raise_signal(signal.SIGINT)
+            after.append("unwind ran on")
+    assert after == ["unwind ran on"]
+
+
+def test_a_signal_recorded_after_a_caught_first_is_delivered_on_exit() -> None:
+    fired: list[int] = []
+
+    def handler(signum: int, frame: Any) -> None:
+        fired.append(signum)
+
+    previous = signal.signal(signal.SIGTERM, handler)
+    try:
+        with notedb._raise_on_sigterm():
+            with suppress(KeyboardInterrupt):
+                signal.raise_signal(signal.SIGTERM)
+            signal.raise_signal(signal.SIGTERM)
+            assert fired == [], "the second signal must be recorded inside the block"
+        assert fired == [signal.SIGTERM], "a recorded signal must reach the restored handler"
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
+@pytest.mark.parametrize("signum", [signal.SIGHUP, signal.SIGINT])
+def test_a_hangup_or_interrupt_unwinds_like_sigterm(signum: int) -> None:
+    name = signal.Signals(signum).name
+    with pytest.raises(KeyboardInterrupt, match=name), notedb._raise_on_sigterm():
+        signal.raise_signal(signum)
+
+
+def test_nested_blocks_leave_the_outer_handlers_installed() -> None:
+    with notedb._raise_on_sigterm():
+        outer = {sig: signal.getsignal(sig) for sig in notedb.TERMINATING}
+        with notedb._raise_on_sigterm():
+            pass
+        assert {sig: signal.getsignal(sig) for sig in notedb.TERMINATING} == outer
+        with pytest.raises(KeyboardInterrupt, match="SIGHUP"):
+            signal.raise_signal(signal.SIGHUP)
+
+
+def test_an_inner_block_does_not_rearm_the_handler_during_the_outer_unwind() -> None:
+    """The first signal raises in an inner block; a second one while the outer block unwinds is
+    recorded, not raised, so the outer cleanup runs to its end."""
+    after: list[str] = []
+    with pytest.raises(KeyboardInterrupt, match="SIGTERM"), notedb._raise_on_sigterm():
+        try:
+            with notedb._raise_on_sigterm():
+                signal.raise_signal(signal.SIGTERM)
+        finally:
+            signal.raise_signal(signal.SIGTERM)
+            after.append("outer cleanup ran on")
+    assert after == ["outer cleanup ran on"]
+
+
+def test_restore_reinstalls_every_handler_when_one_raises_partway(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    installed: list[int] = []
+    real_signal = signal.signal
+
+    def raising_signal(sig: int, handler: Any) -> Any:
+        installed.append(sig)
+        if len(installed) == 1:
+            raise KeyboardInterrupt("a signal fired by the first restored handler")
+        return real_signal(sig, handler)
+
+    previous = {sig: signal.getsignal(sig) for sig in notedb.TERMINATING}
+    monkeypatch.setattr(notedb.signal, "signal", raising_signal)
+    with pytest.raises(KeyboardInterrupt):
+        notedb._restore(previous)
+    assert sorted(installed[1:]) == sorted(notedb.TERMINATING), "each handler must go back"
+
+
+def test_kill_group_waits_until_no_member_is_left(monkeypatch: pytest.MonkeyPatch) -> None:
+    process = subprocess.Popen(["true"], process_group=0)
+    process.wait()
+    probes: list[int] = []
+
+    def killpg(pgid: int, sig: int) -> None:
+        if sig == 0:
+            probes.append(pgid)
+            if len(probes) < 4:
+                return
+        raise ProcessLookupError
+
+    monkeypatch.setattr(notedb.os, "killpg", killpg)
+    notedb._kill_group(process)
+    assert len(probes) == 4, "the group must be polled until it is empty"
+
+
+def test_kill_group_names_a_group_alive_past_its_grace(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    process = subprocess.Popen(["true"], process_group=0)
+    process.wait()
+    monkeypatch.setattr(notedb.os, "killpg", lambda pgid, sig: None)
+    notedb._kill_group(process, grace=0.05)
+    assert f"process group {process.pid} still has members" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("signum", [signal.SIGTERM, signal.SIGHUP])
 def test_sigterm_during_a_git_fetch_leaves_no_scratch_repository(
-    server: Server, tmp_path: Path
+    server: Server, tmp_path: Path, signum: int
 ) -> None:
     """`fetch_month` alone, with no CLI-level wrap: the handling has to live in `fetch_month`
-    itself, so every caller gets it, not only `_stage_fetch_git`."""
+    itself, so every caller gets it, not only `_stage_fetch_git`. A hangup too, since git's own
+    process group no longer receives one sent to the job."""
     workdir = tmp_path / "work"
     workdir.mkdir()
     script = f"""
 import sys
 sys.path.insert(0, {str(Path(notedb.__file__).resolve().parents[2])!r})
+from contextlib import suppress
 from pathlib import Path
 from sphragis.corpus.notedb import fetch_month
 from sphragis.corpus.pacing import Pacer
@@ -1364,13 +1592,13 @@ fetch_month(
         while time.monotonic() < deadline and not any(workdir.iterdir()):
             time.sleep(0.05)
         assert any(workdir.iterdir()), "the scratch repository never appeared to be killed mid-run"
-        proc.send_signal(signal.SIGTERM)
+        proc.send_signal(signum)
         assert proc.wait(timeout=10) != 0
     finally:
         if proc.poll() is None:
             proc.kill()
             proc.wait()
-    assert list(workdir.iterdir()) == [], "the scratch repository must be gone after SIGTERM"
+    assert list(workdir.iterdir()) == [], "the scratch repository must be gone after the signal"
 
 
 def test_sigterm_during_an_intermediate_cleanup_still_stops_the_fetch(
@@ -1388,6 +1616,7 @@ import sys
 sys.path.insert(0, {str(Path(notedb.__file__).resolve().parents[2])!r})
 import time
 from contextlib import contextmanager
+from contextlib import suppress
 from pathlib import Path
 from sphragis.corpus import notedb
 from sphragis.corpus.pacing import Pacer
@@ -2406,6 +2635,7 @@ import time
 
 sys.path.insert(0, {root!r})
 import tempfile as tempfile_module
+from contextlib import suppress
 from pathlib import Path
 from sphragis.corpus.notedb import fetch_month, _require_lazy_fetch_disabled
 from sphragis.corpus.pacing import Pacer

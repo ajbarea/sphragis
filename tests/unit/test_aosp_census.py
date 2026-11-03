@@ -5,7 +5,9 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import signal
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -272,3 +274,20 @@ def test_a_manifest_listing_a_project_twice_is_refused() -> None:
       <project name="platform/a" path="a" /><project name="platform/a" path="b" /></manifest>"""
     with pytest.raises(SystemExit, match="twice"):
         census.manifest_projects(xml)
+
+
+def test_a_hangup_during_the_census_unwinds_the_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """git runs in a process group of its own, so the census converts a hangup into an unwind
+    (`notedb._raise_on_sigterm`), which kills the git group in flight."""
+
+    def hung_up(args: object) -> None:
+        signal.raise_signal(signal.SIGHUP)
+
+    monkeypatch.setattr(census, "run_census", hung_up)
+    argv = ["aosp_census.py", "census", "--code-files", "c", "--scratch", str(tmp_path)]
+    argv += ["--ledger", "l", "--out", "o"]
+    monkeypatch.setattr(sys, "argv", argv)
+    with pytest.raises(KeyboardInterrupt, match="SIGHUP"):
+        census.main()
