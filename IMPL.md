@@ -18,7 +18,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   checkout, and on Overleaf (`make overleaf PAPER=org-house-style`, facd216). Next: a
   share-ready pass on P4 (papers `org-house-style/`): a one-figure design overview and a short
   glossary, reviewed until clean. papers#126 (branch `p4/share-ready`) shortens P4's data-read
-  paragraph and links the itemized copy, issue #250 (branch `docs/data-read-before`):
+  paragraph and names the itemized decision record, issue #250 (PR #251) (branch `docs/data-read-before`):
   registered-decisions "Data read before this report", one row per change with its log entry. Verify: `uv run pytest tests/unit/test_log_tables.py`, `harvest.py --check`
   here and in papers. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
 - **H2's development pilot and simulation (issue #228): done.**
