@@ -94,7 +94,17 @@ def test_sizing_reads_a_run_made_before_calibration_existed() -> None:
     assert "calibrated" not in row
 
 
-def test_sizing_refuses_a_null_only_run_by_name() -> None:
-    path = RESULTS / "partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k12-null.json"
-    with pytest.raises(SystemExit, match="k12-null.json: not a full partition-sensitivity run"):
-        log_tables.sizing([path])
+@pytest.mark.parametrize(
+    "name",
+    [
+        # null-only: no detectable effects at the sizing bound
+        "partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k12-null.json",
+        # made before runs recorded their hypothesis
+        "partition-sensitivity-qt-rp1.0-logprob_per_token.json",
+    ],
+)
+def test_sizing_refuses_a_run_it_cannot_read_by_name(name: str) -> None:
+    with pytest.raises(
+        SystemExit, match=f"{re.escape(name)}: not a full partition-sensitivity run"
+    ):
+        log_tables.sizing([RESULTS / name])
