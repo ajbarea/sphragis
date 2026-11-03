@@ -13,18 +13,18 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   calibrated H2 simulations"): every H1 cell on s and s′ and H2 at K = 40 calibrated detect below δ.
   The table is printed by `log_tables.py sizing` and guarded in `test_log_tables.py`;
   registered-decisions "Stated power" quotes it.
-  Next: P4's numbers, papers#123 (issue #122, branch `p4/numbers-1102`, worktree
-  `papers/.claude/worktrees/p4-numbers`), harvest 87 verified against this main checkout: review
-  rounds until clean (reports in `sphragis-data-local/p4-review/papers123-round*.md`), merge,
-  `make overleaf PAPER=org-house-style`. Verify: `uv run pytest tests/unit/test_log_tables.py`,
-  `harvest.py --check` here and in papers. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
+  P4's numbers are merged, papers#123 (cb5e201; five review rounds and a verify pass, reports in
+  `sphragis-data-local/p4-review/papers123-*.md`), harvest 87 verified against this main
+  checkout, and on Overleaf (`make overleaf PAPER=org-house-style`, facd216). Next: the
+  share-ready pass. Verify: `uv run pytest tests/unit/test_log_tables.py`, `harvest.py --check`
+  here and in papers. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
 - **H2's development pilot and simulation (issue #228): done.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects
   below δ at every spread point, +0.0109 at the sizing bound at 97.5% (K = 10: +0.0174), with its
   null 0.01325 against 0.0125 at that point. The registration took K = 40 with a calibrated
   critical p (#232, PR #233), and PR #246 ran its calibrated simulation; its detectable effect
-  enters P4's Table II through papers#123.
+  is in P4's Table II (papers#123).
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from
