@@ -92,3 +92,9 @@ def test_sizing_reads_a_run_made_before_calibration_existed() -> None:
     row = log_tables.sizing([path]).splitlines()[-1]
     assert row.startswith("| H1 Qt, s | 10 |")
     assert "calibrated" not in row
+
+
+def test_sizing_refuses_a_null_only_run_by_name() -> None:
+    path = RESULTS / "partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k12-null.json"
+    with pytest.raises(SystemExit, match="k12-null.json: not a full partition-sensitivity run"):
+        log_tables.sizing([path])

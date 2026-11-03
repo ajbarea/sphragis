@@ -13,7 +13,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   2026-11-02, "Six-cell, s′ and calibrated H2 simulations"): every H1 cell on s and s′ and H2 at
   K = 40 calibrated detect below δ; Wikimedia's s′ calibrated as registered (727473). The table is
   printed by `log_tables.py sizing` and guarded in `test_log_tables.py`; registered-decisions
-  "Stated power" quotes it. Review: round 1 (7 findings) and round 2 (1 should-fix, 3 nits) fixed;
+  "Stated power" quotes it. Review: rounds 1 (7 findings), 2 (1 should-fix, 3 nits) and 3 (1 nit) fixed;
   reports in `sphragis-data-local/p4-review/sphragis246-round*.md`. Next: a fresh Opus round until
   clean, squash merge, then repoint `papers/.claude/worktrees/sphragis` to the main checkout and
   pull it. P4's numbers are papers#123 (issue #122, branch `p4/numbers-1102`): Table I on s and

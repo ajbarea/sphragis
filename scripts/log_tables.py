@@ -88,10 +88,15 @@ def _pair(values: dict | None) -> str:
 
 def sizing(paths: list[Path]) -> str:
     """One row a cell at the 90% sizing bound: its detectable effects at the most cells it was
-    sized over, its null rates and, for a calibrated run, its critical p and calibrated rates."""
+    sized over, its null rates and, for a calibrated run, its critical p and calibrated rates.
+    It reads full partition-sensitivity runs that record their hypothesis and metric; a null-only
+    run, or one made before those fields, is refused by name."""
     rows = []
     for path in paths:
         report = json.loads(path.read_text())
+        target = report.get("by_target", {}).get("sizing_bound_90", {})
+        if not ("hypothesis" in report and "metric" in report and target.get("by_level")):
+            raise SystemExit(f"{path.name}: not a full partition-sensitivity run sizing reads")
         score = "s′" if report["metric"].endswith(":other") else "s"
         if report["hypothesis"] == "H2":
             label = f"H2 {NAMES[report['org']]} vs {FOREIGN[report['foreign_source']]}, {score}"
@@ -99,7 +104,6 @@ def sizing(paths: list[Path]) -> str:
             label = f"H1 {NAMES[report['org']]}, {score}"
         if report.get("calibrated"):
             label += ", calibrated"
-        target = report["by_target"]["sizing_bound_90"]
         cells = [label, str(report["runs"])]
         for level in LEVELS:
             by_cells = target["by_level"][level]["by_cells"]
