@@ -146,9 +146,9 @@ the cell count its bound is simulated for and the spread target it is read at co
 registration, never the command line: a Gerrit organization's from the design of the admitted
 organizations, frozen by one commit before any test window (the Holm levels of its confirmatory
 hypotheses, a simulation of its H1 cells), a GitHub member's from the replication family (97.5%
-alone, one cell), and for both the 90% upper bound of the development pilot's per-run spread
-(`sizing_bound_90`, "Stated power"). The simulation must have
-been calibrated on the same development pilot K came from. The read, its K and its bounds resample
+alone, one cell), and for both the 90% upper bound of its own development pilot's per-run
+spread (`sizing_bound_90`, "Stated power"). The simulation must have been calibrated on the
+development pilot its K source was made from. The read, its K and its bounds resample
 the registered cluster unit (a Gerrit organization's relation chains, a GitHub member's changes),
 and by chain all three draw the same chains, which each records by a digest of what a read takes
 from the chains file: its chain map and training cluster counts (`chains.chains_sha256`,
@@ -327,8 +327,8 @@ figures they replace are in the research log.
 ### Interval the gate reads: the crossed run-by-cluster bootstrap
 
 Decided by the coverage study and the fixed-K simulation. A Gerrit read's cluster is a relation
-chain and a GitHub member's a change (research log, 2026-10-21). Under chains, at the spread K was
-sized on (the pilot's 90% upper bound), each H1 cell's simulated one-sided false-positive rate is
+chain and a GitHub member's a change (research log, 2026-10-21). Under chains, at the 90% upper
+bound of the pilot's per-run spread, each H1 cell's simulated one-sided false-positive rate is
 within nominal, Qt's at the 95% level exactly at it: at the stricter level 0.0075 for OpenStack, 0.011 for Wikimedia and 0.01175 for
 Qt, against 0.0125, and at the 95% level 0.019, 0.02475 and 0.025, against 0.025. At the pilot's
 99% upper spread Wikimedia's and Qt's exceed nominal at both levels, Qt's stricter rate most, at
@@ -409,7 +409,7 @@ H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1
 pass together at 0.95 or more (the product understates it, Power above), and H2's one cell at 0.95. Each cell is simulated at that power, its
 projected test size and its registered K, read under relation chains at the 90% upper bound of
 its own development pilot's per-run spread: s at six cells (`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`),
-s′ from its own development pilot at its s cell's K
+s′ at its s cell's K
 (`...-logprob_per_token-other-chains-k<K>[-calibrated].json`), H2 at K = 40 calibrated. At the
 two Holm levels, H1 on s detects a half-split contrast of +0.0124 and +0.0115 nats per token on
 OpenStack, +0.0080 and +0.0074 on Wikimedia and +0.0085 and +0.0079 on Qt; on s′, +0.0096 and

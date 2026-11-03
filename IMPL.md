@@ -23,7 +23,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects
   below δ at every spread point, +0.0109 at the sizing bound at 97.5% (K = 10: +0.0174), with its
   null 0.01325 against 0.0125 at that point. The registration took K = 40 with a calibrated
-  critical p (#232, PR #246); its detectable effect enters P4's Table II through papers#123.
+  critical p (#232, PR #233), and PR #246 ran its calibrated simulation; its detectable effect
+  enters P4's Table II through papers#123.
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from
