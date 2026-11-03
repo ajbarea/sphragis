@@ -43,7 +43,9 @@ from sphragis.experiment.partitions import (
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--pilot", type=Path, required=True, help="the development pilot K came from")
+parser.add_argument(
+    "--pilot", type=Path, required=True, help="the development pilot the K source is made from"
+)
 parser.add_argument("--org", required=True)
 parser.add_argument("--grid", type=Path, nargs="+", required=True, help="its simulations by K")
 parser.add_argument(

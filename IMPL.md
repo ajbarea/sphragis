@@ -9,24 +9,23 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **Issue #232, five registered-design decisions (AJ 2026-10-30).**
-  PR #246, the sized runs (research log, 2026-11-02, "Six-cell, s′ and calibrated H2
-  simulations"): every H1 cell on s and s′ and H2 at K = 40 calibrated detect below δ; Wikimedia's
-  s′ calibrated as registered (727473). The table is printed by `log_tables.py sizing` and guarded
-  in `test_log_tables.py`; registered-decisions "Stated power" quotes it. Reviewed in five rounds,
-  the fifth clean (`sphragis-data-local/p4-review/sphragis246-round*.md`).
-  Next: P4's numbers, papers#123 (issue #122, branch `p4/numbers-1102`): Table I on s and s′, the
-  sample size, the Fuchsia line; body 6 of 6, harvest 87 verified. After #246 is on main, point
-  `papers/.claude/worktrees/sphragis` at the main checkout, rerun papers CI, review until clean,
-  merge, `make overleaf PAPER=org-house-style`. Verify: `uv run pytest tests/unit/test_log_tables.py`,
-  `harvest.py --check` here and in papers. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
-- **H2's development pilot and simulation (issue #228): done; P4 waits on the registration call.**
+  PR #246, the sized runs, is merged (0d12cc3; research log, 2026-11-02, "Six-cell, s′ and
+  calibrated H2 simulations"): every H1 cell on s and s′ and H2 at K = 40 calibrated detect below δ.
+  The table is printed by `log_tables.py sizing` and guarded in `test_log_tables.py`;
+  registered-decisions "Stated power" quotes it.
+  P4's numbers are merged, papers#123 (cb5e201; five review rounds and a verify pass, reports in
+  `sphragis-data-local/p4-review/papers123-*.md`), harvest 87 verified against this main
+  checkout, and on Overleaf (`make overleaf PAPER=org-house-style`, facd216). Next: a
+  share-ready pass on P4 (papers `org-house-style/`): a one-figure design overview and a short
+  glossary, reviewed until clean. Verify: `uv run pytest tests/unit/test_log_tables.py`, `harvest.py --check`
+  here and in papers. Open for AJ (needs-you.md): the H1 + H2 sum on Qt's draws.
+- **H2's development pilot and simulation (issue #228): done.**
   PR #229 (research log, 2026-10-29): the pilot is inconclusive and no grid K holds H2's null at
   both levels. PR #230 (2026-10-30, "H2 at K = 40 by chain"): the full simulation at K = 40 detects
   below δ at every spread point, +0.0109 at the sizing bound at 97.5% (K = 10: +0.0174), with its
-  null 0.01325 against 0.0125 at that point. Next, once the registration takes H2's K (K = 40 with
-  the miss disclosed, or H2 exploratory): H2's K and detectable effect into P4's Table I
-  (papers `org-house-style/`, `harvest.py` claims of their own) and registered-decisions "Stated
-  power", then `make overleaf`.
+  null 0.01325 against 0.0125 at that point. The registration took K = 40 with a calibrated
+  critical p (#232, PR #233), and PR #246 ran its calibrated simulation; its detectable effect
+  is in P4's Table II (papers#123).
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated",
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from
@@ -74,11 +73,13 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    and simulation come before its test window.
 2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
    `ADMITTED_ORGANIZATIONS` (`FOREIGN_SOURCE` is set earlier, before the first H2 development
-   contrast, item 3(b)). With Qt admitted, H2 is confirmatory against Chromium, so
-   `decomposition_gate` refuses a Qt read until H2's bounds are simulated and `h1_test_gate`
-   refuses until H2's test read over partitions is built. Qt can be admitted until 2026-11-20, with its
-   cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
-   2026-10-23, so it is not set earlier.
+   contrast, item 3(b)). With Qt admitted, H2 is confirmatory against Chromium's pool. Once the
+   set is frozen, `decomposition_gate` refuses every read: no decomposition-sensitivity artifact
+   bounds Wikimedia's H1 cell or Qt's H2 cell (`detectable_effects` returns only H1 bounds, and
+   the fullest artifact, `decomposition-sensitivity.json`, has them for OpenStack and Qt).
+   `h1_test_gate` refuses until H2's test read over partitions is built. Qt can be admitted until
+   2026-11-20 with its cells' bounds simulated and committed by then (PR #246 did). Chromium is
+   not admitted (no split qualified by 2026-10-23) and supplies H2's foreign pool.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
    (a) done 2026-10-27: Chromium's pool covers every draw, first in the order, so
    `FOREIGN_SOURCE = "chromium"`; `partition_pilot.py`, `partition_sensitivity.py` and
@@ -94,20 +95,18 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    recorded by setting `H2_WITHDRAWN`; (c) the matched foreign
    sampler is `holdout.matched_foreign_draw` (2026-10-14); the two foreign adapters per run in the
    partition jobs take `FOREIGN_SOURCE=chromium` and the cleared pool from the job's
-   environment; the H2 development read needs H2 bounds in
-   `detectable_effects`, which only the H2 simulation supplies; (d) Qt's terms arrived 2026-10-15 and its host is in `REST_PERMITTED`: its fetch, freeze, split check,
-   development pilot for K and both cells' simulation, then the H2 test read over partitions
-   through `require_test_read`.
-4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
+   environment; the H2 development read and its simulation are done (PRs #229, #230, #246),
+   though `detectable_effects` still returns only H1's bounds (item 2); (d) Qt's terms arrived 2026-10-15 and its host
+   is in `REST_PERMITTED`: its fetch, freeze, split check, development pilot for K and both
+   cells' simulation are done; what remains is the H2 test read over partitions through
+   `require_test_read`.
+4. PR #246 sized every H1 cell at six cells, which assumes Qt is admitted. If Qt is not admitted
+   by 2026-11-20, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
    GitHub Pro (Student Pack) for required checks on papers `main`. Decided 2026-10-19: AJ reads
    Chrome Infra's answer as a rate covering Chromium, AOSP and Fuchsia; by that reading Chromium's
    pool, first in the order, is H2's source (2026-10-27).
-6. Dependabot alerts 2-4 (filelock) stay open though `main` pins the patched 4.2.1 (#203): the
-   graph update GitHub ran on that merge failed on its side ("fetching job details: missing
-   response") and cannot be rerun, so its graph still reads 3.32.6. The next push that changes
-   `uv.lock` updates it and closes them as fixed; nothing to bump or dismiss.
 
 ## Standing
 
@@ -116,8 +115,8 @@ A test window below its projected size is read with `power_at_size.py` run on it
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. The paper ends its body on page 6 again (papers#112) and is mirrored to the lab's
-Overleaf project (`make overleaf PAPER=org-house-style`; Overleaf c418573 = papers 6e595c7, #113:
-Chromium as H2's foreign source, its pool's widening disclosed, body on six pages). `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
+Overleaf project (`make overleaf PAPER=org-house-style`; Overleaf facd216 = papers cb5e201,
+papers#123: the six-cell, s′ and calibrated H2 figures, body on six pages). `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before. A host is read only as its registry admits
 it: Qt's REST API at the terms granted 2026-10-15, Chromium's, AOSP's and Fuchsia's under Chrome
 Infra's rate answer of the same day (`REST_PERMITTED`); over git, AOSP alone

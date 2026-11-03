@@ -24,7 +24,7 @@ Every input is read from the artifact that fixed it, never typed: K from the pil
 `--runs`, recorded as the K source, for the K coverage rule's grid), the test window's size from the
 decomposition sensitivity's projection, N and the split criteria's reference from the admissible
 list. sigma_run is calibrated, not chosen: at each of four named points on the pilot's per-run
-spread (its 90% lower bound, its estimate, the 90% bound K was sized on, its 99% upper bound), the
+spread (its 90% lower bound, its estimate, its 90% upper bound, its 99% upper bound), the
 shift at which K null runs on the pilot's number of changes spread that much. The artifact records
 each input's source.
 
