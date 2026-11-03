@@ -12,7 +12,8 @@ declared as one.
 
 They are grouped by where the decision came from. The first group holds choices argued from
 the design and from prior work. The second holds choices a measurement made, under a rule
-written down before that measurement existed.
+written down before that measurement existed. A last section lists the data read before the
+report and each rule that changed after a reading.
 
 ## Fixed in advance
 
@@ -428,6 +429,32 @@ Decided by a determinism check across jobs and nodes, repeated at the registered
 reproduces on every prediction across two jobs on different nodes, where bf16 differs between
 the jobs and within one process (research log, 2026-09-18 and 2026-10-08), at no measurable cost
 in wall time.
+
+## Data read before this report
+
+The Stage 1 report states in brief what was read before it was written and which rules changed
+after a reading. This is the full list, each item with the research-log entry that records it.
+An entry is cited by its date and the first clause of its title. The test window is sealed and
+unread.
+
+**Held before the report:** the pilot, train and development windows of OpenStack, Wikimedia, Qt
+and the GitHub organizations; Chromium's pool; and the pools sized to choose Qt's foreign
+organization (V8, AOSP, Fuchsia).
+
+| what was read, and what it set or changed | research log |
+|---|---|
+| N was set from training-window counts alone. | 2026-09-29, "H1 over repeated partitions" |
+| Repeated splits replaced a single split after OpenStack's development contrast depended on which split was drawn. One single split's H1 reading on exact match had passed. | 2026-09-27, "OpenStack on corpus v2 at the half size"; 2026-09-28, "OpenStack on corpus v3" and "Planned before any run: how much of H1 is the partition"; 2026-09-29, "Partition-to-partition variation is comparable to the seed effect" and "H1 over repeated partitions" |
+| K comes from development runs. Its coverage rule was added after a simulated null passed more often than nominal. | 2026-10-09, "The H1 simulation on likelihood" and "Wikimedia's K under the coverage rule: 20" |
+| Exact match was the outcome. Its repeated-split development H1 readings, on OpenStack and Wikimedia, were both inconclusive; a single split's reading had passed (the row above). It then failed the planted-convention check under greedy decoding, and s replaced it. δ's definition and that check's criterion were fixed before any result on s was read. | 2026-09-28, "OpenStack on corpus v3"; 2026-09-29 and 2026-10-08 (the repeated-split readings); 2026-10-09, "Check 5 fails at the registered decoder" and "Planned before any likelihood result is read" |
+| The rate carrying δ to s was first the adapters' gain ratio. It was replaced once by the planted rate, under a rule fixed after development readings and before the planted runs. No development verdict changed. | 2026-10-15, "Planned before any planted quote-style result is read"; 2026-10-16, "The planted quote-style rate excludes the registered one" |
+| The bounded margin became δ after development H1 readings on s. One development verdict moved from inconclusive to bounded. | 2026-10-14, "The bounded reading becomes a one-sided equivalence test at the SESOI" |
+| Relation chains replaced changes as the cluster unit after those readings and before any chain was read. No verdict moved, and Qt's K fell. | 2026-10-21, "Relation chains registered as H1's cluster unit" and "Relation chains read on the development window"; 2026-10-22, "Relation chains simulated" |
+| Chromium is the first of Chromium, Fuchsia and AOSP, in that fixed order, whose pool covers every matched draw. The pool rule widened from capped V8 to every project after the V8 and AOSP pools were sized. Fuchsia's listings had run by then; its coverage had not been read. | 2026-10-16 (V8); 2026-10-19 (AOSP; "Chromium re-read as a rate grant"); 2026-10-20, "Fuchsia's pool covers every matched draw with its first project"; 2026-10-27 (Chromium) |
+| Exploratory comparators read sibling minus foreign across languages on OpenStack and Wikimedia before H2's language matching was fixed. | 2026-10-06 and 2026-10-07 (the comparators); 2026-10-14, "Planned before any adapter d_org on s is read" |
+| After development readings on s′ (by token class, before it was a co-primary), on H2's contrast (inconclusive) and on its simulation, s′ became co-primary, H2's K the cap, and Fuchsia an exploratory arm. Fuchsia's development contrast, read after, is supported. | 2026-10-15, "s split by token class"; 2026-10-18, "s split by token class on Qt"; 2026-10-29; 2026-10-30, "Five design decisions before the seal"; 2026-11-01 |
+| Qt and AOSP were first fetched before their grants. Both REST fetches stopped on 2026-09-23, when the hosts' robots.txt was read. Chromium's review host was queried before its grant as well: comments read on a sample of changes, a scoping pass, and a test run that reached it after the stop, which the log records as a breach of it. Nothing from those queries is in the corpus. OpenStack's early builds ran faster than the crawl delay its robots.txt asks for. | 2026-09-21, "Chromium yields reviewer comments at Qt's rate"; 2026-09-22, "Chromium scoped"; 2026-09-23, "A rebased test reached chromium-review" and "The review UIs are closed to crawlers and the git hosts are not" |
+| A pilot on Qt's data led to the bot filter and to testing two boundaries. Source-attribution pilots on Qt's and AOSP's data set AOSP last in the order. None of these pilots is in a figure in the report. | 2026-09-22, "RQ1 re-registered around granularity"; 2026-09-23, "A data audit"; 2026-09-18 (the source-attribution pilots); 2026-10-14, "Planned before any adapter d_org on s is read" |
 
 ## Where these live in the code
 
