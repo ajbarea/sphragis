@@ -42,7 +42,14 @@ from typing import Any
 
 from sphragis.corpus.cli import _git_pacer
 from sphragis.corpus.halves import suffix
-from sphragis.corpus.notedb import AOSP_CENSUS_TAG, GIT_HOSTS, GitError, Repo, valid_project_name
+from sphragis.corpus.notedb import (
+    AOSP_CENSUS_TAG,
+    GIT_HOSTS,
+    GitError,
+    Repo,
+    _raise_on_sigterm,
+    valid_project_name,
+)
 from sphragis.corpus.pacing import Pacer
 from sphragis.experiment.decomposition import CPP_SUFFIXES
 from sphragis.provenance import provenance_header
@@ -265,7 +272,9 @@ def main() -> None:
         args.out.write_text(json.dumps(report, indent=2) + "\n")
         print(f"{len(report['suffixes'])} suffixes, {len(report['filenames'])} file names")
     else:
-        run_census(args)
+        # A hangup or kill unwinds the run, so `_run_reaped` kills the git group in flight.
+        with _raise_on_sigterm():
+            run_census(args)
 
 
 if __name__ == "__main__":

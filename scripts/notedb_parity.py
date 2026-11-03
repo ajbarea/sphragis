@@ -37,7 +37,6 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import signal
 import subprocess
 import tempfile
 from collections import Counter, defaultdict
@@ -808,12 +807,12 @@ def main() -> None:
     with _raise_on_sigterm():
         scratch: Path | None = None
         try:
-            with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+            with _uninterruptible():
                 scratch = _find_marked_scratch(args.work) or _make_scratch(args.work)
             _run(args, salt, scratch)
         finally:
             if scratch is not None and not args.keep_work:
-                with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                with _uninterruptible():
                     preserved = _preserve_ledger(scratch, args.work)
                     _rmtree_marked(scratch)
                     if preserved is not None:

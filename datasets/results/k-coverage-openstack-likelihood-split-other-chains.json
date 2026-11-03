@@ -1,0 +1,55 @@
+{
+  "kind": "k_coverage",
+  "org": "openstack",
+  "metric": "logprob_per_token:other",
+  "pilot": "datasets/results/partition-pilot-openstack-likelihood-split-other-chains.json",
+  "cluster_unit": {
+    "unit": "chain",
+    "file": "datasets/results/relation-chains-openstack.json",
+    "sha256": "de4e4adbe6d1ae988d7fdd2b72fffba39c1a7d85a0bcbea38e5e182b28eafbd2",
+    "changes": 206,
+    "chains": 203
+  },
+  "spread_target": "sizing_bound_90",
+  "null_trials": 4000,
+  "reproducibility_runs": null,
+  "coverage_runs": null,
+  "registered_runs": 10,
+  "runs": 10,
+  "nominal": {
+    "0.975": 0.012500000000000011,
+    "0.95": 0.025000000000000022
+  },
+  "grid": [
+    {
+      "runs": 10,
+      "file": "datasets/results/partition-sensitivity-openstack-rp1.0-logprob_per_token-other-chains-k10.json",
+      "null_false_positive": {
+        "0.975": 0.00875,
+        "0.95": 0.01925
+      },
+      "within_nominal": true
+    }
+  ],
+  "calibrated": false,
+  "critical_p": null,
+  "null_false_positive_calibrated": null,
+  "spread_targets": {
+    "pilot_lower_90": 0.003944467563197542,
+    "pilot_estimate": 0.004684198233259472,
+    "sizing_bound_90": 0.005899395524791332,
+    "pilot_upper_99": 0.0071964495796579125
+  },
+  "provenance": {
+    "generated_at": "2026-11-02T17:56:50.872661+00:00",
+    "git": {
+      "commit": "b9e8ccd89ff7ac717927123429faa1daeec7707e",
+      "branch": "results/sims-1101"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

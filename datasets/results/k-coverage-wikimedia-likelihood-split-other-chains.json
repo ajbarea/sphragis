@@ -1,0 +1,61 @@
+{
+  "kind": "k_coverage",
+  "org": "wikimedia",
+  "metric": "logprob_per_token:other",
+  "pilot": "datasets/results/partition-pilot-wikimedia-likelihood-split-other-chains.json",
+  "cluster_unit": {
+    "unit": "chain",
+    "file": "datasets/results/relation-chains-wikimedia.json",
+    "sha256": "39178eb8ea8d9887cb7af7918430937012e80c9e2464cee870ed6cd94224a5be",
+    "changes": 429,
+    "chains": 422
+  },
+  "spread_target": "sizing_bound_90",
+  "null_trials": 4000,
+  "reproducibility_runs": null,
+  "coverage_runs": null,
+  "registered_runs": 20,
+  "runs": 20,
+  "nominal": {
+    "0.975": 0.012500000000000011,
+    "0.95": 0.025000000000000022
+  },
+  "grid": [
+    {
+      "runs": 20,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-other-chains-k20-calibrated.json",
+      "null_false_positive": {
+        "0.975": 0.0155,
+        "0.95": 0.02875
+      },
+      "within_nominal": false
+    }
+  ],
+  "calibrated": true,
+  "critical_p": {
+    "0.975": 0.0105,
+    "0.95": 0.0208
+  },
+  "null_false_positive_calibrated": {
+    "0.975": 0.009,
+    "0.95": 0.01825
+  },
+  "spread_targets": {
+    "pilot_lower_90": 0.004859742799115978,
+    "pilot_estimate": 0.005771120758123589,
+    "sizing_bound_90": 0.007268292731884206,
+    "pilot_upper_99": 0.008866315532733987
+  },
+  "provenance": {
+    "generated_at": "2026-11-02T17:56:51.071519+00:00",
+    "git": {
+      "commit": "b9e8ccd89ff7ac717927123429faa1daeec7707e",
+      "branch": "results/sims-1101"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

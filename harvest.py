@@ -99,6 +99,19 @@ H2_K40 = (
     f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40.json"
 )
 H2_K40_AT = ["by_target", "sizing_bound_90", "by_level"]
+H2_K40_CALIBRATED = (
+    f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains"
+    "-k40-calibrated.json"
+)
+# Each H1 cell's sizing at six cells: s, and s' at its s cell's K (Wikimedia's calibrated).
+PARTITION_SENSITIVITY_CELLS6 = {
+    org: f"{RESULTS}/partition-sensitivity-{org}-rp1.0-cells6-logprob_per_token-chains-k{k}.json"
+    for org, k in (("openstack", 10), ("wikimedia", 20), ("qt", 10))
+}
+PARTITION_SENSITIVITY_OTHER = {
+    org: f"{RESULTS}/partition-sensitivity-{org}-rp1.0-logprob_per_token-other-chains-k{k}.json"
+    for org, k in (("openstack", "10"), ("wikimedia", "20-calibrated"), ("qt", "10"))
+}
 
 CLAIMS: list[tuple[Any, ...]] = [
     # protocol.md: the corpus, and where the dev-window reading stands.
@@ -157,14 +170,14 @@ CLAIMS: list[tuple[Any, ...]] = [
         "rd_h2_k40_mde_975",
         "registered-decisions.md",
         "+0.0109",
-        H2_K40,
+        H2_K40_CALIBRATED,
         [*H2_K40_AT, "0.975", "by_cells", "1", "minimum_detectable_effect"],
     ),
     (
         "rd_h2_k40_mde_95",
         "registered-decisions.md",
         "+0.0103",
-        H2_K40,
+        H2_K40_CALIBRATED,
         [*H2_K40_AT, "0.95", "by_cells", "1", "minimum_detectable_effect"],
     ),
     (
@@ -488,9 +501,9 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_cell_power",
         "registered-decisions.md",
-        "0.983",
-        PARTITION_SENSITIVITY_CHAINS["openstack"],
-        ["cell_power", "3"],
+        "0.9915",
+        PARTITION_SENSITIVITY_CELLS6["openstack"],
+        ["cell_power", "6"],
     ),
     *(
         (
@@ -513,27 +526,33 @@ CLAIMS: list[tuple[Any, ...]] = [
     ),
     *(
         (
-            f"rd_partition_mde_{level}_{org}",
+            f"rd_partition_mde_{score}_{level}_{org}",
             "registered-decisions.md",
             value,
-            PARTITION_SENSITIVITY_CHAINS[org],
+            (PARTITION_SENSITIVITY_CELLS6 if score == "s" else PARTITION_SENSITIVITY_OTHER)[org],
             [
                 "by_target",
                 "sizing_bound_90",
                 "by_level",
                 level,
                 "by_cells",
-                "3",
+                "6",
                 "minimum_detectable_effect",
             ],
         )
-        for org, level, value in (
-            ("openstack", "0.975", "+0.0120"),
-            ("openstack", "0.95", "+0.0112"),
-            ("wikimedia", "0.975", "+0.0074"),
-            ("wikimedia", "0.95", "+0.0069"),
-            ("qt", "0.975", "+0.0083"),
-            ("qt", "0.95", "+0.0077"),
+        for score, org, level, value in (
+            ("s", "openstack", "0.975", "+0.0124"),
+            ("s", "openstack", "0.95", "+0.0115"),
+            ("s", "wikimedia", "0.975", "+0.0080"),
+            ("s", "wikimedia", "0.95", "+0.0074"),
+            ("s", "qt", "0.975", "+0.0085"),
+            ("s", "qt", "0.95", "+0.0079"),
+            ("other", "openstack", "0.975", "+0.0096"),
+            ("other", "openstack", "0.95", "+0.0090"),
+            ("other", "wikimedia", "0.975", "+0.0078"),
+            ("other", "wikimedia", "0.95", "+0.0073"),
+            ("other", "qt", "0.975", "+0.0054"),
+            ("other", "qt", "0.95", "+0.0050"),
         )
     ),
     # outcome-neutral.md
