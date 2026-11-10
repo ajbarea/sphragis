@@ -266,7 +266,11 @@ def _answer(path: Path) -> dict:
         raise SystemExit(f"{path}: not an answer document")
     if body.get("rubric") != RUBRIC_VERSION:
         raise SystemExit(f"{path}: saved under rubric {body.get('rubric')!r}, not this audit's")
-    if body.get("label") not in LABELS or not isinstance(body.get("outside_names"), bool):
+    if (
+        body.get("label") not in LABELS
+        or not isinstance(body.get("outside_names"), bool)
+        or not isinstance(body.get("locked_at"), str)
+    ):
         raise SystemExit(f"{path}: not a locked answer under the rubric")
     slips = body.get("slips", [])
     if not set(slips) <= {"label", "outside_names"}:

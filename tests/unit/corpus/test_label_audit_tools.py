@@ -238,6 +238,7 @@ def test_each_second_rater_is_read_apart_under_a_pseudonym(tmp_path: Path) -> No
     [
         (_answer("valid", "t", rubric="v1"), "item-002", "rubric"),
         (_answer("looks fine", "t"), "item-002", "not a locked answer"),
+        ({**_answer("valid", "t"), "locked_at": None}, "item-002", "not a locked answer"),
         (_answer("valid", "t", slips=["reason"]), "item-002", "unknown slip"),
         (_answer("valid", "t"), "item-003", "not one of the page's items"),
     ],
