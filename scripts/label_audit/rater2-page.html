@@ -1,0 +1,334 @@
+<title>Label Audit Second Rater</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/*__STYLE__*/
+.intro{margin-top:20px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:20px;display:grid;gap:14px}
+.intro h2{font-size:17px;font-weight:600;margin:0}
+.intro p,.intro li{margin:0;max-width:70ch}
+.intro ul{margin:0;padding-inline-start:20px;display:grid;gap:6px}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.facts span{background:var(--chip);border-radius:999px;padding:4px 12px;font-size:13px}
+.answer-line{font-size:13.5px;color:var(--muted)}
+.answer-line b{color:var(--ink);font-weight:500}
+.locked-line{font-family:var(--mono);font-size:13.5px;color:var(--done)}
+.check{border-top:1px dashed var(--rule);padding-top:10px;display:grid;gap:6px}
+.check .verdict{font-family:var(--mono);font-size:13.5px}
+.agree{color:var(--done)} .differ{color:var(--del-ink)}
+.slips label{margin-inline-end:14px}
+.done{text-align:center;padding:32px 20px}
+.done h2{font-size:20px;margin:0 0 8px}
+.err{color:var(--del-ink)}
+</style>
+<div class="wrap">
+  <header>
+    <h1>Label audit: second rater</h1>
+    <p id="lede">Short code reviews, each answered with two questions. Thank you for helping.</p>
+  </header>
+
+  <div class="status" role="status" aria-live="polite">
+    <span class="count" id="count"></span>
+    <div class="meter" aria-hidden="true"><span id="bar"></span></div>
+    <span class="note" id="conn">Connecting…</span>
+  </div>
+  <div class="banner" id="notice" hidden></div>
+
+  <main id="stage"></main>
+</div>
+
+<script>
+const ITEMS = __DATA__;
+const LABELS = ["valid","non_actionable","unrelated_rewrite","partial","context_dependent"];
+const RUBRIC = "v2";
+const DEFINITIONS = {
+  valid: "The comment asks for a change and the rewrite makes it. Extra edits alongside are fine.",
+  non_actionable: "The comment asks for no change (praise, FYI, agreement, a question the author could answer in words), or it withdraws its own request.",
+  unrelated_rewrite: "The requested change is absent; the code changed for some other reason.",
+  partial: "The rewrite makes part of what was asked, or makes it in a clearly different way than the comment suggested.",
+  context_dependent: "You cannot tell what the comment asks for from what is shown: \"same here\", \"see above\", a reference to other lines, files or patch sets, a bare \"?\" or \"why?\", \"remove\" without saying what, or only a link."
+};
+// The rubric's invented worked example: a practice item, never saved and never counted.
+const PRACTICE = {
+  path: "service/status.py",
+  comments: ["This string is compared against in other modules; please make it a constant."],
+  cb: "", b: "status = \"Service unavailable\"", a: "status = errors.SERVICE_UNAVAILABLE", ca: "",
+  label: "valid", outside: true,
+  why: "The request is clear and the rewrite makes it, so the label is valid. The module errors and the constant's name appear nowhere in the item, so the second answer is yes."
+};
+
+const answers = {};   // item -> the locked answer, as the store holds it
+const drafts = {};    // item -> {label, outside, note}: unlocked choices, kept only on this page
+let db = null, uid = null, mode = "connecting", screen = "intro", current = 0, loaded = false, busy = false;
+let practice = {label:null, outside:false, checked:false};
+
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function diffBlock(ex){
+  const box=el("div","diff"), pre=el("pre");
+  const add=(text,cls,prefix)=>{ if(!text) return; for(const line of text.split("\n")) pre.appendChild(el("span",cls,prefix+line+"\n")); };
+  add(ex.cb,"ctx","  "); add(ex.b,"del","- "); add(ex.a,"add","+ "); add(ex.ca,"ctx","  ");
+  box.appendChild(pre); return box;
+}
+function lockedCount(){ return ITEMS.filter(x=>answers[x.item]).length; }
+function firstOpen(){ const i=ITEMS.findIndex(x=>!answers[x.item]); return i<0?ITEMS.length-1:i; }
+function notice(text){ const n=document.getElementById("notice"); n.hidden=!text; n.textContent=text||""; }
+function progress(){
+  const k=lockedCount();
+  document.getElementById("count").textContent=k+" of "+ITEMS.length+" locked";
+  document.getElementById("bar").style.width=(100*k/ITEMS.length)+"%";
+}
+function rubricList(){
+  const dl=el("dl");
+  LABELS.forEach((lab,k)=>{ dl.appendChild(el("dt",null,(k+1)+"  "+lab)); dl.appendChild(el("dd",null,DEFINITIONS[lab])); });
+  return dl;
+}
+function rubricDetails(open){
+  const d=el("details","rubric"); d.open=open;
+  d.appendChild(el("summary",null,"The two questions"));
+  d.appendChild(el("p","note","1. The label: did the reviewer ask for a change, and is the rewrite the author's answer to it? Pick one."));
+  d.appendChild(rubricList());
+  d.appendChild(el("p","note","context_dependent is about understanding the request. A clear request answered with names defined elsewhere is still valid; that is question 2. Several comments: judge the requests together. All made is valid, some is partial, none is unrelated_rewrite; ignore comments that ask for nothing when others do. A deletion the comment asked for is valid, and a question the author answers by changing the code counts as a request. Judge only what is shown; do not guess the project or the author."));
+  d.appendChild(el("p","note","2. Names from outside: does the rewrite use a name or value that appears nowhere in the item (a helper, constant, module, class, config key, file name, version or hash defined elsewhere)? A name the comment spells out counts as shown. New local variable names, plain rewording and ordinary library or language names (open, len, std::move) do not count. Answer it for every item, whatever its label."));
+  d.appendChild(el("p","note","Keys: 1 to 5 pick a label, x toggles question 2, Enter locks, n and p move to the next and previous item."));
+  return d;
+}
+
+function renderIntro(stage){
+  const box=el("section","intro");
+  box.appendChild(el("h2",null,"What this is"));
+  box.appendChild(el("p",null,"Each item is one code review: a reviewer's comment on a few lines of code, and how those lines looked in the author's next revision. You answer two questions about each. AJ labeled the same "+ITEMS.length+" items earlier; a second careful reader's labels show how often two people agree, a figure the study reports."));
+  const facts=el("div","facts");
+  ["About an hour for all "+ITEMS.length,"Stop and resume any time","Answers save as you lock them"].forEach(t=>facts.appendChild(el("span",null,t)));
+  box.appendChild(facts);
+  box.appendChild(el("h2",null,"How it works"));
+  const ul=el("ul");
+  [
+    "Your answers are blind. You will not see AJ's labels or the model raters' labels, before or after you answer.",
+    "Nobody else using this page sees your answers. AJ reads them, by item, only to compute agreement; your name is not attached to them in anything published.",
+    "You can change an answer until you lock it. A locked answer is final, so lock when you are sure. If you mis-click, you can mark the locked answer as a slip; it stays as locked.",
+    "Judge only what is shown. Some items are hard; your best reading is exactly what is wanted.",
+    "Everyone who helps is thanked in the paper's acknowledgments."
+  ].forEach(t=>ul.appendChild(el("li",null,t)));
+  box.appendChild(ul);
+  box.appendChild(rubricDetails(true));
+  const nav=el("div","nav");
+  const go=el("button","primary",lockedCount()?"Continue where I left off":"Try the practice item"); go.type="button";
+  go.onclick=()=>{ screen=lockedCount()?"items":"practice"; current=firstOpen(); render(); window.scrollTo({top:0}); };
+  nav.appendChild(go);
+  if(!lockedCount()){
+    const skip=el("button",null,"Skip to item 1"); skip.type="button";
+    skip.onclick=()=>{ screen="items"; current=0; render(); window.scrollTo({top:0}); };
+    nav.appendChild(skip);
+  }
+  box.appendChild(nav);
+  stage.appendChild(box);
+}
+
+function choiceGroup(selected, disabled, onPick){
+  const ch=el("div","choices"); ch.setAttribute("role","group"); ch.setAttribute("aria-label","Label");
+  LABELS.forEach((lab,k)=>{
+    const b=el("button"); b.type="button"; b.disabled=disabled; b.title=DEFINITIONS[lab];
+    b.appendChild(el("kbd",null,String(k+1))); b.appendChild(document.createTextNode(lab));
+    b.setAttribute("aria-pressed",String(selected===lab));
+    b.addEventListener("click",()=>onPick(lab));
+    ch.appendChild(b);
+  });
+  return ch;
+}
+function outsideBox(checked, disabled, onChange){
+  const flag=el("label","note"); const box=el("input"); box.type="checkbox"; box.disabled=disabled; box.checked=checked;
+  box.addEventListener("change",()=>onChange(box.checked));
+  flag.append(box, document.createTextNode(" The rewrite uses names or values not shown in the item (x)"));
+  return flag;
+}
+function itemBody(card, ex){
+  card.appendChild(el("span","path",ex.path));
+  const cs=el("div","comments");
+  cs.appendChild(el("span","label-small","Reviewer comment"+(ex.comments.length>1?"s":"")));
+  ex.comments.forEach(c=>cs.appendChild(el("div","comment",c)));
+  card.appendChild(cs);
+  const d=el("div"); d.appendChild(el("span","label-small","Next revision (− before, + after)")); d.appendChild(diffBlock(ex)); card.appendChild(d);
+}
+
+function renderPractice(stage){
+  const card=el("section","card current");
+  const head=el("div","card-head");
+  head.appendChild(el("span","num","Practice item: invented, not saved, not counted"));
+  card.appendChild(head);
+  itemBody(card, PRACTICE);
+  card.appendChild(choiceGroup(practice.label, practice.checked, lab=>{ practice.label=lab; render(); }));
+  card.appendChild(outsideBox(practice.outside, practice.checked, v=>{ practice.outside=v; }));
+  const nav=el("div","nav");
+  if(!practice.checked){
+    const check=el("button","primary","Check my practice answer"); check.type="button"; check.disabled=!practice.label;
+    check.onclick=()=>{ practice.checked=true; render(); };
+    nav.appendChild(check);
+  } else {
+    const start=el("button","primary","Start item 1"); start.type="button";
+    start.onclick=()=>{ screen="items"; current=firstOpen(); render(); window.scrollTo({top:0}); };
+    const again=el("button",null,"Try it again"); again.type="button";
+    again.onclick=()=>{ practice={label:null,outside:false,checked:false}; render(); };
+    nav.append(start, again);
+  }
+  card.appendChild(nav);
+  if(practice.checked){
+    const r=el("div","check");
+    const okLabel=practice.label===PRACTICE.label, okNames=practice.outside===PRACTICE.outside;
+    r.appendChild(el("div","verdict "+(okLabel?"agree":"differ"),"Label: valid"+(okLabel?" (you agree)":" (you chose "+practice.label+")")));
+    r.appendChild(el("div","verdict "+(okNames?"agree":"differ"),"Names from outside: yes"+(okNames?" (you agree)":" (you said no)")));
+    r.appendChild(el("div","note",PRACTICE.why));
+    r.appendChild(el("div","note","This is the only answer you will see. The "+ITEMS.length+" items show none."));
+    card.appendChild(r);
+  }
+  stage.appendChild(rubricDetails(false));
+  stage.appendChild(card);
+}
+
+function renderItem(stage){
+  const ex=ITEMS[current], s=answers[ex.item], locked=!!s;
+  const draft=drafts[ex.item]||(drafts[ex.item]={label:null,outside:false,note:""});
+  const card=el("section","card current");
+  const head=el("div","card-head");
+  head.appendChild(el("span","num","Item "+(current+1)+" of "+ITEMS.length));
+  card.appendChild(head);
+  itemBody(card, ex);
+  const frozen=locked||busy;
+  card.appendChild(choiceGroup(locked?s.label:draft.label, frozen, lab=>{ draft.label=lab; render(); }));
+  card.appendChild(outsideBox(locked?!!s.outside_names:draft.outside, frozen, v=>{ draft.outside=v; render(); }));
+  if(!locked){
+    const ta=el("textarea"); ta.placeholder="Optional note, saved with your answer when you lock it"; ta.value=draft.note; ta.disabled=busy;
+    ta.addEventListener("input",()=>{ draft.note=ta.value; });
+    card.appendChild(ta);
+    const line=el("div","answer-line");
+    if(draft.label){ line.append("Your answer: ", el("b",null,draft.label), " · names from outside: ", el("b",null,draft.outside?"yes":"no")); }
+    else line.textContent="Pick a label to lock this item.";
+    card.appendChild(line);
+  } else {
+    card.appendChild(el("div","locked-line","Locked: "+s.label+" · names from outside: "+(s.outside_names?"yes":"no")));
+    if(s.note) card.appendChild(el("div","note","Your note: "+s.note));
+    const slips=el("div","note slips"); slips.appendChild(el("span",null,"Mis-click? Mark it; your locked answer stays as it is: "));
+    for(const [field,text] of [["label","label was a slip"],["outside_names","names answer was a slip"]]){
+      const lab=el("label"); const cb=el("input"); cb.type="checkbox"; cb.checked=(s.slips||[]).includes(field); cb.disabled=busy||mode!=="saving";
+      cb.addEventListener("change",()=>markSlip(ex.item, field, cb.checked));
+      lab.append(cb," "+text); slips.appendChild(lab);
+    }
+    card.appendChild(slips);
+  }
+  const nav=el("div","nav");
+  const prev=el("button",null,"Previous"); prev.type="button"; prev.disabled=current===0; prev.onclick=()=>go(-1);
+  const lock=el("button","primary",locked?"Locked":(busy?"Saving…":"Lock answer")); lock.type="button";
+  lock.disabled=locked||busy||!draft.label||!canLock(); lock.onclick=lockCurrent;
+  const next=el("button",null,"Next"); next.type="button"; next.disabled=current===ITEMS.length-1; next.onclick=()=>go(1);
+  const jump=el("button",null,"First open item"); jump.type="button"; jump.onclick=()=>{ current=firstOpen(); render(); };
+  const back=el("button",null,"Instructions"); back.type="button"; back.onclick=()=>{ screen="intro"; render(); };
+  nav.append(prev,lock,next,jump,back); card.appendChild(nav);
+  const err=el("div","saved err"); err.id="err"; card.appendChild(err);
+  stage.appendChild(card);
+  if(lockedCount()===ITEMS.length){
+    const done=el("section","intro done");
+    done.appendChild(el("h2",null,"All "+ITEMS.length+" locked. Thank you!"));
+    done.appendChild(el("p",null,"Your answers are saved. You can close this page; AJ will take it from here."));
+    stage.appendChild(done);
+  }
+}
+
+function canLock(){ return mode==="saving"||mode==="preview"; }
+function render(){
+  const stage=document.getElementById("stage"); stage.textContent="";
+  if(screen==="intro") renderIntro(stage);
+  else if(screen==="practice") renderPractice(stage);
+  else renderItem(stage);
+  progress();
+}
+function go(step){ current=Math.max(0,Math.min(ITEMS.length-1,current+step)); render(); window.scrollTo({top:0}); }
+
+async function lockCurrent(){
+  const ex=ITEMS[current], draft=drafts[ex.item];
+  if(busy||answers[ex.item]||!draft||!draft.label||!canLock()) return;
+  const body={rubric:RUBRIC,label:draft.label,outside_names:!!draft.outside,note:draft.note.trim(),slips:[],locked_at:new Date().toISOString()};
+  if(mode==="preview"){ answers[ex.item]=body; afterLock(); return; }
+  busy=true; render();
+  try{
+    // Another tab may have locked this item first; a locked answer is never overwritten.
+    const ref=db.doc("answers/"+uid+"/items/"+ex.item);
+    if((await ref.get()).exists){ busy=false; render(); return; }
+    await ensureMarker();
+    await ref.set(body);
+    answers[ex.item]=body; busy=false; afterLock();
+  }catch(e){
+    busy=false; render();
+    const err=document.getElementById("err");
+    if(e&&(e.code==="invalid_argument"||e.code==="not_granted"||e.code==="revoked")){ mode="readonly"; notice(readonlyText()); render(); }
+    else if(err) err.textContent="Not saved. Check your connection and press Lock again.";
+  }
+}
+function afterLock(){
+  if(current<ITEMS.length-1&&lockedCount()<ITEMS.length) current=firstOpenAfter(current);
+  render(); window.scrollTo({top:0});
+}
+function firstOpenAfter(i){ for(let k=i+1;k<ITEMS.length;k++) if(!answers[ITEMS[k].item]) return k; return firstOpen(); }
+let markerWritten=false;
+async function ensureMarker(){
+  // answers/<id> marks that this rater has answers, so they can be listed for the read-back.
+  if(markerWritten) return;
+  const ref=db.doc("answers/"+uid);
+  if(!(await ref.get()).exists) await ref.set({rubric:RUBRIC});
+  markerWritten=true;
+}
+async function markSlip(item, field, on){
+  const s=answers[item]; if(!s||busy) return;
+  const cur=new Set(s.slips||[]); on?cur.add(field):cur.delete(field);
+  const slips=[...cur].sort();
+  busy=true; render();
+  try{ await db.doc("answers/"+uid+"/items/"+item).update({slips}); answers[item]={...answers[item],slips}; }
+  catch(e){ const err=document.getElementById("err"); if(err) err.textContent="Not saved. Try again."; }
+  busy=false; render();
+}
+function readonlyText(){ return "Saving is not available in this view, so nothing you pick here is kept. Open the page from the link AJ sent you, signed in to Claude, to save your answers."; }
+
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="TEXTAREA"||e.ctrlKey||e.metaKey||e.altKey) return;
+  if(screen==="practice"){
+    if(e.key>="1"&&e.key<="5"&&!practice.checked){ practice.label=LABELS[+e.key-1]; render(); }
+    else if(e.key==="x"&&!practice.checked){ practice.outside=!practice.outside; render(); }
+    return;
+  }
+  if(screen!=="items") return;
+  const ex=ITEMS[current], locked=!!answers[ex.item];
+  const draft=drafts[ex.item]||(drafts[ex.item]={label:null,outside:false,note:""});
+  if(e.key>="1"&&e.key<="5"&&!locked&&!busy){ draft.label=LABELS[+e.key-1]; render(); }
+  else if(e.key==="x"&&!locked&&!busy){ draft.outside=!draft.outside; render(); }
+  else if(e.key==="Enter"&&!locked&&draft.label&&e.target.tagName!=="BUTTON"){ e.preventDefault(); lockCurrent(); }
+  else if(e.key==="n") go(1); else if(e.key==="p") go(-1);
+});
+render();
+
+(async()=>{
+  const conn=document.getElementById("conn");
+  let user=null;
+  try{ [db,user]=await Promise.all([window.claude?.use?.("db"),window.claude?.use?.("user")]); }catch(e){ db=null; user=null; }
+  uid=user?await user.id():null;
+  const owner=user?await user.isOwner():false;
+  if(owner){
+    mode="preview"; conn.textContent="Preview";
+    notice("You own this page, so this is a preview: answers you lock here are not saved.");
+    render(); return;
+  }
+  if(!db||!uid){ mode="readonly"; conn.textContent="Not saving"; notice(readonlyText()); render(); return; }
+  mode="saving"; conn.textContent="Loading your answers…";
+  const timer=setTimeout(()=>{ if(!loaded) conn.textContent="Your saved answers can't be reached yet"; },10000);
+  db.collection("answers/"+uid+"/items").onSnapshot(snap=>{
+    for(const d of snap.docs){
+      const v=d.data();
+      if(v&&v.rubric===RUBRIC&&LABELS.includes(v.label)) answers[d.id]=v;
+    }
+    markerWritten=markerWritten||snap.size>0;
+    if(!snap.metadata.fromCache){
+      clearTimeout(timer); conn.textContent="Saving to your own answers";
+      // A returning rater opens on their first open item; the instructions stay one click away.
+      if(!loaded){ loaded=true; if(lockedCount()){ current=firstOpen(); if(screen==="intro") screen="items"; } }
+    }
+    render();
+  },()=>{ clearTimeout(timer); mode="readonly"; conn.textContent="Not saving"; notice(readonlyText()); render(); });
+})();
+</script>

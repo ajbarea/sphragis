@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from label_audit_agreement import readings  # noqa: E402
+from label_audit_agreement import neutral_ids, readings  # noqa: E402
 
 from sphragis.provenance import provenance_header  # noqa: E402
 
@@ -35,16 +35,6 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--report", type=Path, required=True, help="label_audit_agreement.py's output")
 parser.add_argument("--org", required=True)
 parser.add_argument("--out", type=Path, required=True)
-
-
-def neutral_ids(report: dict) -> list[str]:
-    """The neutral id of each label, in the report's order: the sorted ids less the excluded."""
-    excluded = set(report["excluded"])
-    total = len(report["labels"]) + len(excluded)
-    ids = sorted(set(f"item-{n:03d}" for n in range(1, total + 1)) - excluded)
-    if len(ids) != len(report["labels"]):
-        raise ValueError("the excluded ids are not among item-001 upward")
-    return ids
 
 
 def inputs(report: dict, keep: set[str] | None = None) -> dict:
