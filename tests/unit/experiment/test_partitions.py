@@ -1003,3 +1003,23 @@ def test_a_spread_simulation_without_its_calibration_is_refused() -> None:
     sim["by_target"][TEST_SPREAD_TARGET]["calibration"] = None
     with pytest.raises(ValueError, match="calibrated its run shift to another spread"):
         spread_reading(report, sim, name="qt")
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("critical_p", None),
+        ("critical_p", -0.001),
+        ("null_false_positive_calibrated", float("nan")),
+    ],
+)
+def test_a_spread_calibration_out_of_range_is_refused(field: str, value: object) -> None:
+    report = _read(_WIDE)
+    null = {
+        "null_false_positive": {"0.975": 0.019, "0.95": 0.03},
+        "critical_p": {"0.975": 0.008, "0.95": 0.02},
+        "null_false_positive_calibrated": {"0.975": 0.013, "0.95": 0.026},
+    }
+    null[field] = {**null[field], "0.975": value}
+    with pytest.raises(ValueError, match=r"is not in \[0, 1\]"):
+        spread_reading(report, _spread_sim(report, null), name="qt")

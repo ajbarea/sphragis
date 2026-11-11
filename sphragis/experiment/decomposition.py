@@ -797,10 +797,15 @@ def _across(
     cells: Mapping[str, Mapping[str, Any]],
     level: float,
 ) -> dict[str, Any] | None:
-    """The readings across organizations over the cells that stand: an exploratory cell leaves
-    them as it leaves its hypothesis (a refused calibration has no critical p to scale by), as
-    `replication_gate` leaves one out of its conjunction; None with none standing."""
-    standing = {org: cell for org, cell in cells.items() if cell["exploratory"] is None}
+    """The readings across organizations at `level` over every cell but one whose spread
+    calibration is refused there: it has no critical p to scale its p by. A cell exploratory by a
+    small window stays, its p valid if underpowered, as before the spread rule. None with no cell
+    left."""
+    standing = {
+        org: cell
+        for org, cell in cells.items()
+        if level_key(level) not in cell["spread"]["refused_at"]
+    }
     if not standing:
         return None
     return across_organizations(

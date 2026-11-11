@@ -3392,3 +3392,18 @@ def test_an_exploratory_cell_leaves_the_readings_across(admitted) -> None:
     assert "Bradley" not in out["cells"]["openstack"]["exploratory"]
     assert out["across"]["partial_conjunction"]["at_least"] == 1
     assert out["across"]["random_effects"]["organizations"] == ["wikimedia"]
+
+
+def test_a_small_window_cell_stays_in_the_readings_across(admitted) -> None:
+    """Its p is valid if underpowered; only a refused calibration, with no critical p to scale
+    by, leaves the readings across."""
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999),
+        "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+    }
+    sims = {o: _gerrit_sim(o) for o in reports}
+    out = _h1(reports, sims, powers={"openstack": _power("openstack", detectable=0.02)})
+    assert "H1:openstack" in out["exploratory"]
+    assert out["across"]["partial_conjunction"]["at_least"] == 2
+    assert out["across"]["random_effects"]["organizations"] == ["openstack", "wikimedia"]

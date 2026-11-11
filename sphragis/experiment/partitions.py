@@ -397,11 +397,19 @@ def null_reading(
     if not calibrated:
         return read, within, None, None, {}
     critical = by_level(entry["critical_p"])
+    measured = by_level(entry["null_false_positive_calibrated"])
+    bad = [
+        (name, c, v)
+        for name, values in (("critical p", critical), ("calibrated rate", measured))
+        for c, v in values.items()
+        if not (is_real(v) and 0.0 <= v <= 1.0)
+    ]
+    if bad:
+        raise ValueError(f"{file}: {bad[0][0]} {bad[0][2]!r} at {bad[0][1]} is not in [0, 1]")
     if set(critical) != set(nominal):
         raise ValueError(
             f"{file}: critical p at {sorted(critical)}, the read is at {sorted(nominal)}"
         )
-    measured = by_level(entry["null_false_positive_calibrated"])
     if set(measured) != set(nominal):
         raise ValueError(f"{file}: calibrated rates at {sorted(measured)}, not {sorted(nominal)}")
     # A critical p of zero: the null's p resolves no alpha-quantile at its resamples.
@@ -524,8 +532,9 @@ def spread_reading(
     metric and cluster unit, calibrated on the pilot its K came from, at the read's K and realised
     size, with `COVERAGE_NULL_TRIALS` null studies. A null that holds nominal there changes
     nothing; one that misses carries the critical p calibrated on it, which the read then applies,
-    and the levels at which that calibration reads above Bradley's 1.5 alpha on the second null
-    half, where it is refused and the cell is exploratory (`null_reading`).
+    and the levels at which that calibration is refused, with why: its rate on the second null half
+    above Bradley's 1.5 alpha, or a critical p of zero (`null_reading`). A cell read at a refused
+    level is exploratory.
     """
     spread = run_spread(report)
     try:
