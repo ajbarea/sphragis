@@ -1,6 +1,7 @@
 {
   "hypothesis": "H2",
   "foreign_source": "chromium",
+  "exploratory": false,
   "run_files": [
     "datasets/results/likelihood-partition-qt-p4-n1850-foreignchromium-rp1.0.json",
     "datasets/results/likelihood-partition-qt-p7-s2-n1850-foreignchromium-rp1.0.json",
@@ -44,7 +45,32 @@
     0.95
   ],
   "window": "development",
-  "sensitivity": null,
+  "sensitivity": {
+    "file": "datasets/results/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains-k40-calibrated.json",
+    "org": "qt",
+    "cell": [
+      "H2",
+      "chromium"
+    ],
+    "runs": 40,
+    "spread_target": "sizing_bound_90",
+    "cells": 1,
+    "spread_targets": {
+      "pilot_lower_90": 0.008740568306210433,
+      "pilot_estimate": 0.010379741742493885,
+      "sizing_bound_90": 0.013072504393467726,
+      "pilot_upper_99": 0.015946653916000083
+    },
+    "planned_changes": 1925,
+    "metric": "logprob_per_token",
+    "cluster_unit": {
+      "unit": "chain",
+      "file": "datasets/results/relation-chains-qt.json",
+      "sha256": "c70927f47979fe748cc80b1cc35cece7a6c997238e199f529f196a43fa2a9296",
+      "planned_ratio": 0.8647915960691291
+    },
+    "calibrated": true
+  },
   "planted_convention": null,
   "outcome_neutral_runs": [
     {
@@ -209,6 +235,15 @@
     "0.975": "inconclusive",
     "0.95": "inconclusive"
   },
+  "four_way": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "below": {
+    "0.975": false,
+    "0.95": false
+  },
+  "calibrated": false,
   "within_sesoi": {
     "0.975": false,
     "0.95": false
@@ -218,15 +253,30 @@
     "0.95": false
   },
   "p_one_sided": 0.0529,
+  "p_bounded": 0.1957,
   "bootstrap_se": 0.00645294659978813,
   "resamples": 10000,
   "bounds": {
-    "0.975": null,
-    "0.95": null
+    "0.975": 0.010937500000000001,
+    "0.95": 0.010253906250000002
   },
   "examples": 800,
   "dropped": 0,
   "cell_examples": 425,
+  "change_averaged": {
+    "estimate": 0.008380082039354635,
+    "intervals": {
+      "0.975": {
+        "low": -0.009250558894900491,
+        "high": 0.024942840492597426
+      },
+      "0.95": {
+        "low": -0.00693375921948757,
+        "high": 0.023017511108444744
+      }
+    },
+    "p_one_sided": 0.1406
+  },
   "sizing": {
     "pilot_runs": 22,
     "sd": 0.010379741742493885,
@@ -245,14 +295,80 @@
     "changes": 403,
     "chains": 363
   },
+  "positive_control": {
+    "name": "positive_control_crossed:qt",
+    "passed": true,
+    "evidence": {
+      "estimate": 0.390409813063437,
+      "low": 0.35739777896575586,
+      "high": 0.42456586434232063,
+      "confidence": 0.95,
+      "runs": 22,
+      "metric": "logprob_per_token",
+      "examples": 800
+    }
+  },
+  "joint": {
+    "h2": {
+      "foreign": "chromium",
+      "role": "confirmatory"
+    },
+    "population": "cpp",
+    "above_zero": {
+      "H1": 0.9642,
+      "H2": 0.9471
+    },
+    "shares": {
+      "H1>0,H2>0": 0.9113,
+      "H1>0,H2<=0": 0.0529,
+      "H1<=0,H2>0": 0.0358,
+      "H1<=0,H2<=0": 0.0
+    },
+    "summed": {
+      "estimate": 0.0193351524818863,
+      "low": 0.007222246821385051,
+      "high": 0.032207981550973,
+      "confidence": 0.95
+    },
+    "h1_on_cpp": {
+      "estimate": 0.008681673933026752,
+      "low": -0.0006433695290387592,
+      "high": 0.021153577222945256,
+      "confidence": 0.95
+    },
+    "runs": 22,
+    "metric": "logprob_per_token",
+    "examples": 425,
+    "dropped": 0
+  },
+  "on_s_prime": {
+    "metric": "logprob_per_token:other",
+    "runs": 22,
+    "estimate": 0.005756653904400386,
+    "intervals": {
+      "0.975": {
+        "low": -0.0044812271390580125,
+        "high": 0.014671153385775688
+      },
+      "0.95": {
+        "low": -0.0031189321636266977,
+        "high": 0.013563151583529616
+      }
+    },
+    "verdicts": {
+      "0.975": "inconclusive",
+      "0.95": "inconclusive"
+    },
+    "p_one_sided": 0.0959
+  },
   "provenance": {
-    "generated_at": "2026-10-29T15:22:49.264163+00:00",
+    "generated_at": "2026-11-11T15:01:34.988646+00:00",
     "git": {
-      "commit": "27ca7455804636c83a9b53078b77fc42d0f6a7c6",
-      "branch": "results/h2-pilot"
+      "commit": "873f7fb93c34962526b60683dd6edcf0453b3018",
+      "branch": "feat/253-test-reads"
     },
     "python": "3.14.4",
-    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
       "pygments": "2.21.0"
     }

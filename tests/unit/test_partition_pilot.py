@@ -11,7 +11,13 @@ import pytest
 
 from sphragis.corpus.chains import chains_sha256
 from sphragis.experiment import cells, decomposition, partitions
-from sphragis.experiment.cells import K_COVERAGE, REGISTERED_METRIC, REGISTERED_SENSITIVITIES
+from sphragis.experiment.cells import (
+    K_COVERAGE,
+    REGISTERED_METRIC,
+    REGISTERED_SENSITIVITIES,
+    require_test_read,
+)
+from sphragis.experiment.decomposition import COPRIMARY_METRIC
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
 from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, spread_targets
@@ -42,6 +48,11 @@ def _results(org: str, seed: int) -> dict:
                 }
                 for i in range(first, first + N)
             ]
+        # The base model, which every adapter beats on its own half (outcome-neutral check 2).
+        results[run_id(EvalRun("base", window, None))] = [
+            {"id": f"x{i}", "change_id": f"c{i}", "exact_match": 0.0}
+            for i in range(first, first + N)
+        ]
     return results
 
 
@@ -67,6 +78,7 @@ def _inputs(
                 {
                     "seeds": [k],
                     "max_new_tokens": 256,
+                    "lora_rank": 32,
                     "train_size": TRAIN_SIZE,
                     "corpora": {org: {"source": source}},
                     "results": _results(org, k),
@@ -211,7 +223,7 @@ def test_an_h1_read_takes_no_bounds_simulated_for_h2(
     sensitivity.write_text(json.dumps({**simulated, "hypothesis": "H2", "foreign_source": "aosp"}))
     argv = [*_inputs(tmp_path, "openstack"), "--sensitivity", str(sensitivity)]
     argv += ["--spread-target", "pilot_estimate", "--h1-cells", "1"]
-    with pytest.raises(SystemExit, match=r"of the cell \('H2', 'aosp'\), not H1's"):
+    with pytest.raises(SystemExit, match=r"of the cell \('H2', 'aosp'\), not \('H1', None\)"):
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "pilot.json")])
     assert not (tmp_path / "pilot.json").exists()
 
@@ -364,10 +376,13 @@ def _with_likelihood(argv: list[str]) -> None:
         if not path.endswith(".json") or "run-" not in path:
             continue
         run = json.loads(Path(path).read_text())
-        for rows in run["results"].values():
+        for arm, rows in run["results"].items():
+            # The base model a nat per token below every adapter (outcome-neutral check 2).
+            below = 2.0 if arm.startswith("base|") else 1.0
             for row in rows:
-                row["logprob_per_token"] = row["exact_match"] - 1.0
+                row["logprob_per_token"] = row["exact_match"] - below
                 row["logprob"] = 10 * (row["exact_match"] - 1.0)
+                row["logprob_per_token:other"] = (row["exact_match"] - 1.0) / 2
         Path(path).write_text(json.dumps(run))
 
 
@@ -389,6 +404,8 @@ def _registered_metric(argv: list[str]) -> list[str]:
                 "metric": REGISTERED_METRIC,
                 "runs": pilot["sizing"]["runs"],
                 "spread_targets": spread_targets(pilot),
+                # A coverage artifact is made for its pilot's cell, H1's or H2's.
+                **{k: pilot[k] for k in ("hypothesis", "foreign_source") if k in pilot},
                 # A coverage artifact is made in the unit of the pilot it covers.
                 **({"cluster_unit": pilot["cluster_unit"]} if "cluster_unit" in pilot else {}),
             }
@@ -1015,7 +1032,9 @@ def test_a_test_read_refuses_a_run_whose_battery_did_not_hold(
 ) -> None:
     argv = _gerrit_test_argv(tmp_path)
     _rewrite_run(tmp_path, 2, change)
-    with pytest.raises(SystemExit, match="outcome-neutral battery missing or failed"):
+    with pytest.raises(
+        SystemExit, match="outcome-neutral battery missing or failed.*organization is withdrawn"
+    ):
         _main(monkeypatch, argv)
     assert not (tmp_path / "o.json").exists()
 
@@ -1093,11 +1112,15 @@ ARMS = {"foreign-aosp-for-qt-b": "qt-a", "foreign-aosp-for-qt-a": "qt-b"}
 
 
 def _h2_inputs(
-    tmp_path: Path, foreign: dict | None = ARMS, pool_sha: str = "p1", first_pool: str = "p1"
+    tmp_path: Path,
+    foreign: dict | None = ARMS,
+    pool_sha: str = "p1",
+    first_pool: str = "p1",
+    window: str = "dev",
 ) -> list[str]:
     """Qt's runs with their matched foreign arms: the sibling wins every C++ example, the foreign
     arm every Python one, so H2 on C++ reads +1 and the whole hunk would read 0."""
-    argv = _inputs(tmp_path, "qt")
+    argv = _inputs(tmp_path, "qt", window)
     for k, path in enumerate(argv[: len(ADMISSIBLE)], start=1):
         run = json.loads(Path(path).read_text())
         results = {}
@@ -1114,6 +1137,14 @@ def _h2_inputs(
                     }
                     for i in range(first, first + N)
                 ]
+            results[run_id(EvalRun("base", window, None))] = [
+                {
+                    "id": f"qt:c{i}:f{i}.{'cpp' if i % 2 == 0 else 'py'}:1:1",
+                    "change_id": f"c{i}",
+                    "exact_match": 0.0,
+                }
+                for i in range(first, first + N)
+            ]
         pool = {"source": "aosp", "pool_sha256": pool_sha if k > 1 else first_pool}
         record = {**run, "results": results, "foreign": foreign, "foreign_pool": pool}
         Path(path).write_text(json.dumps(record))
@@ -1198,7 +1229,7 @@ def test_an_h2_read_under_chains_draws_the_cells_cpp_changes_by_chain(
     [
         (None, [], "carries foreign arms None"),
         ({"foreign-aosp-for-qt-b": "qt-a"}, [], "carries foreign arms"),
-        (ARMS, ["--planted", "x.json"], "takes no --replication"),
+        (ARMS, ["--replication"], "H2 is a Gerrit cell"),
     ],
 )
 def test_an_h2_read_refuses_runs_without_both_arms_or_h1_only_inputs(
@@ -1422,3 +1453,235 @@ def test_an_h2_read_on_arms_from_an_unregistered_pool_is_refused(tmp_path, monke
     argv = [*_h2_inputs(tmp_path, pool_sha="p2", first_pool="p2"), "--hypothesis", "H2"]
     with pytest.raises(SystemExit, match="drew from p2, not the registered pool p1"):
         _main(monkeypatch, [*argv, "--foreign-source", "aosp", "--out", str(tmp_path / "o.json")])
+
+
+def _h2_test_argv(tmp_path: Path) -> list[str]:
+    """H2's test-window read as registered: Qt's runs with matched AOSP arms on the test window,
+    Qt's check 5, a K coverage artifact and a simulation both made for H2's cell, the registered
+    sensitivities listed over the runs' examples, and relation chains."""
+    cell = {"hypothesis": "H2", "foreign_source": "aosp"}
+    sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, "qt")
+    sensitivity.write_text(json.dumps(json.loads(sensitivity.read_text()) | cell))
+    chains = _chains(tmp_path, "qt")
+    sizing = _sizing(tmp_path, "qt", **cell)
+    for made in (sensitivity, Path(sizing[1])):
+        _by_chain(made, chains[1])
+    runs = _h2_inputs(tmp_path, window="test")
+    ids = sorted(
+        {
+            row["id"]
+            for path in runs[: len(ADMISSIBLE)]
+            for rows in json.loads(Path(path).read_text())["results"].values()
+            for row in rows
+        }
+    )
+    listing = tmp_path / "sensitivity-ids-qt-test.json"
+    names = {name: [] for name in REGISTERED_SENSITIVITIES}
+    listing.write_text(json.dumps({"org": "qt", "window": "test", "ids": names, "universe": ids}))
+    argv = [
+        *runs,
+        *_planted(tmp_path, "qt"),
+        *sizing,
+        *[arg for name in names for arg in ("--without", f"{name}={listing}")],
+        "--sensitivity",
+        str(sensitivity),
+        *chains,
+        "--hypothesis",
+        "H2",
+        "--foreign-source",
+        "aosp",
+    ]
+    return [*_registered_metric(argv), "--out", str(tmp_path / "o.json")]
+
+
+def test_h2_reads_its_test_window_at_the_registration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Item 6 of #253: H2's test read over partitions, checked by `require_test_read` against
+    H2's registered read before the script writes it."""
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    _main(monkeypatch, _h2_test_argv(tmp_path))
+    report = json.loads((tmp_path / "o.json").read_text())
+    registered = decomposition.registered_read("qt", hypothesis="H2")
+    assert report["window"] == "test" and report["levels"] == registered["levels"]
+    assert registered["levels"] == [0.975, 0.95] and registered["cell"] == ["H2", "aosp"]
+    assert (report["hypothesis"], report["foreign_source"]) == ("H2", "aosp")
+    assert report["k_from"]["cell"] == ["H2", "aosp"]
+    assert report["sensitivity"]["cell"] == ["H2", "aosp"] and report["sensitivity"]["cells"] == 1
+    assert report["per_run"] == pytest.approx([1.0] * len(ADMISSIBLE))
+    assert set(report["without"]) == set(REGISTERED_SENSITIVITIES)
+    # Read on H2's contrast: dropping nothing leaves the cell's own estimate.
+    for name in REGISTERED_SENSITIVITIES:
+        assert report["without"][name]["estimate"] == pytest.approx(report["estimate"])
+    assert report["p_bounded"] == 1.0 and report["verdicts"] == {
+        "0.975": "supported",
+        "0.95": "supported",
+    }
+    # The H2 read is not an H1 one: checked as H1's, its cell is refused.
+    with pytest.raises(ValueError, match=r"the read is of the cell \('H2', 'aosp'\)"):
+        require_test_read(report, org="qt", expected=decomposition.registered_read("qt"))
+
+
+def test_an_h2_test_read_refuses_bounds_or_a_k_made_for_h1(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    argv = _h2_test_argv(tmp_path)
+    sensitivity = tmp_path / "sensitivity.json"
+    record = json.loads(sensitivity.read_text())
+    sensitivity.write_text(json.dumps({k: v for k, v in record.items() if k != "hypothesis"}))
+    with pytest.raises(SystemExit, match=r"not \('H2', 'aosp'\)"):
+        _main(monkeypatch, argv)
+
+
+def test_h2_is_read_on_the_whole_score_on_the_test_window(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """H2's s' reading at its s level is a registered secondary analysis: read on development
+    runs, never as a test read."""
+    from sphragis.experiment.decomposition import COPRIMARY_METRIC
+
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    argv = _on_coprimary(_h2_test_argv(tmp_path))
+    assert argv[argv.index("--metric") + 1] == COPRIMARY_METRIC
+    with pytest.raises(SystemExit, match="its s' reading at its s level is secondary"):
+        _main(monkeypatch, argv)
+
+
+def _set_base(argv: list[str], metric: str, value: float) -> None:
+    """Score the base model `value` on `metric` in every written run."""
+    for path in argv:
+        if path.endswith(".json") and "run-" in path:
+            run = json.loads(Path(path).read_text())
+            for arm, rows in run["results"].items():
+                if arm.startswith("base|"):
+                    for row in rows:
+                        row[metric] = value
+            Path(path).write_text(json.dumps(run))
+
+
+def test_an_h1_read_on_the_registered_score_reads_check_2_crossed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _inputs(tmp_path, "openstack")
+    _with_likelihood(argv)
+    out = tmp_path / "out.json"
+    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
+    check = json.loads(out.read_text())["positive_control"]
+    assert check["name"] == "positive_control_crossed:openstack" and check["passed"] is True
+    assert check["evidence"]["runs"] == len(ADMISSIBLE)
+    assert check["evidence"]["metric"] == REGISTERED_METRIC
+    # On the development window a failed check 2 is reported, and the cell still read.
+    _set_base(argv, REGISTERED_METRIC, 0.0)
+    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
+    report = json.loads(out.read_text())
+    assert report["positive_control"]["passed"] is False and report["verdicts"]
+    # Another score's read runs check 2 too, on the registered score.
+    _main(monkeypatch, [*argv, "--out", str(out)])
+    check = json.loads(out.read_text())["positive_control"]
+    assert check["evidence"]["metric"] == REGISTERED_METRIC
+    # Runs without the registered score read none on the development window.
+    for path in argv:
+        if path.endswith(".json") and "run-" in path:
+            run = json.loads(Path(path).read_text())
+            for rows in run["results"].values():
+                for row in rows:
+                    del row[REGISTERED_METRIC]
+            Path(path).write_text(json.dumps(run))
+    _main(monkeypatch, [*argv, "--out", str(out)])
+    assert json.loads(out.read_text())["positive_control"] is None
+
+
+def test_a_test_read_whose_crossed_check_2_fails_writes_the_withdrawal_and_stops(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _replication_argv(tmp_path, "test")
+    _set_base(argv, REGISTERED_METRIC, 0.0)
+    with pytest.raises(SystemExit, match="positive_control_crossed:apache failed"):
+        _main(monkeypatch, argv)
+    battery = json.loads((tmp_path / "pilot.json").read_text())
+    assert battery["apparatus_holds"] is False and battery["org"] == "apache"
+    assert "provenance" in battery
+    # It is the battery the gate withdraws an organization by.
+    from sphragis.experiment.neutral import withdrawing_failures
+
+    assert withdrawing_failures(battery, org="apache") == ["positive_control_crossed:apache"]
+
+
+def test_an_h2_read_on_the_registered_score_carries_its_joint_and_s_prime_readings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    _with_likelihood(argv)
+    out = tmp_path / "out.json"
+    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
+    report = json.loads(out.read_text())
+    joint, secondary = report["joint"], report["on_s_prime"]
+    assert joint["runs"] == report["runs"] == len(ADMISSIBLE)
+    assert joint["population"] == "cpp" and joint["metric"] == REGISTERED_METRIC
+    # On C++ the own adapter never matches and the sibling always does, the foreign arm never.
+    assert joint["h1_on_cpp"]["estimate"] == pytest.approx(-1.0)
+    assert report["estimate"] == pytest.approx(1.0)
+    assert joint["summed"]["estimate"] == pytest.approx(0.0)
+    assert secondary["metric"] == COPRIMARY_METRIC and secondary["runs"] == report["runs"]
+    assert set(secondary["verdicts"]) == set(report["verdicts"])
+    # Check 2 runs on H2's read too, each half's own adapter against the base model.
+    assert report["positive_control"]["name"] == "positive_control_crossed:qt"
+    # Without the s' score in its runs, a development read leaves it out.
+    for path in argv:
+        if path.endswith(".json") and "run-" in path:
+            run = json.loads(Path(path).read_text())
+            for rows in run["results"].values():
+                for row in rows:
+                    del row[COPRIMARY_METRIC]
+            Path(path).write_text(json.dumps(run))
+    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
+    assert json.loads(out.read_text())["on_s_prime"] is None
+
+
+def _rank(argv: list[str], ranks: dict[int, int]) -> None:
+    """Record run k's rank as `ranks[k]` (absent where not given)."""
+    for path in argv:
+        if path.endswith(".json") and "run-" in path:
+            k = int(Path(path).stem.split("-")[1])
+            run = json.loads(Path(path).read_text())
+            run.pop("lora_rank", None)
+            if k in ranks:
+                run["lora_rank"] = ranks[k]
+            Path(path).write_text(json.dumps(run))
+
+
+def test_runs_at_two_ranks_are_two_studies_never_one_cell(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _inputs(tmp_path, "openstack")
+    out = tmp_path / "out.json"
+    _main(monkeypatch, [*argv, "--out", str(out)])
+    assert json.loads(out.read_text())["lora_rank"] == 32
+    _rank(argv, dict.fromkeys(range(1, len(ADMISSIBLE) + 1), 256))
+    _main(monkeypatch, [*argv, "--out", str(out)])
+    assert json.loads(out.read_text())["lora_rank"] == 256
+    _rank(argv, {1: 32, 2: 256, 3: 256, 4: 256})
+    with pytest.raises(SystemExit, match="ranks"):
+        _main(monkeypatch, [*argv, "--out", str(out)])
+
+
+def test_a_test_read_is_of_the_registered_rank_or_the_rerun(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _replication_argv(tmp_path, "test")
+    _rank(argv, dict.fromkeys(range(1, len(ADMISSIBLE) + 1), 64))
+    with pytest.raises(SystemExit, match="runs at rank 64, registered 32 and 256"):
+        _main(monkeypatch, argv)
+    _rank(argv, dict.fromkeys(range(1, len(ADMISSIBLE) + 1), 256))
+    _main(monkeypatch, argv)
+    report = json.loads((tmp_path / "pilot.json").read_text())
+    assert report["lora_rank"] == 256
+    # The rerun is read by its own gate, never the registered one.
+    simulations = {"apache": _simulation(tmp_path)}
+    with pytest.raises(ValueError, match="at rank 256, read at 32"):
+        decomposition.replication_gate({"apache": report}, simulations=simulations)
+    gate = decomposition.replication_gate(
+        {"apache": report}, simulations=simulations, lora_rank=256
+    )
+    assert gate["lora_rank"] == 256 and gate["supplementary"]

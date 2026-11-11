@@ -1,0 +1,10 @@
+{
+  "db": {
+    "rules": [
+      {"path": "", "read": "view", "write": "owner"},
+      {"path": "answers", "read": "owner", "write": "self"},
+      {"path": "answers/{self}", "read": "view", "write": "interact"}
+    ]
+  },
+  "user": {}
+}

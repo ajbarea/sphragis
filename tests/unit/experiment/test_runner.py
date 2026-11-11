@@ -134,3 +134,22 @@ def test_to_clusters_still_refuses_a_repeated_id_through_the_shared_check() -> N
     rows = [{"id": "x", "change_id": "C", "exact_match": 1.0}] * 2
     with pytest.raises(ValueError, match="treatment arm repeats example ids"):
         to_clusters(rows, rows)
+
+
+def test_clusters_of_relabelled_rows_carry_each_examples_own_change() -> None:
+    from sphragis.experiment.runner import to_clusters
+
+    def row(i: int, source: str, score: float) -> dict:
+        return {"id": f"x{i}", "change_id": "chain", "source_change_id": source, "m": score}
+
+    treated = [row(0, "I1", 1.0), row(1, "I2", 0.0), row(2, "I1", 1.0)]
+    control = [row(i, s, 0.0) for i, s in ((0, "I1"), (1, "I2"), (2, "I1"))]
+    (cluster,) = to_clusters(treated, control, metric="m")
+    assert cluster.changes == ("I1", "I2", "I1")
+    # Unrelabelled rows make clusters that are one change each.
+    plain = [{"id": "y", "change_id": "c", "m": 1.0}]
+    assert to_clusters(plain, plain, metric="m")[0].changes == ()
+    # An arm relabelled in part is refused, never averaged as if its rows were one change.
+    del treated[1]["source_change_id"]
+    with pytest.raises(ValueError, match="no source change id"):
+        to_clusters(treated, control, metric="m")

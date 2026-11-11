@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from statistics import fmean
 
@@ -85,6 +86,17 @@ def own_half_gains(path: Path) -> list[tuple[float, float]]:
     return gains
 
 
+def registered_run(path: Path) -> bool:
+    """A control run the rate reads: registered, so no plant, no foreign arms, and not the
+    rank-256 rerun (`-r256`, Stage 1 report "Rank 256"), which would move the registered δ."""
+    name = path.name
+    return (
+        "-plant" not in name
+        and "-foreign" not in name
+        and not re.search(r"-r\d+(?=-|\.json$)", name)
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
@@ -95,7 +107,7 @@ def main() -> None:
         p
         for org in CONTROL_ORGS
         for p in RESULTS.glob(f"likelihood-partition-{org}-p*-rp1.0.json")
-        if "-plant" not in p.name and "-foreign" not in p.name
+        if registered_run(p)
     )
     gains = [gain for path in files for gain in own_half_gains(path)]
     logprob, exact = fmean(g[0] for g in gains), fmean(g[1] for g in gains)

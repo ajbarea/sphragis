@@ -1,6 +1,7 @@
 {
   "hypothesis": "H1",
   "foreign_source": null,
+  "exploratory": false,
   "run_files": [
     "datasets/results/likelihood-partition-qt-p4-n1850-rp1.0.json",
     "datasets/results/likelihood-partition-qt-p7-s2-n1850-rp1.0.json",
@@ -44,7 +45,32 @@
     0.95
   ],
   "window": "development",
-  "sensitivity": null,
+  "sensitivity": {
+    "file": "datasets/results/partition-sensitivity-qt-rp1.0-cells6-logprob_per_token-chains-k10.json",
+    "org": "qt",
+    "cell": [
+      "H1",
+      null
+    ],
+    "runs": 10,
+    "spread_target": "sizing_bound_90",
+    "cells": 6,
+    "spread_targets": {
+      "pilot_lower_90": 0.004345576161629417,
+      "pilot_estimate": 0.005160529235610697,
+      "sizing_bound_90": 0.006499298612503915,
+      "pilot_upper_99": 0.007928248677593022
+    },
+    "planned_changes": 3103,
+    "metric": "logprob_per_token",
+    "cluster_unit": {
+      "unit": "chain",
+      "file": "datasets/results/relation-chains-qt.json",
+      "sha256": "c70927f47979fe748cc80b1cc35cece7a6c997238e199f529f196a43fa2a9296",
+      "planned_ratio": 0.8647915960691291
+    },
+    "calibrated": false
+  },
   "planted_convention": null,
   "outcome_neutral_runs": [
     {
@@ -209,6 +235,15 @@
     "0.975": "supported",
     "0.95": "supported"
   },
+  "four_way": {
+    "0.975": "supported",
+    "0.95": "supported"
+  },
+  "below": {
+    "0.975": false,
+    "0.95": false
+  },
+  "calibrated": false,
   "within_sesoi": {
     "0.975": false,
     "0.95": false
@@ -218,15 +253,30 @@
     "0.95": false
   },
   "p_one_sided": 0.0002,
+  "p_bounded": 0.0395,
   "bootstrap_se": 0.003290858130701335,
   "resamples": 10000,
   "bounds": {
-    "0.975": null,
-    "0.95": null
+    "0.975": 0.008496093750000001,
+    "0.95": 0.00791015625
   },
   "examples": 800,
   "dropped": 0,
   "cell_examples": 800,
+  "change_averaged": {
+    "estimate": 0.009740161344511349,
+    "intervals": {
+      "0.975": {
+        "low": 0.0026669300386653865,
+        "high": 0.017007241402762364
+      },
+      "0.95": {
+        "low": 0.0035338287914057007,
+        "high": 0.01594184392089509
+      }
+    },
+    "p_one_sided": 0.0009
+  },
   "sizing": {
     "pilot_runs": 22,
     "sd": 0.005160529235610697,
@@ -241,17 +291,33 @@
   "cluster_unit": {
     "unit": "chain",
     "file": "datasets/results/relation-chains-qt.json",
+    "sha256": "c70927f47979fe748cc80b1cc35cece7a6c997238e199f529f196a43fa2a9296",
     "changes": 403,
     "chains": 363
   },
+  "positive_control": {
+    "name": "positive_control_crossed:qt",
+    "passed": true,
+    "evidence": {
+      "estimate": 0.39040981305190353,
+      "low": 0.3573977789062366,
+      "high": 0.4245658643035247,
+      "confidence": 0.95,
+      "runs": 22,
+      "metric": "logprob_per_token",
+      "examples": 800
+    }
+  },
+  "joint": null,
+  "on_s_prime": null,
   "provenance": {
-    "generated_at": "2026-10-21T09:00:43.882336+00:00",
+    "generated_at": "2026-11-11T14:31:16.665717+00:00",
     "git": {
-      "commit": "977253f69f27d342f05ae1aa7fcf640af1c58f88",
-      "branch": "registration/relation-chains"
+      "commit": "ab4d48a376314eaf92d11b6cef0d1de888403845",
+      "branch": "feat/253-test-reads"
     },
     "python": "3.14.4",
-    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
       "pygments": "2.21.0"
     }

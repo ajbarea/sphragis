@@ -1,6 +1,7 @@
 {
   "hypothesis": "H1",
   "foreign_source": null,
+  "exploratory": false,
   "run_files": [
     "datasets/results/likelihood-partition-openstack-p2-n1850-rp1.0.json",
     "datasets/results/likelihood-partition-openstack-p3-s2-n1850-rp1.0.json",
@@ -44,7 +45,32 @@
     0.95
   ],
   "window": "development",
-  "sensitivity": null,
+  "sensitivity": {
+    "file": "datasets/results/partition-sensitivity-openstack-rp1.0-cells6-logprob_per_token-chains-k10.json",
+    "org": "openstack",
+    "cell": [
+      "H1",
+      null
+    ],
+    "runs": 10,
+    "spread_target": "sizing_bound_90",
+    "cells": 6,
+    "spread_targets": {
+      "pilot_lower_90": 0.004542859469156211,
+      "pilot_estimate": 0.005394810315569553,
+      "sizing_bound_90": 0.006794358019861835,
+      "pilot_upper_99": 0.008288180494188778
+    },
+    "planned_changes": 1913,
+    "metric": "logprob_per_token",
+    "cluster_unit": {
+      "unit": "chain",
+      "file": "datasets/results/relation-chains-openstack.json",
+      "sha256": "de4e4adbe6d1ae988d7fdd2b72fffba39c1a7d85a0bcbea38e5e182b28eafbd2",
+      "planned_ratio": 0.9483282674772037
+    },
+    "calibrated": false
+  },
   "planted_convention": null,
   "outcome_neutral_runs": [
     {
@@ -209,6 +235,15 @@
     "0.975": "supported",
     "0.95": "supported"
   },
+  "four_way": {
+    "0.975": "supported",
+    "0.95": "supported"
+  },
+  "below": {
+    "0.975": false,
+    "0.95": false
+  },
+  "calibrated": false,
   "within_sesoi": {
     "0.975": false,
     "0.95": false
@@ -218,15 +253,30 @@
     "0.95": false
   },
   "p_one_sided": 0.0,
+  "p_bounded": 0.8266,
   "bootstrap_se": 0.007171880630272669,
   "resamples": 10000,
   "bounds": {
-    "0.975": null,
-    "0.95": null
+    "0.975": 0.012402343750000001,
+    "0.95": 0.0115234375
   },
   "examples": 501,
   "dropped": 0,
   "cell_examples": 501,
+  "change_averaged": {
+    "estimate": 0.014382558188506412,
+    "intervals": {
+      "0.975": {
+        "low": 0.0025764877431748243,
+        "high": 0.027160860314940728
+      },
+      "0.95": {
+        "low": 0.004080199540830089,
+        "high": 0.025678725436424795
+      }
+    },
+    "p_one_sided": 0.0032
+  },
   "sizing": {
     "pilot_runs": 22,
     "sd": 0.005394810315569553,
@@ -241,17 +291,33 @@
   "cluster_unit": {
     "unit": "chain",
     "file": "datasets/results/relation-chains-openstack.json",
+    "sha256": "de4e4adbe6d1ae988d7fdd2b72fffba39c1a7d85a0bcbea38e5e182b28eafbd2",
     "changes": 206,
     "chains": 203
   },
+  "positive_control": {
+    "name": "positive_control_crossed:openstack",
+    "passed": true,
+    "evidence": {
+      "estimate": 0.4080465264796382,
+      "low": 0.361914742598193,
+      "high": 0.4536936312271693,
+      "confidence": 0.95,
+      "runs": 22,
+      "metric": "logprob_per_token",
+      "examples": 501
+    }
+  },
+  "joint": null,
+  "on_s_prime": null,
   "provenance": {
-    "generated_at": "2026-10-21T08:52:49.198169+00:00",
+    "generated_at": "2026-11-11T14:30:50.768445+00:00",
     "git": {
-      "commit": "977253f69f27d342f05ae1aa7fcf640af1c58f88",
-      "branch": "registration/relation-chains"
+      "commit": "ab4d48a376314eaf92d11b6cef0d1de888403845",
+      "branch": "feat/253-test-reads"
     },
     "python": "3.14.4",
-    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
       "pygments": "2.21.0"
     }

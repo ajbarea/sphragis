@@ -71,6 +71,17 @@ case "${CALIBRATE:-0}" in
   0) ;;
   *) echo "CALIBRATE must be 0 or 1, not $CALIBRATE" >&2; exit 1 ;;
 esac
+# TEST_READ=<partition_pilot.py test read>: the spread rule (Stage 1 report, Execution step 1): the
+# cell's null at that read's own per-run spread, K and realised size, calibrated on a miss, under a
+# result name of its own. It takes no RUNS, NULL_ONLY or CALIBRATE; the script sets them.
+if [ -n "${TEST_READ:-}" ]; then
+  if [ -n "${RUNS:-}${CALIBRATE:-}${NULL_ONLY:-}" ]; then
+    echo "TEST_READ takes no RUNS, CALIBRATE or NULL_ONLY" >&2; exit 1
+  fi
+  COVERAGE_ARGS+=(--test-read "$TEST_READ"); RESULT_SUFFIX="$RESULT_SUFFIX-test-spread"
+  # The rank-256 rerun's read (LORA_RANK=256) claims its own name beside the registered one's.
+  tag_result_suffix LORA_RANK
+fi
 # CELLS="2 4 6": the H1 cell counts bounds are read at; the script's default otherwise.
 if [ -n "${CELLS:-}" ]; then read -r -a CELL_COUNTS <<< "$CELLS"; COVERAGE_ARGS+=(--cells "${CELL_COUNTS[@]}"); fi
 # SMOKE=1: a few trials end to end before the full run, under a result name of its own.

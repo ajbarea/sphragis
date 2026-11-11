@@ -322,6 +322,16 @@ def one_sided_p(draws: Sequence[float]) -> float:
     return sum(1 for d in draws if d <= 0.0) / len(draws)
 
 
+def bounded_p(draws: Sequence[float], margin: float) -> float:
+    """One-sided bootstrap p-value of the bounded test, an effect below `margin`: the share of
+    draws at or above it. At whole `resamples * alpha` it is below alpha exactly when the
+    percentile interval's upper bound is below `margin`, as `one_sided_p` mirrors the lower
+    bound."""
+    if not draws:
+        raise ValueError("no bootstrap draws")
+    return sum(1 for d in draws if d >= margin) / len(draws)
+
+
 def across_organizations(
     cells: Mapping[str, Mapping[str, Any]],
     *,

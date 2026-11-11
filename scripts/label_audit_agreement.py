@@ -22,6 +22,16 @@ pair is also read on the first and second half of the check apart, in the page's
 pairs are read again on the checked items alone, so a human-to-model figure has a comparator on the
 same items.
 
+Second raters (`--second-raters`) label the human's checked items of one organization on a page
+that reveals nothing (`label_audit_page.py --second-rater`), each under their own id in the page's
+store. Their answers are read from that store's export, beside the committed report: every pair
+of readers (the model raters, the human and each second rater, under a pseudonym kept from one
+export to the next) on the items both answered, with raw agreement and its Wilson
+interval, kappa, AC1, valid against the rest and outside names, and again without the items a
+slip touches. No second rater saw any label, so no pair of theirs is read by halves. Every human
+pair but the halves, and the model raters' label pair, must first reproduce the organization's
+own reading (`label_audit_by_org.py`) on the same items.
+
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
 
@@ -30,12 +40,17 @@ sheet is corpus text, so neither is committed.
         --rater A=scratch/audit-v2/raters/A/labels.json \\
         --rater B=scratch/audit-v2/raters/B/labels.json \\
         --human scratch/audit-v2/human.json --out datasets/results/label-audit-v2.json
+    uv run --no-sync --no-active python scripts/label_audit_agreement.py \\
+        --from-report datasets/results/label-audit-v2.json \\
+        --org-reading datasets/results/label-audit-v2-openstack.json \\
+        --second-raters scratch/rater2/export --out datasets/results/label-audit-v2-rater2.json
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections import Counter
 from pathlib import Path
@@ -55,9 +70,9 @@ from sphragis.measure.agreement import (  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--sheet", type=Path, required=True)
-parser.add_argument("--key", type=Path, required=True, help="neutral item id -> example id")
-parser.add_argument("--rater", action="append", required=True, metavar="NAME=LABELS.json")
+parser.add_argument("--sheet", type=Path)
+parser.add_argument("--key", type=Path, help="neutral item id -> example id")
+parser.add_argument("--rater", action="append", metavar="NAME=LABELS.json")
 parser.add_argument("--human", type=Path, help="neutral item id -> {label, ...}, blind checks")
 parser.add_argument("--checked-against", default="A", help="the rater the human checked")
 parser.add_argument(
@@ -71,7 +86,24 @@ parser.add_argument("--models", default="", help="NAME=model,... recorded beside
 parser.add_argument(
     "--exclude", action="append", default=[], help="item ids left out, e.g. the rubric's example"
 )
+parser.add_argument("--from-report", type=Path, help="the committed report second raters join")
+parser.add_argument(
+    "--org-reading", type=Path, help="label_audit_by_org.py's reading of that organization"
+)
+parser.add_argument(
+    "--second-raters", type=Path, help="the second-rater page's store export (answers/...)"
+)
 parser.add_argument("--out", type=Path, required=True)
+
+# The second-rater page saves answers under this rubric; any other is not this audit's.
+RUBRIC_VERSION = "v2"
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def relative(path: Path) -> str:
+    """A path as recorded in a committed result: from the repository root when inside it."""
+    resolved = path.resolve()
+    return str(resolved.relative_to(ROOT)) if resolved.is_relative_to(ROOT) else str(path)
 
 
 def _labels(path: Path) -> tuple[dict[str, str], dict[str, bool]]:
@@ -103,10 +135,32 @@ def _is_valid(labels: dict[str, str]) -> dict[str, bool]:
     return {item: label == "valid" for item, label in labels.items()}
 
 
-def _pair(first: dict, second: dict, items: list[str], categories: list) -> dict:
+def _undefined_as_nan(interval) -> tuple[float, float]:
+    """A bootstrap interval, or NaN at both ends where the statistic is undefined on every
+    resample (one label throughout, as on a second rater's first few items)."""
+    try:
+        return interval()
+    except ValueError as error:
+        if "undefined on every resample" not in str(error):
+            raise
+        return math.nan, math.nan
+
+
+def _pair(
+    first: dict, second: dict, items: list[str], categories: list, *, undefined_ok: bool = False
+) -> dict:
+    """One pair's figures. An interval undefined on every resample raises, unless
+    `undefined_ok`, where it reads NaN (the second-rater reading, whose prefixes can be short),
+    as does an interval of zero width."""
     a, b = [first[i] for i in items], [second[i] for i in items]
-    low, high = kappa_interval(a, b, seed=20260924)
-    ac1_low, ac1_high = ac1_interval(a, b, categories, seed=20260924)
+    guard = _undefined_as_nan if undefined_ok else (lambda interval: interval())
+    low, high = guard(lambda: kappa_interval(a, b, seed=20260924))
+    ac1_low, ac1_high = guard(lambda: ac1_interval(a, b, categories, seed=20260924))
+    if undefined_ok:
+        # Resamples that all give one value (one or two shared items, or full agreement) state
+        # no uncertainty; the interval is left undefined and the Wilson interval is the reading.
+        low, high = (math.nan, math.nan) if low == high else (low, high)
+        ac1_low, ac1_high = (math.nan, math.nan) if ac1_low == ac1_high else (ac1_low, ac1_high)
     return {
         "items": len(items),
         "raw_agreement": sum(x == y for x, y in zip(a, b, strict=True)) / len(items),
@@ -208,8 +262,299 @@ def readings(
     return pairs
 
 
+REPRODUCED_FIELDS = ("items", "raw_agreement", "kappa", "kappa_95", "ac1", "ac1_95")
+
+
+def differences(ours: dict, theirs: dict, names: dict[str, str]) -> list[str]:
+    """Each named pair whose recomputed figures and recorded figures disagree beyond 1e-12."""
+    wrong = []
+    for mine, recorded in sorted(names.items()):
+        for field in REPRODUCED_FIELDS:
+            a, b = ours[mine][field], theirs[recorded][field]
+            if isinstance(a, list) != isinstance(b, list) or (
+                isinstance(a, list) and len(a) != len(b)
+            ):
+                wrong.append(f"{mine}.{field}: {a} against {b}")
+                continue
+            pairs = zip(a, b, strict=True) if isinstance(a, list) else [(a, b)]
+            if not all(
+                _undefined(x)
+                and _undefined(y)
+                or (not _undefined(x) and not _undefined(y) and math.isclose(x, y, abs_tol=1e-12))
+                for x, y in pairs
+            ):
+                wrong.append(f"{mine}.{field}: {a} against {b}")
+    return wrong
+
+
+def _undefined(value) -> bool:
+    return value is None or (isinstance(value, float) and math.isnan(value))
+
+
+def neutral_ids(report: dict) -> list[str]:
+    """The neutral id of each label, in the report's order: the sorted ids less the excluded."""
+    excluded = set(report["excluded"])
+    total = len(report["labels"]) + len(excluded)
+    ids = sorted(set(f"item-{n:03d}" for n in range(1, total + 1)) - excluded)
+    if len(ids) != len(report["labels"]):
+        raise ValueError("the excluded ids are not among item-001 upward")
+    return ids
+
+
+def checked_items(report: dict, org: str) -> list[str]:
+    """The neutral ids of `org`'s items the human checked, in the page's order."""
+    chosen = [
+        n
+        for n, (eid, by) in zip(neutral_ids(report), report["labels"].items(), strict=True)
+        if eid.split(":", 1)[0] == org and "human" in by
+    ]
+    if not chosen:
+        raise SystemExit(f"the human checked none of {org}'s items")
+    return chosen
+
+
+def _answer(path: Path) -> dict:
+    """One exported answer document, refused unless it is a locked answer under this rubric."""
+    body = json.loads(path.read_text())
+    if not isinstance(body, dict):
+        raise SystemExit(f"{path}: not an answer document")
+    if body.get("rubric") != RUBRIC_VERSION:
+        raise SystemExit(f"{path}: saved under rubric {body.get('rubric')!r}, not this audit's")
+    if (
+        body.get("label") not in LABELS
+        or not isinstance(body.get("outside_names"), bool)
+        or not isinstance(body.get("locked_at"), str)
+    ):
+        raise SystemExit(f"{path}: not a locked answer under the rubric")
+    slips = body.get("slips", [])
+    if not isinstance(slips, list) or not all(
+        isinstance(s, str) and s in ("label", "outside_names") for s in slips
+    ):
+        raise SystemExit(f"{path}: unknown slip fields {slips}")
+    return {**body, "slips": sorted(slips)}
+
+
+def read_second_raters(export: Path, items: list[str]) -> dict[str, dict[str, dict]]:
+    """Each second rater's answers by item, under their pseudonyms (`pseudonyms`).
+
+    The export is the page store's `answers/<viewer id>/items` collections saved as files
+    (`ArtifactData list` with `out_dir`): `answers/<viewer id>/items/<item>.json`, one
+    document body each. Viewer ids never leave this function, so nothing written names who
+    answered.
+    """
+    by_viewer: dict[str, dict[str, dict]] = {}
+    for path in sorted(export.glob("answers/*/items/*.json")):
+        viewer, item = path.parent.parent.name, path.stem
+        if item not in items:
+            raise SystemExit(f"{path}: {item} is not one of the page's items")
+        by_viewer.setdefault(viewer, {})[item] = _answer(path)
+    if not by_viewer:
+        raise SystemExit(f"{export}: no answers/<viewer id>/items/<item>.json under it")
+    names = pseudonyms(export, by_viewer)
+    return {names[v]: by_viewer[v] for v in sorted(by_viewer, key=lambda v: int(names[v][1:]))}
+
+
+def pseudonyms(export: Path, by_viewer: dict[str, dict[str, dict]]) -> dict[str, str]:
+    """Each viewer's pseudonym, kept in `<export>/pseudonyms.json` so a later export renames no one.
+
+    A viewer new to the file takes the next number, in the order of their first lock. The file
+    holds viewer ids, so it stays beside the export and is never committed.
+    """
+    kept = export / "pseudonyms.json"
+    names: dict[str, str] = json.loads(kept.read_text()) if kept.exists() else {}
+    if len(set(names.values())) != len(names):
+        raise SystemExit(f"{kept}: two viewers share a pseudonym")
+    taken = max((int(n[1:]) for n in names.values()), default=0)
+    first = {v: min(a["locked_at"] for a in got.values()) for v, got in by_viewer.items()}
+    for viewer in sorted(set(by_viewer) - set(names), key=lambda v: (first[v], v)):
+        taken += 1
+        names[viewer] = f"L{taken}"
+    kept.write_text(json.dumps(names, indent=1) + "\n")
+    return names
+
+
+def reader_pairs(
+    readers: dict[str, tuple[dict[str, str], dict[str, bool], dict[str, set[str]]]],
+    order: list[str],
+    *,
+    already: frozenset[str] = frozenset(),
+    second_rater: bool = True,
+) -> dict[str, dict]:
+    """Every pair of readers on the items both answered, each question with and without slips.
+
+    A reader is (labels, outside-names flags, slipped items by field). Raw agreement carries a
+    Wilson interval beside the bootstrap intervals of kappa and AC1. Pairs of two readers in
+    `already` are left out, as read before. `second_rater` pairs take `_pair`'s undefined_ok
+    reading; the report's own readers are read strictly, exactly as the report was.
+    """
+    pairs: dict[str, dict] = {}
+    for x, first in enumerate(order):
+        for second in order[x + 1 :]:
+            if first in already and second in already:
+                continue
+            (la, fa, sa), (lb, fb, sb) = readers[first], readers[second]
+            shared = sorted(set(la) & set(lb))
+            if not shared:
+                continue
+            questions = (
+                ("", la, lb, list(LABELS), "label"),
+                (" valid_vs_rest", _is_valid(la), _is_valid(lb), [True, False], "label"),
+                (" outside_names", fa, fb, [True, False], "outside_names"),
+            )
+            for question, a, b, categories, field in questions:
+                slipped = sa[field] | sb[field]
+                subsets = [("", shared)]
+                if slipped & set(shared):
+                    subsets.append((" without slips", [i for i in shared if i not in slipped]))
+                for suffix, subset in subsets:
+                    if not subset:
+                        continue
+                    stats = _pair(a, b, subset, categories, undefined_ok=second_rater)
+                    same = sum(a[i] == b[i] for i in subset)
+                    stats["raw_agreement_95"] = list(wilson_interval(same, len(subset)))
+                    pairs[f"{first}~{second}{question}{suffix}"] = stats
+    return pairs
+
+
+Reader = tuple[dict[str, str], dict[str, bool], dict[str, set[str]]]
+
+
+def report_readers(report: dict, org_reading: dict) -> tuple[list[str], dict[str, Reader], dict]:
+    """The report's own readers on the checked items of `org_reading`'s organization, and
+    their pairs, refused unless those pairs reproduce `org_reading` (`label_audit_by_org.py`).
+
+    Every pair here is on the checked items, so the model pairs are named "... on checked
+    items". Reproduced: every human pair `org_reading` records except the halves of the check
+    (none of them may be missing here), and the model raters' label pair on the checked items.
+    A wrong rebuild of the neutral ids, or of the human's slips, cannot reproduce them.
+    """
+    org = org_reading["org"]
+    items = checked_items(report, org)
+    by_neutral = dict(zip(neutral_ids(report), report["labels"].values(), strict=True))
+    human_slips = {
+        f: set(report.get("human_slips", {}).get(f, [])) & set(items)
+        for f in ("label", "outside_names")
+    }
+    none: dict[str, set[str]] = {"label": set(), "outside_names": set()}
+    models = sorted({r for i in items for r in by_neutral[i]} - {"human"})
+    readers: dict[str, Reader] = {
+        name: (
+            {i: by_neutral[i][name]["label"] for i in items},
+            {i: bool(by_neutral[i][name]["outside_names"]) for i in items},
+            human_slips if name == "human" else none,
+        )
+        for name in ["human", *models]
+    }
+    # Every pair here is on the checked items; the model pairs take the name the organization's
+    # reading gives that reading, since its plain model pairs are on all of its items.
+    pairs = {
+        (f"{n} on checked items" if not n.startswith("human~") else n): stats
+        for n, stats in reader_pairs(readers, list(readers), second_rater=False).items()
+    }
+    recorded = org_reading["pairs"]
+    halves = (" first half", " second half")
+    # Both ways, as label_audit_by_org.reproduces: a human pair either side lacks is refused.
+    human = [n for n in [*recorded, *pairs] if n.startswith("human~")]
+    wanted = {n for n in human if not any(h in n for h in halves)} | {
+        f"{a}~{b} on checked items" for x, a in enumerate(models) for b in models[x + 1 :]
+    }
+    unbuilt = sorted(n for n in wanted if n not in pairs)
+    unrecorded = sorted(n for n in wanted if n not in recorded)
+    wrong = [f"{n}: not rebuilt" for n in unbuilt] + [f"{n}: not recorded" for n in unrecorded]
+    wrong += differences(pairs, recorded, {n: n for n in wanted - set(unbuilt) - set(unrecorded)})
+    if not wanted:
+        wrong.append("nothing to compare")
+    if wrong:
+        raise SystemExit(f"the {org} reading does not reproduce: " + "; ".join(wrong))
+    return items, readers, pairs
+
+
+def second_rater_report(report: dict, org_reading: dict, export: Path) -> dict:
+    """The second raters' readings beside the report's own readers (`report_readers`)."""
+    items, readers, pairs = report_readers(report, org_reading)
+    example = dict(zip(neutral_ids(report), report["labels"], strict=True))
+    known = list(readers)
+    second = read_second_raters(export, items)
+    for name, got in second.items():
+        readers[name] = (
+            {i: a["label"] for i, a in got.items()},
+            {i: a["outside_names"] for i, a in got.items()},
+            {f: {i for i, a in got.items() if f in a["slips"]} for f in ("label", "outside_names")},
+        )
+    order = [*known, *second]
+    pairs |= reader_pairs(readers, order, already=frozenset(known))
+    return {
+        "org": org_reading["org"],
+        "items": len(items),
+        "rubric": RUBRIC_VERSION,
+        "second_raters": {
+            name: {
+                "answered": len(got),
+                "slips": {f: sorted(readers[name][2][f]) for f in ("label", "outside_names")},
+            }
+            for name, got in second.items()
+        },
+        # Keyed by example id, as the report keys its labels; slips stay by neutral id, as there.
+        "labels": {
+            name: {
+                example[i]: {"label": readers[name][0][i], "outside_names": readers[name][1][i]}
+                for i in sorted(readers[name][0])
+            }
+            for name in second
+        },
+        "valid_shares": {name: _share(readers[name][0]) for name in order if readers[name][0]},
+        "pairs": pairs,
+    }
+
+
+def _nan_as_null(value):
+    """NaN (an interval undefined on every resample) written as JSON null, which every reader
+    parses."""
+    if isinstance(value, float) and math.isnan(value):
+        return None
+    if isinstance(value, dict):
+        return {k: _nan_as_null(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_nan_as_null(v) for v in value]
+    return value
+
+
+def _share(labels: dict[str, str]) -> dict:
+    n, valid = len(labels), sum(v == "valid" for v in labels.values())
+    return {"n": n, "valid": valid, "share": valid / n, "share_95": list(wilson_interval(valid, n))}
+
+
+def _print_pairs(pairs: dict[str, dict]) -> None:
+    for pair, stats in pairs.items():
+        low, high = stats["kappa_95"]
+        ac1_low, ac1_high = stats["ac1_95"]
+        print(
+            f"{pair}: {stats['items']} items, kappa {stats['kappa']:.3f} [{low:.3f}, {high:.3f}],"
+            f" AC1 {stats['ac1']:.3f} [{ac1_low:.3f}, {ac1_high:.3f}]"
+        )
+
+
 def main() -> None:
     args = parser.parse_args()
+    if args.second_raters:
+        if not (args.from_report and args.org_reading):
+            parser.error("--second-raters takes --from-report and --org-reading")
+        if args.out.resolve() in (args.from_report.resolve(), args.org_reading.resolve()):
+            parser.error("--out must not name an input")
+        reading = second_rater_report(
+            json.loads(args.from_report.read_text()),
+            json.loads(args.org_reading.read_text()),
+            args.second_raters,
+        )
+        sources = {"from": relative(args.from_report), "org_reading": relative(args.org_reading)}
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        body = {"provenance": provenance_header(), **sources, **reading}
+        args.out.write_text(json.dumps(_nan_as_null(body), indent=2, allow_nan=False) + "\n")
+        _print_pairs(reading["pairs"])
+        print(f"wrote {args.out}")
+        return
+    if not (args.sheet and args.key and args.rater):
+        parser.error("--sheet, --key and --rater are required")
     key: dict[str, str] = json.loads(args.key.read_text())
     sheet = {r["id"]: r for r in map(json.loads, args.sheet.read_text().splitlines()) if r}
     cell_of = {item: (sheet[eid]["org"], sheet[eid]["half"]) for item, eid in key.items()}
@@ -261,13 +606,7 @@ def main() -> None:
         report["pairs"] = readings(items, raters, flags)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2) + "\n")
-    for pair, stats in report["pairs"].items():
-        low, high = stats["kappa_95"]
-        ac1_low, ac1_high = stats["ac1_95"]
-        print(
-            f"{pair}: {stats['items']} items, kappa {stats['kappa']:.3f} [{low:.3f}, {high:.3f}],"
-            f" AC1 {stats['ac1']:.3f} [{ac1_low:.3f}, {ac1_high:.3f}]"
-        )
+    _print_pairs(report["pairs"])
     print(f"wrote {args.out}")
 
 

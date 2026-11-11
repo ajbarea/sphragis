@@ -30,7 +30,9 @@ from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
     K_COVERAGE,
     REGISTERED_METRIC,
+    REGISTERED_RANK,
     REGISTERED_SENSITIVITIES,
+    RERUN_RANK,
     SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
     TEST_RESAMPLES,
@@ -54,6 +56,7 @@ from sphragis.experiment.decomposition import (
     holm_levels,
     metric_sesoi,
     registered_read,
+    require_registered_analyses,
     valid_bound,
 )
 from sphragis.experiment.likelihood import COMPONENT_METRICS
@@ -67,8 +70,10 @@ from sphragis.experiment.partitions import (
     eval_ids,
     h1_over_partitions,
     h2_contrast,
+    joint_over_partitions,
     partition_run_windows,
     pilot_sizing,
+    positive_control_crossed,
     runs_needed,
     spread_targets,
 )
@@ -212,6 +217,27 @@ def cluster_by_chain(runs: list[tuple[dict, int]], chains: dict, org: str) -> di
     return {"changes": len(seen), "chains": len({chain_of[c] for c in seen})}
 
 
+def carries(runs: list[tuple[dict, int]], metric: str) -> bool:
+    """Whether every arm of every run scores `metric`."""
+    return all(metric in row for results, _ in runs for rows in results.values() for row in rows)
+
+
+def withdraw(out: Path, org: str, check: Any) -> None:
+    """Write the failed check as the battery that withdraws `org` (`decomposition.confirmatory_
+    gate`'s `withdrawn`), and stop: none of its cells is read."""
+    battery = {
+        "org": org,
+        "apparatus_holds": False,
+        "checks": [{"name": check.name, "passed": check.passed, "evidence": check.evidence}],
+        "provenance": provenance_header(),
+    }
+    out.write_text(json.dumps(battery, indent=2) + "\n")
+    raise SystemExit(
+        f"not read: {check.name} failed ({check.evidence}); the organization is withdrawn, "
+        f"its battery written to {out}"
+    )
+
+
 def recorded_cluster(artifact: dict, path: Path) -> dict | None:
     """`artifact`'s cluster unit with the digest of its chains resolved (`cells.cluster_of`), so
     the report checks it without the artifact."""
@@ -251,10 +277,8 @@ def main() -> None:
             )
         except ValueError as error:
             raise SystemExit(str(error)) from error
-    if h2 and (args.replication or args.without or args.planted or args.sensitivity):
-        raise SystemExit(
-            "an H2 development read takes no --replication, --without, --planted or --sensitivity"
-        )
+    if h2 and args.replication:
+        raise SystemExit("H2 is a Gerrit cell; --replication reads the GitHub family's H1")
     # Every check on the arguments alone, before any run is read.
     if args.replication != (args.org in REPLICATION_FAMILY):
         raise SystemExit(
@@ -289,6 +313,7 @@ def main() -> None:
     pools: set[str | None] = set()
     windows: set[str] = set()
     decoders: set[str] = set()
+    ranks: set[Any] = set()
     batteries = []
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
@@ -318,6 +343,12 @@ def main() -> None:
             pools.add((run.get("foreign_pool") or {}).get("pool_sha256"))
         runs.append((run["results"], k))
         decoders.add(json.dumps(decoder(run), sort_keys=True))
+        ranks.add(run.get("lora_rank"))
+    # Runs at the registered rank and the rerun's are two studies of one grid (Stage 1 report,
+    # "Rank 256"), never one cell.
+    if len(ranks) != 1:
+        raise SystemExit(f"runs trained at ranks {sorted(map(str, ranks))}, not one study")
+    lora_rank = next(iter(ranks))
     if len(decoders) != 1:
         raise SystemExit(f"runs decoded differently, not one study: {sorted(decoders)}")
     cluster_unit: dict[str, Any] = {"unit": "change"}
@@ -342,8 +373,15 @@ def main() -> None:
         window = "development"
     else:
         raise SystemExit(f"runs read on {sorted(windows)}, not one of the two windows")
-    if h2 and window != "development":
-        raise SystemExit("H2 is read here on the development window only")
+    if h2 and args.exploratory and window != "development":
+        raise SystemExit("H2's exploratory arm is read on the development window only")
+    # H2's confirmatory read is on the whole score; its s' reading at its s level is a secondary
+    # analysis (Stage 1 report, Analysis), which no registered test read here takes.
+    if h2 and args.metric == COPRIMARY_METRIC and window == "test":
+        raise SystemExit(
+            "H2's test read is on the whole score; its s' reading at its s level is secondary "
+            "and takes no registered test read"
+        )
     lexer_dropped = None
     if args.lexer_sure:
         if window != "development":
@@ -359,12 +397,19 @@ def main() -> None:
             raise SystemExit("a test-window read needs --sizing: K from the development pilot")
         # Levels, cell count and spread target come from the registration, never the command.
         try:
-            expected = registered_read(args.org)
+            expected = registered_read(args.org, hypothesis=args.hypothesis)
         except ValueError as error:
             raise SystemExit(f"not read: {error}") from error
         # A Gerrit H1 cell is read on each co-primary score, its registration otherwise the same.
         if args.org not in REPLICATION_FAMILY and args.metric == COPRIMARY_METRIC:
             expected = coprimary_read(expected)
+        # A test read is of the registered rank, or of the rerun at 256 that reads beside it.
+        if lora_rank not in (REGISTERED_RANK, RERUN_RANK):
+            raise SystemExit(
+                f"not read: runs at rank {lora_rank!r}, registered {REGISTERED_RANK} and "
+                f"{RERUN_RANK}"
+            )
+        expected["lora_rank"] = lora_rank
         chosen = {
             "levels": None if args.hypotheses is None else holm_levels(args.hypotheses),
             "cells": args.h1_cells,
@@ -384,12 +429,15 @@ def main() -> None:
             )
     if window == "test":
         check_resamples(args, levels)
-        # Every outcome-neutral test failing halts the study, so no run whose battery did not
-        # hold, or that recorded none, enters a test read.
+        # A failed outcome-neutral test withdraws the organization, so no run whose battery did
+        # not hold, or that recorded none, enters a test read.
         failed = [b["file"] for b in batteries if not b["holds"]]
         if failed:
-            raise SystemExit(f"not read: outcome-neutral battery missing or failed in {failed}")
-    # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
+            raise SystemExit(
+                f"not read: outcome-neutral battery missing or failed in {failed}; the "
+                "organization is withdrawn"
+            )
+    # Check 5 is part of the withdrawal rule, so a read of the sealed window cannot go without it.
     # A K, a bound or a test read rests on the SESOI, so none is taken on an unregistered metric.
     if sesoi is None and (args.sizing or args.sensitivity or window == "test"):
         raise SystemExit(
@@ -406,7 +454,10 @@ def main() -> None:
     # takes its cell's (`decomposition.coprimary_read`).
     cell_metric = REGISTERED_METRIC if args.metric == COPRIMARY_METRIC else args.metric
     if window == "test" and not args.planted:
-        raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
+        raise SystemExit(
+            "a test-window read needs --planted: outcome-neutral check 5 withdraws an "
+            "organization that fails it"
+        )
     # Bounds are registered before the test window, so it is never read without them.
     if window == "test" and not args.sensitivity:
         raise SystemExit("a test-window read needs --sensitivity: its registered bounds")
@@ -421,7 +472,10 @@ def main() -> None:
         check = planted_convention(planted_run, org=args.org, train_size=train_size)
         planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
         if not apparatus_holds([check]):
-            raise SystemExit(f"{args.planted}: check 5 failed ({check.evidence}); H1 is not read")
+            raise SystemExit(
+                f"{args.planted}: check 5 failed ({check.evidence}); the organization is "
+                "withdrawn and its cells are not read"
+            )
     runs_fixed, k_source, k_from = len(runs), "all runs", None
     if args.sizing:
         sizing_artifact = json.loads(args.sizing.read_text())
@@ -452,6 +506,8 @@ def main() -> None:
             # A critical p calibrated at a registered K (`partitions.registered_coverage`).
             "calibrated": bool(sizing_artifact.get("calibrated")),
             "critical_p": sizing_artifact.get("critical_p"),
+            # The cell the K was found for, which a test read checks (`require_test_read`).
+            "cell": list(cell_of(sizing_artifact)),
         }
         # Only a test read is checked against its simulation's calibration.
         if window == "test":
@@ -479,7 +535,11 @@ def main() -> None:
             )
         try:
             bounds = sensitivity_bounds(
-                sensitivity, args.spread_target, levels, cells=args.h1_cells
+                sensitivity,
+                args.spread_target,
+                levels,
+                cells=args.h1_cells,
+                cell=(args.hypothesis, args.foreign_source),
             )
         except (KeyError, TypeError, ValueError) as error:
             raise SystemExit(f"not read: {args.sensitivity}: {error}") from error
@@ -531,6 +591,30 @@ def main() -> None:
             raise SystemExit(f"{artifact} was made by {made_by}, this read is by {unit}")
         if made_from != cluster_unit.get("sha256"):
             raise SystemExit(f"{artifact} was made from other chains than {args.chains}")
+    # Outcome-neutral check 2 is read before the cell, as every check is before a confirmatory
+    # comparison: each half's own adapter against the base model on the registered score, over
+    # the read's runs on the crossed interval, whatever cell or score the read is of. On the test
+    # window a failure withdraws the organization; on the development window it is reported.
+    positive_control = None
+    if window == "test" or carries(runs[:runs_fixed], REGISTERED_METRIC):
+        try:
+            check = positive_control_crossed(
+                runs,
+                org=args.org,
+                runs_fixed=runs_fixed,
+                bootstrap_seed=args.bootstrap_seed,
+                resamples=args.resamples,
+                metric=REGISTERED_METRIC,
+            )
+        except (KeyError, ValueError) as error:
+            raise SystemExit(f"not read: check 2: {error}") from error
+        if window == "test" and not check.passed:
+            withdraw(args.out, args.org, check)
+        positive_control = {
+            "name": check.name,
+            "passed": check.passed,
+            "evidence": check.evidence,
+        }
     contrast = {"contrast": h2_contrast(args.foreign_source)} if h2 else {}
     calibrated = k_from.get("critical_p") if k_from and k_from.get("calibrated") else None
     cell = h1_over_partitions(
@@ -546,12 +630,55 @@ def main() -> None:
         critical=calibrated,
         **contrast,
     )
+    # Beside H2's registered cell, binding no verdict: H1 and H2 on the same C++ examples and
+    # draws over H2's K runs, and H2 on s' at its s levels (Stage 1 report, "Verdicts and
+    # Readings"; Analysis, "Secondary and exploratory analyses").
+    joint = on_s_prime = None
+    if h2 and not args.exploratory and args.metric == REGISTERED_METRIC:
+        if not carries(runs[:runs_fixed], COPRIMARY_METRIC):
+            if window == "test":
+                raise SystemExit(f"not read: H2's runs carry no {COPRIMARY_METRIC} for its s' read")
+        else:
+            secondary = h1_over_partitions(
+                runs,
+                org=args.org,
+                runs_fixed=runs_fixed,
+                levels=levels,
+                bounds=None,
+                bootstrap_seed=args.bootstrap_seed,
+                resamples=args.resamples,
+                metric=COPRIMARY_METRIC,
+                sesoi=metric_sesoi(COPRIMARY_METRIC) or SESOI,
+                change_averaged=False,
+                **contrast,
+            )
+            on_s_prime = {
+                "metric": COPRIMARY_METRIC,
+                "runs": secondary["runs"],
+                **{k: secondary[k] for k in ("estimate", "intervals", "verdicts", "p_one_sided")},
+            }
+        joint = joint_over_partitions(
+            runs,
+            org=args.org,
+            source=args.foreign_source,
+            runs_fixed=runs_fixed,
+            bootstrap_seed=args.bootstrap_seed,
+            resamples=args.resamples,
+            metric=args.metric,
+        )
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"], xi=sesoi or SESOI)
     if sesoi is None:
         # The SESOI is 0.01 in exact match and means nothing on this metric, so the verdicts,
         # margins and K that compare against it are dropped or set to None. Intervals and
         # estimates stand.
-        for key in ("verdicts", "within_sesoi", "meaningful", "reproducibility"):
+        for key in (
+            "verdicts",
+            "below",
+            "within_sesoi",
+            "meaningful",
+            "reproducibility",
+            "p_bounded",
+        ):
             cell[key] = None
         kept = ("pilot_runs", "sd", "sd_upper", "confidence")
         sizing = {key: value for key, value in sizing.items() if key in kept}
@@ -579,6 +706,8 @@ def main() -> None:
                 metric=args.metric,
                 sesoi=sesoi or SESOI,
                 critical=calibrated,
+                change_averaged=False,
+                **contrast,
             )
         except ValueError as error:
             without[name] = {
@@ -588,7 +717,14 @@ def main() -> None:
                 "unreadable": str(error),
             }
             continue
-        fields = ("intervals", "within_sesoi", "meaningful", "p_one_sided", "bootstrap_se")
+        fields = (
+            "intervals",
+            "within_sesoi",
+            "meaningful",
+            "p_one_sided",
+            "p_bounded",
+            "bootstrap_se",
+        )
         if sesoi is None:
             fields = ("intervals", "p_one_sided", "bootstrap_se")
         without[name] = {
@@ -609,6 +745,7 @@ def main() -> None:
         "metric",
         "sesoi",
         "decoder",
+        "lora_rank",
         "admissible",
         "k_source",
         "k_from",
@@ -622,6 +759,9 @@ def main() -> None:
         "lexer_sure",
         "cluster_unit",
         "provenance",
+        "positive_control",
+        "joint",
+        "on_s_prime",
     }
     if head & set(cell):
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
@@ -633,6 +773,7 @@ def main() -> None:
         "metric": args.metric,
         "sesoi": sesoi,
         "decoder": json.loads(next(iter(decoders))),
+        "lora_rank": lora_rank,
         "admissible": str(args.admissible),
         "k_source": k_source,
         "k_from": k_from,
@@ -646,11 +787,15 @@ def main() -> None:
         "without": without,
         "lexer_sure": lexer_dropped,
         "cluster_unit": cluster_unit,
+        "positive_control": positive_control,
+        "joint": joint,
+        "on_s_prime": on_s_prime,
         "provenance": provenance_header(),
     }
     if window == "test":
         try:
             require_test_read(report, org=args.org, expected=expected)
+            require_registered_analyses(report, org=args.org, expected=expected)
         except ValueError as error:
             raise SystemExit(f"not read: {error}") from error
     for c in levels:

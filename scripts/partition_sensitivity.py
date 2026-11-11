@@ -51,6 +51,7 @@ import argparse
 import json
 import random
 from collections import defaultdict
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from statistics import fmean, stdev
@@ -62,7 +63,12 @@ from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.across import one_sided_p
-from sphragis.experiment.cells import cell_of, cluster_of
+from sphragis.experiment.cells import (
+    REGISTERED_SPREAD_TARGET,
+    cell_of,
+    cluster_of,
+    same_calibration,
+)
 from sphragis.experiment.decomposition import (
     COPRIMARY_METRIC,
     FAMILY_ALPHA,
@@ -78,7 +84,9 @@ from sphragis.experiment.decomposition import (
 from sphragis.experiment.partitions import (
     K_MAX,
     K_MIN,
+    TEST_SPREAD_TARGET,
     pilot_sizing,
+    run_spread,
     spread_targets,
 )
 from sphragis.experiment.power import (
@@ -182,6 +190,13 @@ parser.add_argument(
     "--foreign-source",
     choices=FOREIGN_SOURCES,
     help="H2's source: the pilot must be H2's cell against it; none for H1",
+)
+# The spread rule (Stage 1 report, Execution step 1): a test read whose per-run spread exceeds its
+# sizing bound is simulated at that spread, at its K and realised size, and calibrated on a miss.
+parser.add_argument(
+    "--test-read",
+    type=Path,
+    help="a partition_pilot.py test read: simulate its cell's null at the read's own spread",
 )
 parser.add_argument("--out", type=Path, required=True)
 
@@ -602,6 +617,104 @@ def supported(t: dict, level: float, critical: dict[float, float] | None) -> boo
     return t["supported"][level] and (critical is None or t["p"] < critical[level])
 
 
+class PowerNotReached(ValueError):
+    """No lift under the bracket's top reaches the target power: the cell detects nothing below
+    it. Separate from every other error a trial can raise, which must not read as this."""
+
+
+def lift_ceiling(continuous: bool) -> float:
+    """The top of the lift bracket a detectable effect is searched under, in the metric's units."""
+    return CONTINUOUS_CEILING if continuous else LIFT_CEILING
+
+
+def detectable_lift(
+    trials_at_lift: Callable[[float], list[dict]],
+    *,
+    level: float,
+    target_power: float,
+    critical: dict[float, float] | None,
+    continuous: bool,
+    steps: int,
+) -> float:
+    """The smallest lift at which the cell reads supported at `level` in `target_power` of its
+    trials: bisection over [0, the metric's ceiling] in `steps` halvings, each step's trials from
+    `trials_at_lift` (common random numbers across steps). Refused when the ceiling is reached."""
+    ceiling = lift_ceiling(continuous)
+    low, high = 0.0, ceiling
+    for _ in range(steps):
+        mid = (low + high) / 2
+        if fmean(supported(t, level, critical) for t in trials_at_lift(mid)) >= target_power:
+            high = mid
+        else:
+            low = mid
+    if high == ceiling:
+        raise PowerNotReached(f"power {target_power} not reached")
+    return high
+
+
+def realised_effect(
+    lift: float, *, continuous: bool, pilot_halves: list[list[Cluster]], seed: int
+) -> float:
+    """The effect a lift realises: a shift realises itself; on exact match a lift realises what
+    the pilot's rates allow, averaged over the first pooled partition's halves."""
+    if continuous:
+        return lift
+    return fmean(
+        realised_difference(h, lift=lift, seed=seed, draws=EFFECT_DRAWS) for h in pilot_halves
+    )
+
+
+def only_a_miss(
+    null: list[dict], levels: list, critical: dict[float, float] | None
+) -> dict[float, float] | None:
+    """`critical` where the null misses nominal at some level, else None: at a test read's spread
+    the rule calibrates a miss alone, as `partitions.null_reading` reads it."""
+    holds = all(fmean(t["supported"][c] for t in null) <= (1.0 - c) / 2.0 for c in levels)
+    return None if holds else critical
+
+
+def read_for_spread(
+    report: dict, pilot: dict, args: argparse.Namespace, *, runs_given: bool = False
+) -> dict:
+    """What a test read gives the spread rule's simulation: its per-run spread, K and realised
+    size, refused unless it is a test read of this pilot's organization, cell, metric and cluster
+    unit whose K was calibrated on this pilot, and whose spread exceeds its sizing bound; and when
+    a K was given besides (`runs_given`), since K is the read's."""
+    if runs_given:
+        raise ValueError("a test read gives the spread rule its K; give no --runs")
+    if report.get("window") != "test":
+        raise ValueError(f"read on the {report.get('window')} window, not the test window")
+    checks = (
+        (report.get("org") == args.org, f"is {report.get('org')}'s read, not {args.org}'s"),
+        (cell_of(report) == cell_of(pilot), f"reads {cell_of(report)}, the pilot {cell_of(pilot)}"),
+        (
+            report.get("metric", "exact_match") == args.metric,
+            f"is on {report.get('metric', 'exact_match')}, not {args.metric}",
+        ),
+        (cluster_of(report) == cluster_of(pilot), "was not drawn as the pilot was"),
+        (
+            same_calibration(
+                (report.get("k_from") or {}).get("spread_targets"), spread_targets(pilot)
+            ),
+            "took its K from another pilot",
+        ),
+    )
+    for holds, reason in checks:
+        if not holds:
+            raise ValueError(reason)
+    spread = run_spread(report)
+    bound = report["k_from"]["spread_targets"][REGISTERED_SPREAD_TARGET]
+    if not spread > bound:
+        raise ValueError(f"per-run spread {spread:.5f} is within its sizing bound {bound:.5f}")
+    return {
+        "file": str(args.test_read),
+        "spread": spread,
+        "bound": bound,
+        "runs": report["runs"],
+        "changes": report["changes"],
+    }
+
+
 def _cached_trials(
     at_lift: dict[float, list[dict]], executor, pool, args, lift, sigma_run, levels
 ) -> list[dict]:
@@ -669,12 +782,36 @@ def main() -> None:
     k_source = f"{args.pilot}: sizing.runs" if args.runs is None else "--runs"
     args.runs = sized if args.runs is None else args.runs
     hypothesis, foreign_source = cell_of(pilot)
+    test_read = None
+    if args.test_read is not None:
+        try:
+            test_read = read_for_spread(
+                json.loads(args.test_read.read_text()), pilot, args, runs_given=k_source == "--runs"
+            )
+        except ValueError as error:
+            raise SystemExit(f"{args.test_read}: {error}") from error
+        # The read's own K and size, and its null alone: no detectable effect is searched here.
+        # The rule calibrates on a miss, so the second null half is always drawn; a null that
+        # holds is recorded uncalibrated (below).
+        k_source, args.runs, args.size = (
+            f"{args.test_read}: runs",
+            test_read["runs"],
+            test_read["changes"],
+        )
+        args.null_only = True
+        args.calibrate = True
     # A critical value is calibrated only where registered: H2's, at its registered K, and an H1
     # cell's on the co-primary score, should its null miss nominal at the cell's K (research
     # log, 2026-10-30); the whole score's H1 cells read their interval.
     if hypothesis == "H2" and args.metric == COPRIMARY_METRIC:
         raise SystemExit("the co-primary score is H1's; H2 is read on the whole score")
-    if args.calibrate and hypothesis == "H1" and args.metric != COPRIMARY_METRIC:
+    # At a test read's spread every cell is calibrated on a miss (the spread rule).
+    if (
+        args.calibrate
+        and test_read is None
+        and hypothesis == "H1"
+        and args.metric != COPRIMARY_METRIC
+    ):
         raise SystemExit("--calibrate is registered for H2 and H1's co-primary score alone")
     if args.calibrate and hypothesis == "H2" and args.runs != H2_RUNS:
         raise SystemExit(f"H2 is calibrated at its registered K = {H2_RUNS}, not {args.runs}")
@@ -686,8 +823,10 @@ def main() -> None:
         raise SystemExit(f"--partitions {args.partitions}: two disjoint sets of {K_MAX} are drawn")
     if not K_MIN <= args.runs <= K_MAX:
         raise SystemExit(f"the pilot's K {args.runs} lies outside [{K_MIN}, {K_MAX}]")
-    # The per-run spread the simulation is calibrated to, each point named for what it is.
+    # The per-run spread the simulation is calibrated to, each point named for what it is; a test
+    # read's run is calibrated to that read's spread alone, the pilot's points kept as its record.
     targets = spread_targets(pilot)
+    points = targets if test_read is None else {TEST_SPREAD_TARGET: test_read["spread"]}
     continuous = args.metric != "exact_match"
     if args.redraw is None:
         args.redraw = 0.0 if continuous else BINARY_REDRAW
@@ -766,6 +905,7 @@ def main() -> None:
         "xi": sesoi,
         "runs": args.runs,
         "null_only": args.null_only,
+        # A test read's run records itself calibrated only where its null missed (below).
         "calibrated": args.calibrate,
         "levels": levels,
         "trials": args.trials,
@@ -773,14 +913,19 @@ def main() -> None:
         "resamples": args.resamples,
         "redraw": args.redraw,
         "seed": args.seed,
+        "steps": args.steps,
         "size_floor": admissible["size_floor"],
         "partitions_pooled": len(partitions),
         "partition_seeds_tried": tried,
         "spread_targets": targets,
-        "calibration_changes": pilot["changes"],
+        "calibration_changes": pilot["changes"] if test_read is None else test_read["changes"],
+        "test_read": test_read,
         "calibration_trials": args.calibration_trials,
         "by_target": {},
     }
+    if test_read is not None:
+        report["inputs"]["planned_changes"] = f"{args.test_read}: changes, the realised size"
+        report["inputs"]["calibration_changes"] = f"{args.test_read}: changes"
     # The detectable effect as the registered sensitivity reads it: the realised difference per
     # half, averaged (`decomposition_sensitivity.py`), here over the halves of the first pooled
     # partition, which is the first admissible one.
@@ -789,11 +934,13 @@ def main() -> None:
     with ProcessPoolExecutor(
         args.workers, initializer=_init, initargs=worker_args(partitions, args.metric, noise)
     ) as executor:
-        for label, target in targets.items():
-            calibration = calibrate(executor, pool, args, target, pilot["changes"])
+        for label, target in points.items():
+            # Each point is calibrated at the size its spread was seen at.
+            seen_at = pilot["changes"] if test_read is None else test_read["changes"]
+            calibration = calibrate(executor, pool, args, target, seen_at)
             sigma_run = calibration["sigma_run"]
             print(
-                f"{label}: spread {target:.4f} at {pilot['changes']} changes -> sigma_run "
+                f"{label}: spread {target:.4f} at {seen_at} changes -> sigma_run "
                 f"{sigma_run:.4f} (realised {calibration['spread']:.4f})",
                 flush=True,
             )
@@ -811,6 +958,9 @@ def main() -> None:
             )
             null, fresh = studies[: args.null_trials], studies[args.null_trials :]
             critical = {c: critical_p(null, c) for c in levels} if args.calibrate else None
+            # At a test read's spread only a miss is calibrated (`partitions.null_reading`).
+            if test_read is not None:
+                critical = only_a_miss(null, levels, critical)
             entry: dict = {
                 "calibration": calibration,
                 "null_false_positive": {c: fmean(t["supported"][c] for t in null) for c in levels},
@@ -831,27 +981,21 @@ def main() -> None:
             for level in levels:
                 entry["by_level"][level] = {"by_cells": {}}
                 for cells, target_power in cell_power.items():
-                    ceiling = CONTINUOUS_CEILING if continuous else LIFT_CEILING
-                    low, high = 0.0, ceiling
-                    for _ in range(args.steps):
-                        mid = (low + high) / 2
-                        trials = _cached_trials(
-                            at_lift, executor, pool, args, mid, sigma_run, levels
+                    try:
+                        high = detectable_lift(
+                            lambda lift, cache=at_lift, sigma=sigma_run: _cached_trials(
+                                cache, executor, pool, args, lift, sigma, levels
+                            ),
+                            level=level,
+                            target_power=target_power,
+                            critical=critical,
+                            continuous=continuous,
+                            steps=args.steps,
                         )
-                        if fmean(supported(t, level, critical) for t in trials) >= target_power:
-                            high = mid
-                        else:
-                            low = mid
-                    if high == ceiling:
-                        raise SystemExit(f"{label} at {level}: power {target_power} not reached")
-                    # A shift realises itself; a lift realises what the pilot's rates allow.
-                    effect = (
-                        high
-                        if continuous
-                        else fmean(
-                            realised_difference(h, lift=high, seed=args.seed, draws=EFFECT_DRAWS)
-                            for h in pilot_halves
-                        )
+                    except ValueError as error:
+                        raise SystemExit(f"{label} at {level}: {error}") from error
+                    effect = realised_effect(
+                        high, continuous=continuous, pilot_halves=pilot_halves, seed=args.seed
                     )
                     at = {
                         "cell_power": target_power,
@@ -877,6 +1021,10 @@ def main() -> None:
                     )
             entry["lifts_simulated"] = len(at_lift)
             report["by_target"][label] = entry
+    if test_read is not None:
+        report["calibrated"] = any(
+            e["critical_p"] is not None for e in report["by_target"].values()
+        )
     report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {args.out}")

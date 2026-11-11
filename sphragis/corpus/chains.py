@@ -164,12 +164,17 @@ def chains_sha256(artifact: Mapping[str, Any]) -> str:
 
 def relabel(rows: Iterable[dict[str, Any]], chain_of: Mapping[str, str]) -> set[str]:
     """Set every row's `change_id` to its chain, so whatever groups by `change_id` groups by
-    chain; returns the Change-Ids seen. A Change-Id the map lacks is refused, never left as its
-    own cluster."""
+    chain, keeping its own as `source_change_id` for an estimate that counts changes
+    (`stats.change_totals`); returns the Change-Ids seen. A Change-Id the map lacks is refused,
+    never left as its own cluster, and a row relabelled twice is refused, since its chain would
+    be looked up as a change."""
     seen: set[str] = set()
     for row in rows:
+        if "source_change_id" in row:
+            raise SystemExit(f"{row['source_change_id']} is relabelled already")
         if row["change_id"] not in chain_of:
             raise SystemExit(f"{row['change_id']} has no chain in the chain artifact")
         seen.add(row["change_id"])
+        row["source_change_id"] = row["change_id"]
         row["change_id"] = chain_of[row["change_id"]]
     return seen

@@ -7,13 +7,19 @@ description: What has to hold for the study to be interpretable, and the evidenc
 
 These are pre-specified checks on the apparatus, run before the confirmatory comparison. They
 are neutral to the outcome: none of them can be passed by the hypothesis being true, and none
-of them can be failed by it being false. **A failure halts the study and is reported as an
-apparatus failure rather than as a result.**
+of them can be failed by it being false. **A failure withdraws the organization it fails on.**
+It is reported as a deviation, an apparatus failure rather than a result, and the hypotheses are
+read over the remaining organizations. Without Qt, or with Chromium's pool over check 4's
+threshold, `H2` has no confirmatory cell and `H1` alone is read, at 95%. Check 1, the
+contamination battery, is a reported measurement and withdraws nothing.
 
-The halt rule is one function,
-[`apparatus_holds`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py),
-and it is true only when every check passed. There is no partial credit and no override: if it
-is false, `H1` is not read.
+The withdrawal rule lives in
+[`neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py):
+`apparatus_holds` is true only when every check on a run passed, and `withdrawing_failures` reads
+which failed checks withdraw an organization. There is no partial credit and no override: a
+withdrawn organization's cells are not read. The gate takes each withdrawn organization with its
+recorded battery, refuses one whose battery failed no check from 2 to 6 of its own (a foreign
+arm's failure is `H2`'s, recorded in `H2_WITHDRAWN`), and reads the rest.
 
 Each check returns its evidence beside its pass flag, so a run's JSON carries why it passed
 and not only that it did. The pilot figures below are what each check returned on real model
@@ -52,9 +58,15 @@ not on this battery.
 
 ## 2. Positive control
 
-Each organization's own adapter must beat the base model on that organization's data, read
-with the same one-sided rule as the gate. If it fails, the training setup is broken and the
-comparison between adapters means nothing.
+Each organization's own adapter must beat the base model on that organization's data, on s:
+the lower bound of its crossed 95% interval, over the cell's runs and resampling the cell's
+clusters, strictly above zero (Stage 1 report, "Outcome-Neutral Tests";
+`partitions.positive_control_crossed`, read by `partition_pilot.py` before the cell). If it
+fails, the training setup is broken and the comparison between adapters means nothing: on the
+test window the organization is withdrawn, and the read writes the failed check as its battery.
+Each run's own check 2 is reported beside it and withdraws nothing. Every test read takes it over
+its own runs (a development read, where its runs carry s), so Qt's H2 read, over H2's K runs,
+can withdraw Qt on its own.
 
 Passed on OpenStack, deduplicated, both arms under the model's chat template: exact match
 0.074 base against 0.407 adapted, paired cluster bootstrap on the difference +0.333
@@ -124,12 +136,12 @@ arithmetic rather than measurement.
 
 This check has fired for real. On the mismatched arms of one calibration run the adapters
 score exactly zero, because an adapter trained on annotated refinements can never match an
-unannotated reference, so non-degeneracy failed and the halt rule went false. The ceiling
+unannotated reference, so non-degeneracy failed and the withdrawal rule went false. The ceiling
 condition is degenerate by construction, and the apparatus is what said so.
 
 ## Beyond the registered six
 
-One further check is not part of the halt rule and is reported beside it.
+One further check is not part of the withdrawal rule and is reported beside it.
 
 **The interval's error rate is measured.** Simulated over each organization's registered K
 partitions at its projected test size, on the registered metric, the crossed interval the gate
@@ -144,4 +156,4 @@ Carlo standard error.
 Every figure above resolves to a committed file under `datasets/results/`, listed with its
 writing script in the [artifact index](artifacts.md). The checks themselves are
 `sphragis/experiment/neutral.py`, and a test holds the measurement package to running without
-a GPU: a halt condition that can only be exercised on a cluster is one that never fires.
+a GPU: a withdrawal condition that can only be exercised on a cluster is one that never fires.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import random
 from collections.abc import Callable
 from fractions import Fraction
 from itertools import combinations
@@ -34,26 +35,30 @@ from sphragis.experiment.decomposition import (
     SUMMED_CONFIDENCE,
     below_sesoi,
     cell_verdict,
+    confirmatory_gate,
     decomposition_gate,
     design,
     detectable_effects,
     file_type_supplement,
     foreign_arm,
-    h1_test_gate,
     halves,
     holm_levels,
     holm_steps,
     holm_verdicts,
     is_cpp,
+    is_mixed,
     matched_clusters,
     matched_suffix,
+    metric_sesoi,
     organization_clusters,
     project_clusters,
+    read_intervals,
     reading,
     registered_read,
     replication,
     replication_gate,
     row_path,
+    small_window,
     whole_hunk_supplement,
 )
 from sphragis.experiment.grid import EvalRun, run_id
@@ -544,13 +549,13 @@ def test_a_mistyped_registered_source_is_refused_even_without_qt(
         _gate(_by_relation(0.75, 0.5, 0.25), admitted=("openstack", "wikimedia"))
 
 
-def test_the_h1_test_gate_refuses_while_qts_registered_source_makes_h2_confirmatory(
+def test_the_confirmatory_gate_needs_qts_reads_while_its_source_makes_h2_confirmatory(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
     _registered_source(monkeypatch, "fuchsia")
-    with pytest.raises(ValueError, match="H2 is confirmatory"):
-        h1_test_gate({}, simulations={}, coprimary={}, coprimary_simulations={})
+    with pytest.raises(ValueError, match=r"no reports for \['openstack', 'qt'\]"):
+        confirmatory_gate({}, simulations={}, coprimary={}, coprimary_simulations={})
 
 
 def test_a_whole_hunk_cell_keeps_its_estimate_when_its_cpp_share_cannot_be_read(
@@ -628,9 +633,12 @@ def _replication_cell(
         "levels": [REPLICATION_CONFIDENCE],
         "intervals": {REPLICATION_CONFIDENCE: {"low": low, "high": high}},
         "p_one_sided": p,
+        # Two runs 0.001 apart: a per-run spread well inside the sizing bound, 0.015.
+        "per_run": [(low + high) / 2 - 0.0005, (low + high) / 2 + 0.0005],
         "resamples": resamples,
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
+        "lora_rank": 32,
         "planted_convention": {"passed": True},
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
@@ -649,6 +657,17 @@ def _replication_cell(
             for name in REGISTERED_SENSITIVITIES
         },
         "runs": 24,
+        # Outcome-neutral check 2, crossed over the read's runs, as partition_pilot.py writes it.
+        "positive_control": {
+            "name": f"positive_control_crossed:{org}",
+            "passed": True,
+            "evidence": {
+                "runs": 24,
+                "metric": "logprob_per_token",
+                "confidence": 0.95,
+                "low": 0.1,
+            },
+        },
         "k_from": {
             "kind": "k_coverage",
             "metric": "logprob_per_token",
@@ -1022,6 +1041,7 @@ def test_a_read_waits_for_its_organizations_to_be_frozen(
     with pytest.raises(ValueError, match="frozen replication member"):
         registered_read("llvm")
     assert registered_read("apache") == {
+        "lora_rank": 32,
         "levels": [REPLICATION_CONFIDENCE],
         "cells": 1,
         "spread_target": "sizing_bound_90",
@@ -1690,6 +1710,9 @@ def test_the_frozen_set_check_reads_a_generator_once(monkeypatch: pytest.MonkeyP
     assert outcome["design"]["H1"] == ("openstack",)
 
 
+_LOGPROB_SESOI = float(metric_sesoi("logprob_per_token") or 0.0)
+
+
 def _gerrit_report(
     org: str,
     low: float,
@@ -1716,6 +1739,10 @@ def _gerrit_report(
             "k_from": report["k_from"] | unit,
             "sensitivity": {**report["sensitivity"], "cells": cells} | unit,
             "bootstrap_se": se,
+            # The bounded test's p, from the same draws: below alpha exactly where high is below δ.
+            "p_bounded": 0.001 if high < _LOGPROB_SESOI else 0.4,
+            # Two runs 0.001 apart: a per-run spread well inside the sizing bound, 0.015.
+            "per_run": [(low + high) / 2 - 0.0005, (low + high) / 2 + 0.0005],
         }
     )
 
@@ -1747,7 +1774,7 @@ def _h1(
     coprimary_sims: dict | None = None,
 ) -> dict:
     """The H1 gate with each organization's co-primary read the whole score's twin, unless given."""
-    return h1_test_gate(
+    return confirmatory_gate(
         reports,
         simulations=sims,
         coprimary={o: _on_other(r) for o, r in reports.items()} if coprimary is None else coprimary,
@@ -1790,7 +1817,7 @@ def test_an_upper_bound_above_the_simulated_bound_and_below_the_sesoi_reads_boun
         ((0.01, 0.05, 0.001), (-0.01, 0.05, 0.3), "inconclusive", "unresolved"),
     ],
 )
-def test_the_h1_test_gate_reads_the_admitted_cells_at_the_registered_level(
+def test_the_confirmatory_gate_reads_the_admitted_cells_at_the_registered_level(
     admitted, openstack: tuple, wikimedia: tuple, verdict: str, reading_: str
 ) -> None:
     admitted("openstack", "wikimedia")
@@ -1843,6 +1870,7 @@ def test_a_calibrated_critical_p_overrules_a_supported_interval(admitted) -> Non
     other = {o: _on_other(r) for o, r in reports.items()}
     other_sims = {o: _on_other(sim) for o, sim in sims.items()}
     other["openstack"]["k_from"] |= {"calibrated": True, "critical_p": {"0.95": 0.0005}}
+    other["openstack"]["p_bounded"] = 0.4
     other["openstack"]["sensitivity"]["calibrated"] = True
     other_sims["openstack"]["calibrated"] = True
     at_target = other_sims["openstack"]["by_target"]["sizing_bound_90"]
@@ -1895,22 +1923,22 @@ def test_the_coprimary_read_must_score_the_same_runs(admitted, field: str) -> No
         _h1(reports, {o: _gerrit_sim(o) for o in reports}, coprimary=other)
 
 
-def test_the_h1_test_gate_reads_back_from_json(admitted) -> None:
+def test_the_confirmatory_gate_reads_back_from_json(admitted) -> None:
     admitted("openstack", "wikimedia")
     reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
     loaded = json.loads(json.dumps({"r": reports, "s": {o: _gerrit_sim(o) for o in reports}}))
     assert _h1(loaded["r"], loaded["s"])["verdicts"] == {"H1": "pass"}
 
 
-def test_the_h1_test_gate_waits_for_the_freeze_and_for_the_h2_read(
+def test_the_confirmatory_gate_waits_for_the_freeze_and_for_every_cells_read(
     admitted, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", None)
     with pytest.raises(ValueError, match="not frozen"):
-        h1_test_gate({}, simulations={}, coprimary={}, coprimary_simulations={})
+        confirmatory_gate({}, simulations={}, coprimary={}, coprimary_simulations={})
     admitted("openstack", "qt", "chromium")
-    with pytest.raises(ValueError, match="H2 is confirmatory"):
-        h1_test_gate({}, simulations={}, coprimary={}, coprimary_simulations={})
+    with pytest.raises(ValueError, match="no reports for"):
+        confirmatory_gate({}, simulations={}, coprimary={}, coprimary_simulations={})
 
 
 @pytest.mark.parametrize(
@@ -1946,7 +1974,7 @@ def test_the_h1_test_gate_waits_for_the_freeze_and_for_the_h2_read(
         ),
     ],
 )
-def test_the_h1_test_gate_refuses(admitted, reports: dict, sims: Any, match: str) -> None:
+def test_the_confirmatory_gate_refuses(admitted, reports: dict, sims: Any, match: str) -> None:
     admitted("openstack", "wikimedia")
     sims = sims if sims is not None else {o: _gerrit_sim(o) for o in ("openstack", "wikimedia")}
     with pytest.raises(ValueError, match=match):
@@ -1981,7 +2009,7 @@ def test_a_gerrit_test_read_resamples_its_registered_unit_from_one_chains_file(
         require_test_read(report, org="openstack", expected=registered_read("openstack"))
 
 
-def test_the_h1_test_gate_refuses_a_simulation_drawn_from_other_chains(admitted) -> None:
+def test_the_confirmatory_gate_refuses_a_simulation_drawn_from_other_chains(admitted) -> None:
     admitted("openstack", "wikimedia")
     reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
     sims = {o: _gerrit_sim(o) for o in reports}
@@ -2026,7 +2054,14 @@ def test_an_across_reading_that_cannot_be_computed_withholds_no_verdict(
 _SE_93 = (0.93 * 0.07 / 1_000) ** 0.5
 
 
-def _power(org: str, *, changes: int = 1_999, cells: int = 4, bound: float = 0.03) -> dict:
+def _power(
+    org: str,
+    *,
+    changes: int = 1_999,
+    cells: int = 4,
+    bound: float = 0.03,
+    detectable: float = 0.012,
+) -> dict:
     """A `power_at_size.py` artifact at the registered bound, read at H1-alone's 95%."""
     return {
         "org": org,
@@ -2035,11 +2070,19 @@ def _power(org: str, *, changes: int = 1_999, cells: int = 4, bound: float = 0.0
         "spread_target": "sizing_bound_90",
         "cells": cells,
         "trials": 1_000,
-        "by_level": {"0.95": {"lift": 0.05, "bound": bound, "power": 0.93, "mc_se": _SE_93}},
+        "by_level": {
+            "0.95": {
+                "lift": 0.05,
+                "bound": bound,
+                "power": 0.93,
+                "mc_se": _SE_93,
+                "detectable": detectable,
+            }
+        },
     }
 
 
-def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
+def test_the_confirmatory_gate_reports_its_registered_companions(admitted) -> None:
     admitted("openstack", "wikimedia")
     reports = {
         "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999),
@@ -2057,13 +2100,16 @@ def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
     assert out["detectable"] == {
         "H1": {o: {0.95: 0.03} for o in reports},
         f"H1:{COPRIMARY_METRIC}": {o: {0.95: 0.03} for o in reports},
+        "H2": {},
     }
     assert out["coprimary_metric"] == COPRIMARY_METRIC
     assert out["coprimary_below_projection"] == ["openstack"]
     assert out["cells"]["openstack"]["size"] == {
         "projected": 2_000,
         "realised": 1_999,
-        "power": {0.95: {"power": 0.93, "mc_se": _SE_93}},
+        "power": {
+            0.95: {"power": 0.93, "mc_se": _SE_93, "detectable": 0.012, "detectable_above": None}
+        },
     }
     assert "power" not in out["cells"]["wikimedia"]["size"]
     assert out["below_projection"] == ["openstack"]
@@ -2081,7 +2127,11 @@ def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
         (
             {
                 "openstack": _power("openstack")
-                | {"by_level": {"0.95": {"bound": 0.03, "power": 0.93, "mc_se": 0.0}}}
+                | {
+                    "by_level": {
+                        "0.95": {"bound": 0.03, "power": 0.93, "mc_se": 0.0, "detectable": 0.012}
+                    }
+                }
             },
             "Monte Carlo SE 0.0",
         ),
@@ -2093,7 +2143,11 @@ def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
         (
             {
                 "openstack": _power("openstack")
-                | {"by_level": {"0.95": {"bound": 0.03, "power": 1.2, "mc_se": 0.0}}}
+                | {
+                    "by_level": {
+                        "0.95": {"bound": 0.03, "power": 1.2, "mc_se": 0.0, "detectable": 0.012}
+                    }
+                }
             },
             "power 1.2",
         ),
@@ -2117,11 +2171,15 @@ def test_a_replication_member_below_its_projection_carries_its_power(frozen) -> 
     cells = {"apache": _replication_cell(0.01, 0.02, 0.001, changes=1_999)}
     se = (0.9 * 0.1 / 1_000) ** 0.5
     power = _power("apache", cells=1) | {
-        "by_level": {"0.975": {"lift": 0.05, "bound": 0.03, "power": 0.9, "mc_se": se}}
+        "by_level": {
+            "0.975": {"lift": 0.05, "bound": 0.03, "power": 0.9, "mc_se": se, "detectable": 0.012}
+        }
     }
     out = replication_gate(cells, simulations=_SIM, powers={"apache": power})
     assert out["below_projection"] == ["apache"]
-    assert out["cells"]["apache"]["size"]["power"] == {0.975: {"power": 0.9, "mc_se": se}}
+    assert out["cells"]["apache"]["size"]["power"] == {
+        0.975: {"power": 0.9, "mc_se": se, "detectable": 0.012, "detectable_above": None}
+    }
     with pytest.raises(ValueError, match="no power-at-size artifact"):
         replication_gate(cells, simulations=_SIM)
 
@@ -2359,3 +2417,1399 @@ def test_each_source_trains_on_its_own_registered_pool() -> None:
     for source, exploratory in (("fuchsia", False), ("chromium", True), ("aosp", True)):
         with pytest.raises(ValueError, match="foreign source is"):
             decomposition.registered_pool(source, exploratory=exploratory)
+
+
+# --- Stage 1 report rules (sphragis#253): the calibrated bounded side, withdrawal, the small
+# window, the mixed row and the "below δ" legend.
+
+_DELTA = 0.0161
+
+
+def test_the_bounded_test_p_mirrors_the_upper_bound_at_whole_alpha_counts() -> None:
+    """Share of draws at or above δ below alpha exactly when the percentile high is below δ."""
+    from sphragis.experiment.across import bounded_p
+    from sphragis.measure.stats import one_sided_alpha, percentile_interval
+
+    rng = random.Random(5)
+    for trial in range(200):
+        centre = rng.uniform(-0.01, 0.03)
+        draws = [rng.gauss(centre, 0.004) for _ in range(10_000)]
+        for level in (0.975, 0.95):
+            _, high = percentile_interval(draws, level)
+            assert (bounded_p(draws, _DELTA) < one_sided_alpha(level)) == (high < _DELTA), trial
+    # "At or above": a draw exactly at δ counts against bounded, as a draw at zero counts
+    # against supported in `one_sided_p`.
+    assert bounded_p([_DELTA, 0.0], _DELTA) == 0.5
+    with pytest.raises(ValueError, match="no bootstrap draws"):
+        bounded_p([], _DELTA)
+
+
+@pytest.mark.parametrize(
+    ("p_bounded", "verdict", "four"),
+    [
+        # Upper bound below δ, bounded-test p below the calibrated critical p: bounded.
+        (0.001, "bounded", "bounded"),
+        # Upper bound below δ, its p above the critical p (though below alpha): not bounded.
+        (0.004, "inconclusive", "inconclusive"),
+    ],
+)
+def test_a_calibrated_cell_reads_bounded_only_below_its_critical_p(
+    p_bounded: float, verdict: str, four: str
+) -> None:
+    out = read_intervals(
+        {0.975: (-0.004, 0.012)},
+        {0.975: 0.008},
+        sesoi=_DELTA,
+        p=0.3,
+        critical={0.975: 0.003},
+        p_bounded=p_bounded,
+    )
+    assert out["verdicts"] == {0.975: verdict}
+    assert out["four_way"] == {0.975: four}
+    assert out["below"] == {0.975: verdict == "bounded"}
+
+
+def test_a_calibrated_cell_supported_reads_below_delta_only_below_its_critical_p() -> None:
+    def read(p_bounded: float) -> dict:
+        return read_intervals(
+            {0.975: (0.002, 0.012)},
+            {0.975: 0.008},
+            sesoi=_DELTA,
+            p=0.0001,
+            critical={0.975: 0.003},
+            p_bounded=p_bounded,
+        )
+
+    assert read(0.001)["four_way"] == {0.975: "supported, below SESOI"}
+    assert read(0.004)["four_way"] == {0.975: "supported"}
+    assert read(0.004)["verdicts"] == {0.975: "supported"}
+
+
+def test_an_uncalibrated_cell_reads_bounded_on_its_upper_bound_alone() -> None:
+    out = read_intervals({0.975: (-0.004, 0.012)}, {0.975: 0.008}, sesoi=_DELTA)
+    assert out["verdicts"] == {0.975: "bounded"} and out["below"] == {0.975: True}
+    # With no registered bound a level is never below δ.
+    assert read_intervals({0.975: (-0.004, 0.012)}, {}, sesoi=_DELTA)["below"] == {0.975: False}
+
+
+def test_a_calibrated_read_needs_both_one_sided_ps() -> None:
+    for kwargs in ({"p": 0.3}, {"p_bounded": 0.001}):
+        with pytest.raises(ValueError, match="one-sided p and bounded-test p"):
+            read_intervals(
+                {0.975: (-0.004, 0.012)},
+                {0.975: 0.008},
+                sesoi=_DELTA,
+                critical={0.975: 0.003},
+                **kwargs,
+            )
+
+
+def _calibrated_coprimary(reports: dict, sims: dict, *, critical: float) -> tuple[dict, dict]:
+    other = {o: _on_other(r) for o, r in reports.items()}
+    other_sims = {o: _on_other(sim) for o, sim in sims.items()}
+    other["openstack"]["k_from"] |= {"calibrated": True, "critical_p": {"0.95": critical}}
+    other["openstack"]["sensitivity"]["calibrated"] = True
+    other_sims["openstack"]["calibrated"] = True
+    other_sims["openstack"]["by_target"]["sizing_bound_90"]["critical_p"] = {"0.95": critical}
+    return other, other_sims
+
+
+@pytest.mark.parametrize(("p_bounded", "verdict"), [(0.001, "bounded"), (0.004, "inconclusive")])
+def test_the_confirmatory_gate_reads_a_calibrated_cell_bounded_below_its_critical_p(
+    admitted, p_bounded: float, verdict: str
+) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, -0.004, 0.012, 0.3) for o in ("openstack", "wikimedia")}
+    sims = {o: _gerrit_sim(o) for o in reports}
+    other, other_sims = _calibrated_coprimary(reports, sims, critical=0.003)
+    other["openstack"]["p_bounded"] = p_bounded
+    out = _h1(reports, sims, coprimary=other, coprimary_sims=other_sims)
+    assert out["coprimary_cells"]["openstack"]["verdicts"] == {0.95: verdict}
+    assert out["coprimary_cells"]["openstack"]["p_bounded"] == p_bounded
+    assert out["verdicts"] == {"H1": verdict}
+
+
+def test_the_confirmatory_gate_refuses_a_calibrated_cell_without_its_bounded_test_p(
+    admitted,
+) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, -0.004, 0.012, 0.3) for o in ("openstack", "wikimedia")}
+    sims = {o: _gerrit_sim(o) for o in reports}
+    other, other_sims = _calibrated_coprimary(reports, sims, critical=0.003)
+    del other["openstack"]["p_bounded"]
+    with pytest.raises(ValueError, match="carries no bounded-test p"):
+        _h1(reports, sims, coprimary=other, coprimary_sims=other_sims)
+    # An uncalibrated cell is read on its interval, which its p would only repeat.
+    del reports["wikimedia"]["p_bounded"]
+    other, other_sims = _calibrated_coprimary(reports, sims, critical=0.003)
+    other["openstack"]["p_bounded"] = 0.001
+    assert _h1(reports, sims, coprimary=other, coprimary_sims=other_sims)["verdicts"] == {
+        "H1": "bounded"
+    }
+
+
+@pytest.mark.parametrize(
+    ("p_bounded", "match"),
+    [
+        (0.4, "disagree at 0.95"),  # high 0.012 is below δ, so its p must be below 0.025
+        (1.5, r"not in \[0, 1\]"),
+        (True, r"not in \[0, 1\]"),
+    ],
+)
+def test_the_confirmatory_gate_refuses_a_bounded_test_p_from_other_draws(
+    admitted, p_bounded: Any, match: str
+) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, -0.004, 0.012, 0.3) for o in ("openstack", "wikimedia")}
+    reports["openstack"]["p_bounded"] = p_bounded
+    with pytest.raises(ValueError, match=match):
+        _h1(reports, {o: _gerrit_sim(o) for o in reports})
+
+
+def _failed_battery(*failed: str) -> dict:
+    """A recorded battery (`rq1_pilot.py`'s `outcome_neutral`) whose named checks failed."""
+    names = ["non_degeneracy"]
+    checks = [{"name": n, "passed": True} for n in names if n not in failed]
+    return {
+        "apparatus_holds": not failed,
+        "checks": checks + [{"name": n, "passed": False} for n in failed],
+    }
+
+
+def _two_levels(org: str, low: float, high: float, p: float, **kwargs: Any) -> tuple[dict, dict]:
+    """`org`'s report and simulation under the registration with H2 confirmatory: three H1
+    organizations on two scores make six cells, read at Holm's 97.5% and 95%."""
+    report = _gerrit_report(org, low, high, p, cells=6, **kwargs)
+    bound = report["bounds"][0.95]
+    report |= {
+        "levels": [0.975, 0.95],
+        "intervals": {0.975: {"low": low, "high": high}, 0.95: {"low": low, "high": high}},
+        "bounds": {0.975: bound, 0.95: bound},
+    }
+    sim = _gerrit_sim(org, bound, cells=6)
+    at = {"by_cells": {"6": {"minimum_detectable_effect": bound}}}
+    sim["by_target"]["sizing_bound_90"]["by_level"] = {"0.975": at, "0.95": at}
+    return report, sim
+
+
+def test_a_withdrawn_qt_leaves_h1_alone_confirmatory_at_95(admitted) -> None:
+    admitted("openstack", "wikimedia", "qt")
+    pairs = {o: _two_levels(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    # Qt not withdrawn: its H1 reports and its H2 read are owed.
+    with pytest.raises(ValueError, match=r"no reports for \['qt'\]"):
+        _h1(reports, sims)
+    out = confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary={o: _on_other(r) for o, r in reports.items()},
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        withdrawn={"qt": _failed_battery("leakage:qt-a")},
+    )
+    assert out["design"]["H1"] == ("openstack", "wikimedia")
+    assert out["design"]["admitted"] == ("openstack", "wikimedia", "qt")
+    assert out["design"]["H2"] == () and out["design"]["withdrawn"] == ("qt",)
+    assert out["withdrawn"] == {"qt": ["leakage:qt-a"]}
+    assert out["holm_levels"] == [0.95]
+    assert out["verdicts"] == {"H1": "pass"} and out["passed_at"] == {"H1": 0.95}
+    # The reports are still checked against the registration: six cells, two levels.
+    assert set(out["cells"]["openstack"]["verdicts"]) == {0.975, 0.95}
+
+
+def test_a_withdrawn_organization_is_read_over_the_rest(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {"wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001)}
+    out = confirmatory_gate(
+        reports,
+        simulations={"wikimedia": _gerrit_sim("wikimedia")},
+        coprimary={"wikimedia": _on_other(reports["wikimedia"])},
+        coprimary_simulations={"wikimedia": _on_other(_gerrit_sim("wikimedia"))},
+        withdrawn={"openstack": _failed_battery("positive_control_crossed:openstack")},
+    )
+    assert out["design"]["H1"] == ("wikimedia",)
+    assert out["verdicts"] == {"H1": "pass"}
+    # The withdrawn organization's report is not read, and one passed is refused.
+    with pytest.raises(ValueError, match="outside"):
+        confirmatory_gate(
+            {**reports, "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001)},
+            simulations={"wikimedia": _gerrit_sim("wikimedia")},
+            coprimary={"wikimedia": _on_other(reports["wikimedia"])},
+            coprimary_simulations={"wikimedia": _on_other(_gerrit_sim("wikimedia"))},
+            withdrawn={"openstack": _failed_battery("positive_control_crossed:openstack")},
+        )
+
+
+@pytest.mark.parametrize(
+    ("withdrawn", "match"),
+    [
+        ({"qt": _failed_battery("leakage:qt-a")}, "not among the admitted"),
+        ({"chromium": _failed_battery("leakage:chromium")}, "H2_WITHDRAWN"),
+        # A string is no evidence, and a battery that held withdraws nothing.
+        ({"wikimedia": "check 5"}, "not a recorded battery"),
+        ({"wikimedia": {"checks": []}}, "not a recorded battery"),
+        ({"wikimedia": _failed_battery()}, r"failed no check that withdraws \(2 to 6,"),
+        # Check 1 is a reported measurement: its failure withdraws nothing.
+        ({"wikimedia": _failed_battery("contamination:wikimedia-a")}, "failed no check"),
+        # One run's own check 2 is reported; check 2 is read crossed over the cell's runs.
+        ({"wikimedia": _failed_battery("positive_control:wikimedia-a|s1")}, "failed no check"),
+        (["wikimedia"], "must map organizations to batteries"),
+        # A foreign arm's failure is H2's: Qt stays in H1 (check 4).
+        (
+            {"wikimedia": _failed_battery("leakage:foreign-chromium-for-wikimedia-a->wikimedia-b")},
+            "not a foreign arm's",
+        ),
+        # A foreign adapter failing check 3 is the foreign source's failure too.
+        (
+            {"wikimedia": _failed_battery("manipulation:foreign-chromium-for-wikimedia-a|s1")},
+            "not a foreign arm's",
+        ),
+        # Another organization's battery, a malformed flag, a battery that says it held.
+        ({"wikimedia": _failed_battery("leakage:openstack-a")}, "another organization's"),
+        # A label naming its halves and another's is not the organization's alone.
+        (
+            {"wikimedia": _failed_battery("leakage:wikimedia-a->openstack-b")},
+            "another organization's",
+        ),
+        (
+            {
+                "wikimedia": _failed_battery("non_degeneracy")
+                | {
+                    "checks": [
+                        {
+                            "name": "leakage:foreign-chromium-for-openstack-a->openstack-b",
+                            "passed": True,
+                        },
+                        {"name": "non_degeneracy", "passed": False},
+                    ]
+                }
+            },
+            "another organization's",
+        ),
+        ({"wikimedia": {"checks": [{"name": "non_degeneracy"}]}}, "records no pass flag"),
+        (
+            {"wikimedia": {"checks": [{"name": "non_degeneracy", "passed": "no"}]}},
+            "records no pass flag",
+        ),
+        (
+            {"wikimedia": _failed_battery("non_degeneracy") | {"apparatus_holds": True}},
+            "says it held",
+        ),
+        (
+            {
+                "openstack": _failed_battery("non_degeneracy"),
+                "wikimedia": _failed_battery("planted_convention"),
+            },
+            "every admitted organization",
+        ),
+    ],
+)
+def test_a_withdrawal_names_an_admitted_organization_and_its_check(
+    admitted, withdrawn: Any, match: str
+) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    sims = {o: _gerrit_sim(o) for o in reports}
+    with pytest.raises(ValueError, match=match):
+        confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary={o: _on_other(r) for o, r in reports.items()},
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            withdrawn=withdrawn,
+        )
+
+
+def test_design_reads_the_rest_after_a_withdrawal() -> None:
+    spec = design(("openstack", "wikimedia", "qt"), "chromium", withdrawn=("qt",))
+    assert spec["H1"] == ("openstack", "wikimedia") and spec["H2"] == ()
+    assert spec["exploratory_h2"] == (("openstack", "wikimedia"), ("wikimedia", "openstack"))
+    spec = design(("openstack", "wikimedia", "qt"), "chromium", withdrawn=("openstack",))
+    assert spec["H1"] == ("wikimedia", "qt") and spec["H2"] == (("qt", "chromium"),)
+    with pytest.raises(ValueError, match="never admitted"):
+        design(("openstack",), withdrawn=("qt",))
+    with pytest.raises(ValueError, match="every admitted organization is withdrawn"):
+        design(("openstack",), withdrawn=("openstack",))
+
+
+def test_the_registered_design_drops_h2_without_qt_or_its_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    admitted_ = ("openstack", "wikimedia", "qt")
+    assert decomposition.registered_design(admitted_)["H2"] == (("qt", "chromium"),)
+    assert decomposition.registered_design(admitted_, withdrawn=("qt",))["H2"] == ()
+    assert decomposition.registered_design(admitted_, withdrawn=("wikimedia",))["H2"] == (
+        ("qt", "chromium"),
+    )
+    # With the pair admitted, a withdrawn Chromium leaves Qt no foreign side.
+    assert design(("openstack", "qt", "chromium"), withdrawn=("chromium",))["H2"] == ()
+    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", "chromium")
+    pair = ("openstack", "qt", "chromium")
+    assert decomposition.registered_design(pair, withdrawn=("chromium",))["H2"] == ()
+
+
+def test_small_window_reads_the_detectable_effect_at_the_realised_size() -> None:
+    size = {
+        "realised": 1_200,
+        "projected": 1_913,
+        "power": {
+            0.975: {"power": 0.9, "mc_se": 0.01, "detectable": 0.0170},
+            0.95: {"power": 0.95, "mc_se": 0.01, "detectable": 0.0150},
+        },
+    }
+    assert small_window(size, _DELTA, 0.975) == (
+        "detects +0.0170 at 0.975 at its realised 1200 of 1913 projected, above the SESOI 0.0161"
+    )
+    # Only the family's first level decides: read at 95% alone, the 97.5% entry says nothing.
+    assert small_window(size, _DELTA, 0.95) is None
+    size["power"][0.95]["detectable"] = 0.0170
+    assert str(small_window(size, _DELTA, 0.95)).startswith("detects +0.0170 at 0.95 ")
+    size["power"][0.975]["detectable"] = 0.0160
+    assert small_window(size, _DELTA, 0.975) is None
+    # At the projection there is no power artifact and nothing to read.
+    assert small_window({"realised": 1_913, "projected": 1_913}, _DELTA, 0.975) is None
+
+
+def test_a_cell_that_cannot_detect_delta_at_its_realised_size_is_exploratory(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", -0.01, 0.05, 0.3, changes=1_999),
+        "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+    }
+    sims = {o: _gerrit_sim(o) for o in reports}
+    powers = {"openstack": _power("openstack", detectable=0.02)}
+    out = _h1(reports, sims, powers=powers)
+    assert out["cells"]["openstack"]["exploratory"].startswith("detects +0.0200 at 0.95")
+    assert out["exploratory"] == sorted(["H1:openstack", f"H1:openstack:{COPRIMARY_METRIC}"])
+    # Only Wikimedia's cells decide H1, and they pass.
+    assert out["verdicts"] == {"H1": "pass"}
+    # Detecting δ at the realised size, the same cell stays in and H1 does not pass.
+    out = _h1(reports, sims, powers={"openstack": _power("openstack", detectable=0.0161)})
+    assert out["exploratory"] == [] and out["cells"]["openstack"]["exploratory"] is None
+    assert out["verdicts"] == {"H1": "inconclusive"}
+
+
+def test_with_every_cell_exploratory_h1_is_not_tested(admitted) -> None:
+    admitted(
+        "openstack",
+    )
+    reports = {"openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999, cells=2)}
+    sims = {"openstack": _gerrit_sim("openstack", cells=2)}
+    out = _h1(reports, sims, powers={"openstack": _power("openstack", cells=2, detectable=0.03)})
+    assert out["verdicts"] == {"H1": "not tested"} and out["passed_at"] == {"H1": None}
+    assert out["reading"] == "unresolved" and out["below_sesoi"] == []
+
+
+def test_a_power_artifact_without_its_detectable_effect_is_refused(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999),
+        "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+    }
+    power = _power("openstack")
+    del power["by_level"]["0.95"]["detectable"]
+    with pytest.raises(ValueError, match="no detectable effect at the realised size"):
+        _h1(reports, {o: _gerrit_sim(o) for o in reports}, powers={"openstack": power})
+
+
+def _at_first_level(*verdicts: str) -> dict:
+    return {f"c{i}": {"verdicts": {0.975: v}} for i, v in enumerate(verdicts)}
+
+
+@pytest.mark.parametrize(
+    ("verdicts", "mixed"),
+    [
+        (("supported", "bounded"), True),
+        (("supported", "bounded", "bounded"), True),
+        (("supported", "supported"), False),
+        (("bounded", "bounded"), False),
+        (("supported", "bounded", "inconclusive"), False),
+        (("supported", "inconclusive"), False),
+    ],
+)
+def test_is_mixed_is_some_supported_and_the_rest_bounded(verdicts: tuple, mixed: bool) -> None:
+    assert is_mixed(_at_first_level(*verdicts), 0.975) is mixed
+
+
+@pytest.mark.parametrize(
+    ("h1", "h2", "expected"),
+    [
+        ("inconclusive", None, decomposition.MIXED_READING),
+        ("inconclusive", "bounded", decomposition.MIXED_READING),
+        ("inconclusive", "inconclusive", decomposition.MIXED_READING),
+        # H2 passing is "not pass & pass": the organization row, not the mixed one.
+        ("inconclusive", "pass", "organization"),
+    ],
+)
+def test_the_mixed_row_reads_when_h2_does_not_pass(h1: str, h2: Any, expected: str) -> None:
+    assert reading(h1, h2, mixed=True) == expected
+    assert reading(h1, h2) != decomposition.MIXED_READING
+
+
+def test_the_confirmatory_gate_reads_the_mixed_row(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001),
+        "wikimedia": _gerrit_report("wikimedia", -0.004, 0.012, 0.3),
+    }
+    out = _h1(reports, {o: _gerrit_sim(o) for o in reports})
+    assert out["verdicts"] == {"H1": "inconclusive"}
+    assert out["mixed"] is True and out["reading"] == decomposition.MIXED_READING
+    # One cell inconclusive instead of bounded: not mixed.
+    reports["wikimedia"] = _gerrit_report("wikimedia", -0.004, 0.02, 0.3)
+    out = _h1(reports, {o: _gerrit_sim(o) for o in reports})
+    assert out["mixed"] is False and out["reading"] == "unresolved"
+
+
+def test_below_sesoi_lists_passing_cells_whose_every_upper_bound_is_below_delta() -> None:
+    """The Table III legend: a pass reads "below δ" when its upper bounds are below δ."""
+    cells: dict[str, dict[str, Any]] = {
+        "a": {"intervals": {0.95: {"high": 0.010}, 0.975: {"high": 0.020}}},
+        "b": {"intervals": {0.95: {"high": 0.020}, 0.975: {"high": 0.010}}},
+    }
+    assert below_sesoi({"H1": cells}, {"H1": 0.95}, sesoi=_DELTA) == ["H1:a"]
+    assert below_sesoi({"H1": cells}, {"H1": 0.975}, sesoi=_DELTA) == ["H1:b"]
+    assert below_sesoi({"H1": cells}, {"H1": None}, sesoi=_DELTA) == []
+    # A cell recording its bounded test is read by it, so a calibrated cell's p counts.
+    cells["a"]["below"] = {0.95: False}
+    assert below_sesoi({"H1": cells}, {"H1": 0.95}, sesoi=_DELTA) == []
+
+
+def test_a_cell_that_detects_nothing_under_the_bracket_is_exploratory(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999),
+        "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+    }
+    power = _power("openstack")
+    power["by_level"]["0.95"] |= {"detectable": None, "detectable_above": 0.1}
+    out = _h1(reports, {o: _gerrit_sim(o) for o in reports}, powers={"openstack": power})
+    assert out["cells"]["openstack"]["exploratory"].startswith("detects nothing up to +0.1000")
+    # Neither, or both, is no reading of the size at all.
+    for bad in ({"detectable": None, "detectable_above": None}, {"detectable_above": 0.1}):
+        power["by_level"]["0.95"] |= {"detectable": 0.012} | bad
+        with pytest.raises(ValueError, match="no detectable effect at the realised size"):
+            _h1(reports, {o: _gerrit_sim(o) for o in reports}, powers={"openstack": power})
+
+
+def test_a_level_the_family_does_not_read_decides_no_cell_exploratory(admitted) -> None:
+    """Qt withdrawn, H1 is read at 95% alone, so a detectable effect above δ at the unread 97.5%
+    leaves the cell in the family."""
+    admitted("openstack", "wikimedia", "qt")
+    pairs = {
+        "openstack": _two_levels("openstack", -0.001, 0.05, 0.3, changes=1_999),
+        "wikimedia": _two_levels("wikimedia", 0.01, 0.05, 0.001),
+    }
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    entry = {"lift": 0.05, "bound": 0.03, "power": 0.93, "mc_se": _SE_93}
+    power = _power("openstack", cells=6) | {
+        "by_level": {
+            "0.975": entry | {"detectable": 0.020},
+            "0.95": entry | {"detectable": 0.012},
+        }
+    }
+
+    def gate(power_: dict) -> dict:
+        return confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary={o: _on_other(r) for o, r in reports.items()},
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            powers={"openstack": power_},
+            coprimary_powers={"openstack": power_},
+            withdrawn={"qt": _failed_battery("leakage:qt-a")},
+        )
+
+    out = gate(power)
+    assert out["exploratory"] == [] and out["verdicts"] == {"H1": "inconclusive"}
+    power["by_level"]["0.95"]["detectable"] = 0.020
+    out = gate(power)
+    assert "H1:openstack" in out["exploratory"] and out["verdicts"] == {"H1": "pass"}
+
+
+def test_a_replication_member_that_cannot_detect_delta_leaves_the_conjunction(frozen) -> None:
+    """The family is read with the Gerrit cells' rules (Stage 1 report, the GitHub family)."""
+    frozen("apache", "llvm")
+    cells = {
+        "apache": _replication_cell(0.02, 0.05, 0.0001, changes=1_999),
+        "llvm": _replication_cell(0.02, 0.05, 0.0001, org="llvm"),
+    }
+    se = (0.9 * 0.1 / 1_000) ** 0.5
+    power = _power("apache", cells=1) | {
+        "by_level": {
+            "0.975": {"lift": 0.05, "bound": 0.03, "power": 0.9, "mc_se": se, "detectable": 0.25}
+        }
+    }
+    sims = {"apache": _sim(0.03), "llvm": _sim(0.03, "llvm")}
+    out = replication_gate(cells, simulations=sims, powers={"apache": power})
+    assert out["cells"]["apache"]["exploratory"].startswith("detects +0.2500 at 0.975")
+    assert out["exploratory"] == ["apache"]
+    assert out["partial_conjunction"]["at_least"] == 1
+    power["by_level"]["0.975"]["detectable"] = 0.012
+    out = replication_gate(cells, simulations=sims, powers={"apache": power})
+    assert out["exploratory"] == [] and out["partial_conjunction"]["at_least"] == 2
+
+
+def test_a_score_with_every_cell_exploratory_is_named_in_the_reading(admitted) -> None:
+    """H1 is registered on s and s'; passing on s with every s' cell exploratory says so."""
+    admitted("openstack", "wikimedia")
+    reports = {
+        o: _gerrit_report(o, 0.01, 0.05, 0.001, changes=1_999) for o in ("openstack", "wikimedia")
+    }
+    sims = {o: _gerrit_sim(o) for o in reports}
+    small = {o: _power(o, detectable=0.05) for o in reports}
+    out = confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary={o: _on_other(r) for o, r in reports.items()},
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        powers={o: _power(o) for o in reports},
+        coprimary_powers=small,
+    )
+    assert out["verdicts"] == {"H1": "pass"}
+    assert out["scores"][COPRIMARY_METRIC] == "not tested"
+    assert out["reading"] == (
+        f"within-half; {COPRIMARY_METRIC} not tested (every cell exploratory)"
+    )
+
+
+@pytest.mark.parametrize(
+    ("label", "org", "names"),
+    [
+        ("wikimedia-a|s1", "wikimedia", {"wikimedia"}),
+        ("wikimedia-b->wikimedia-a", "wikimedia", {"wikimedia"}),
+        ("foreign-chromium-for-qt-a->qt-b", "qt", {"qt"}),
+        ("openstack-a", "qt", {"openstack"}),
+        ("qt", "qt", set()),
+    ],
+)
+def test_a_checks_label_names_its_organizations_halves(label: str, org: str, names: set) -> None:
+    from sphragis.experiment.neutral import labelled_halves
+
+    assert labelled_halves(label) == names
+
+
+def test_a_whole_organization_label_is_its_own() -> None:
+    from sphragis.experiment.neutral import withdrawing_failures
+
+    battery = {"apparatus_holds": False, "checks": [{"name": "leakage:qt", "passed": False}]}
+    assert withdrawing_failures(battery, org="qt") == ["leakage:qt"]
+    with pytest.raises(ValueError, match="another organization's"):
+        withdrawing_failures(battery, org="wikimedia")
+
+
+# --- H2's test read and the Holm gate over both hypotheses; the spread rule (#253 items 4, 6).
+
+_H2_CRITICAL = {"0.975": 0.0121, "0.95": 0.0255}
+
+
+def _h2_pair(low: float, high: float, p: float, **kwargs: Any) -> tuple[dict, dict]:
+    """Qt's H2 test read against Chromium and its simulation: one cell at Holm's two levels, its K
+    and bounds calibrated at the registered K (`partitions.registered_coverage`)."""
+    report, sim = _two_levels("qt", low, high, p, **kwargs)
+    cell = {"hypothesis": "H2", "foreign_source": "chromium"}
+    report |= cell
+    # Beside the cell, binding nothing: the joint reading over its K runs and H2 on s'.
+    report["joint"] = {
+        "runs": report["runs"],
+        "metric": "logprob_per_token",
+        "population": "cpp",
+        "summed": {"estimate": 0.04, "low": 0.02, "high": 0.06, "confidence": 0.95},
+        "h2": {"foreign": "chromium", "role": "confirmatory"},
+    }
+    report["on_s_prime"] = {
+        "metric": COPRIMARY_METRIC,
+        "runs": report["runs"],
+        "verdicts": {"0.975": "inconclusive", "0.95": "supported"},
+        "intervals": {"0.975": {"low": -0.001, "high": 0.03}, "0.95": {"low": 0.001, "high": 0.03}},
+    }
+    report["k_from"] |= {"cell": ["H2", "chromium"], "calibrated": True, "critical_p": _H2_CRITICAL}
+    report["sensitivity"] |= {"cell": ["H2", "chromium"], "cells": 1, "calibrated": True}
+    bound = report["bounds"][0.95]
+    at = {"by_cells": {"1": {"minimum_detectable_effect": bound}}}
+    sim |= cell | {"calibrated": True}
+    sim["by_target"]["sizing_bound_90"] |= {
+        "by_level": {"0.975": at, "0.95": at},
+        "critical_p": _H2_CRITICAL,
+    }
+    return report, sim
+
+
+def _full(
+    h1: dict[str, tuple[float, float, float]], h2: tuple[float, float, float], **kwargs: Any
+) -> dict:
+    """The gate over OpenStack, Wikimedia and Qt with H2 confirmatory."""
+    pairs = {o: _two_levels(o, *at) for o, at in h1.items()}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    h2_report, h2_sim = _h2_pair(*h2)
+    return confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary={o: _on_other(r) for o, r in reports.items()},
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        h2={"qt": h2_report},
+        h2_simulations={"qt": h2_sim},
+        **kwargs,
+    )
+
+
+_PASS = (0.01, 0.05, 0.001)
+_THREE = ("openstack", "wikimedia", "qt")
+
+
+@pytest.mark.parametrize(
+    ("h2", "verdict", "reading_"),
+    [
+        (_PASS, "pass", "nested"),
+        ((-0.004, 0.009, 0.3), "bounded", "within-half"),
+        ((-0.004, 0.03, 0.3), "inconclusive", "within-half, organization unresolved"),
+    ],
+)
+def test_the_gate_reads_h2_beside_h1_under_holm(
+    admitted, h2: tuple, verdict: str, reading_: str
+) -> None:
+    admitted(*_THREE)
+    out = _full(dict.fromkeys(_THREE, _PASS), h2)
+    assert out["verdicts"] == {"H1": "pass", "H2": verdict}
+    assert out["holm_levels"] == [0.975, 0.95] and out["reading"] == reading_
+    assert out["h2_cells"]["qt"]["critical_p"] == {0.975: 0.0121, 0.95: 0.0255}
+    assert out["detectable"]["H2"] == {"qt": {0.975: 0.03, 0.95: 0.03}}
+
+
+def test_h2_passing_at_the_second_level_after_h1(admitted) -> None:
+    """Holm: H1 passes at 97.5%, so H2 is read again at 95%, where its p clears 0.0255."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(0.001, 0.03, 0.02)
+    # Below zero at 97.5%, above it at 95%: p 0.02 lies between the two alphas.
+    h2_report["intervals"][0.975]["low"] = -0.001
+    out = _full_with(h2_report, h2_sim)
+    assert out["verdicts"] == {"H1": "pass", "H2": "pass"}
+    assert out["passed_at"] == {"H1": 0.975, "H2": 0.95}
+
+
+def test_the_calibrated_h2_cell_reads_its_critical_p(admitted) -> None:
+    """Above zero by its interval at 97.5%, its p 0.0123 above the critical 0.0121: not
+    supported there; at 95% it is."""
+    admitted(*_THREE)
+    out = _full(dict.fromkeys(_THREE, _PASS), (0.0001, 0.03, 0.0123))
+    assert out["h2_cells"]["qt"]["verdicts"] == {0.975: "inconclusive", 0.95: "supported"}
+
+
+def test_the_gate_needs_h2s_read_exactly_when_the_design_has_its_cell(admitted) -> None:
+    admitted(*_THREE)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    kwargs: dict[str, Any] = {
+        "simulations": sims,
+        "coprimary": {o: _on_other(r) for o, r in reports.items()},
+        "coprimary_simulations": {o: _on_other(s) for o, s in sims.items()},
+    }
+    with pytest.raises(ValueError, match="H2 reports must map"):
+        confirmatory_gate(reports, **kwargs)
+    # Qt withdrawn: no H2 cell, so an H2 read given is refused.
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    rest = {o: r for o, r in reports.items() if o != "qt"}
+    rest_kwargs: dict[str, Any] = {
+        k: {o: x for o, x in v.items() if o != "qt"} for k, v in kwargs.items()
+    }
+    with pytest.raises(ValueError, match="the design has no confirmatory H2 cell"):
+        confirmatory_gate(
+            rest,
+            **rest_kwargs,
+            h2={"qt": h2_report},
+            h2_simulations={"qt": h2_sim},
+            withdrawn={"qt": _failed_battery("leakage:qt-a")},
+        )
+
+
+def test_an_h1_read_given_as_h2s_is_refused(admitted) -> None:
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    for name in ("hypothesis", "foreign_source"):
+        del h2_report[name]
+    with pytest.raises(ValueError, match=r"qt: the read is of the cell \('H1', None\)"):
+        _full_with(h2_report, h2_sim)
+
+
+def _full_with(h2_report: dict, h2_sim: dict) -> dict:
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    return confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary={o: _on_other(r) for o, r in reports.items()},
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        h2={"qt": h2_report},
+        h2_simulations={"qt": h2_sim},
+    )
+
+
+def test_an_h2_cell_that_cannot_detect_delta_leaves_h1_alone_at_95(admitted) -> None:
+    """The two-step read: H2 exploratory at the design's 97.5% drops out, and H1 is read at the
+    95% of the family that remains, where a 97.5%-only shortfall decides nothing."""
+    admitted(*_THREE)
+    entry = {"lift": 0.05, "bound": 0.03, "power": 0.93, "mc_se": _SE_93}
+    h2_power = _power("qt", cells=1) | {
+        "by_level": {
+            "0.975": entry | {"detectable": 0.02},
+            "0.95": entry | {"detectable": 0.012},
+        }
+    }
+    h2_report, h2_sim = _h2_pair(*_PASS, changes=1_999)
+    h1 = {o: _two_levels(o, *_PASS) for o in _THREE}
+    h1["openstack"] = _two_levels("openstack", -0.001, 0.05, 0.3, changes=1_999)
+    h1_power = _power("openstack", cells=6) | {"by_level": h2_power["by_level"]}
+    reports = {o: r for o, (r, _) in h1.items()}
+    sims = {o: s for o, (_, s) in h1.items()}
+    out = confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary={o: _on_other(r) for o, r in reports.items()},
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        h2={"qt": h2_report},
+        h2_simulations={"qt": h2_sim},
+        powers={"openstack": h1_power},
+        coprimary_powers={"openstack": h1_power},
+        h2_powers={"qt": h2_power},
+    )
+    assert "H2:qt" in out["exploratory"] and "H1:openstack" not in out["exploratory"]
+    assert out["holm_levels"] == [0.95]
+    # OpenStack's s cell, inconclusive and standing at 95%, keeps H1 from passing.
+    assert out["verdicts"] == {"H1": "inconclusive", "H2": "not tested"}
+    assert out["reading"] == "unresolved"
+
+
+def _narrow_coprimary(reports: dict) -> dict:
+    """Each report's co-primary twin, its runs within the twin's own sizing bound."""
+    twins = {o: _on_other(r) for o, r in reports.items()}
+    for twin in twins.values():
+        twin["per_run"] = [0.0, 0.001]
+    return twins
+
+
+def _spread_sim_for(report: dict, null: dict) -> dict:
+    """The null `partition_sensitivity.py --test-read` writes at `report`'s own spread."""
+    from sphragis.experiment.partitions import TEST_SPREAD_TARGET, run_spread
+
+    spread = run_spread(report)
+    return {
+        "org": report["org"],
+        "metric": report["metric"],
+        "runs": report["runs"],
+        "planned_changes": report["changes"],
+        "null_trials": 4_000,
+        "spread_targets": report["k_from"]["spread_targets"],
+        **({"cluster_unit": report["cluster_unit"]} if "cluster_unit" in report else {}),
+        "calibrated": "critical_p" in null,
+        **{k: report[k] for k in ("hypothesis", "foreign_source") if k in report},
+        "test_read": {"spread": spread},
+        "by_target": {TEST_SPREAD_TARGET: {"calibration": {"target": spread}, **null}},
+    }
+
+
+def test_a_cell_above_its_sizing_bound_is_read_at_the_critical_p_calibrated_there(
+    admitted,
+) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.02) for o in ("openstack", "wikimedia")}
+    # OpenStack's runs spread 0.03 apart, above the sizing bound 0.015.
+    reports["openstack"]["per_run"] = [0.0, 0.03, 0.06]
+    sims = {o: _gerrit_sim(o) for o in reports}
+    with pytest.raises(ValueError, match="above its sizing bound 0.01500, with no simulation"):
+        _h1(reports, sims)
+    null = {
+        "null_false_positive": {"0.95": 0.04},
+        "critical_p": {"0.95": 0.015},
+        "null_false_positive_calibrated": {"0.95": 0.027},
+    }
+    spreads = {"openstack": _spread_sim_for(reports["openstack"], null)}
+    out = confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary=_narrow_coprimary(reports),
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        spreads=spreads,
+    )
+    # p 0.02 is below alpha 0.025 but above the critical 0.015 calibrated at the test spread.
+    assert out["cells"]["openstack"]["critical_p"] == {0.95: 0.015}
+    assert out["cells"]["openstack"]["verdicts"] == {0.95: "inconclusive"}
+    assert out["cells"]["wikimedia"]["verdicts"] == {0.95: "supported"}
+    assert out["verdicts"] == {"H1": "inconclusive"}
+    assert out["cells"]["openstack"]["spread"]["above"] is True
+
+
+def test_a_spread_calibration_refused_by_bradley_leaves_the_cell_exploratory(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    reports["openstack"] = _gerrit_report("openstack", -0.01, 0.05, 0.3)
+    reports["openstack"]["per_run"] = [0.0, 0.03, 0.06]
+    sims = {o: _gerrit_sim(o) for o in reports}
+    null = {
+        "null_false_positive": {"0.95": 0.06},
+        "critical_p": {"0.95": 0.001},
+        "null_false_positive_calibrated": {"0.95": 0.04},  # above 1.5 x 0.025
+    }
+    out = confirmatory_gate(
+        reports,
+        simulations=sims,
+        # The co-primary cells all supported, so only the whole score's OpenStack cell is in doubt.
+        coprimary=_narrow_coprimary(
+            {**reports, "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001)}
+        ),
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        spreads={"openstack": _spread_sim_for(reports["openstack"], null)},
+    )
+    assert "Bradley" in out["cells"]["openstack"]["exploratory"]
+    assert out["exploratory"] == ["H1:openstack"]
+    assert out["verdicts"] == {"H1": "pass"}
+
+
+def test_spread_simulations_for_cells_not_read_are_refused(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    with pytest.raises(ValueError, match=r"spread simulations for \['qt'\]"):
+        confirmatory_gate(
+            reports,
+            simulations={o: _gerrit_sim(o) for o in reports},
+            coprimary={o: _on_other(r) for o, r in reports.items()},
+            coprimary_simulations={o: _on_other(_gerrit_sim(o)) for o in reports},
+            spreads={"qt": {}},
+        )
+
+
+def test_an_s_cell_supported_where_its_s_prime_is_not_reads_as_names(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    sims = {o: _gerrit_sim(o) for o in reports}
+    other = {o: _on_other(r) for o, r in reports.items()}
+    other["wikimedia"] = _on_other(_gerrit_report("wikimedia", -0.01, 0.05, 0.3))
+    out = _h1(reports, sims, coprimary=other)
+    assert out["names"] == {"openstack": {0.95: False}, "wikimedia": {0.95: True}}
+
+
+def test_a_replication_member_above_its_bound_is_read_at_its_spread(frozen) -> None:
+    frozen("apache", "llvm")
+    cells = {
+        "apache": _replication_cell(0.02, 0.05, 0.004) | {"per_run": [0.0, 0.03, 0.06]},
+        "llvm": _replication_cell(0.02, 0.05, 0.004, org="llvm"),
+    }
+    sims = {"apache": _sim(0.03), "llvm": _sim(0.03, "llvm")}
+    with pytest.raises(ValueError, match="apache: per-run spread"):
+        replication_gate(cells, simulations=sims)
+    calibrated = {
+        "null_false_positive": {"0.975": 0.03},
+        "critical_p": {"0.975": 0.002},
+        "null_false_positive_calibrated": {"0.975": 0.013},
+    }
+    cells["apache"]["p_bounded"] = 0.4
+    out = replication_gate(
+        cells, simulations=sims, spreads={"apache": _spread_sim_for(cells["apache"], calibrated)}
+    )
+    # p 0.004 is below alpha 0.0125 but above the 0.002 calibrated at the test spread.
+    assert out["cells"]["apache"]["verdict"] == "inconclusive"
+    assert out["cells"]["llvm"]["verdict"] == "supported"
+    # In the conjunction its p counts as 0.004 x 0.0125 / 0.002 = 0.025, above alpha.
+    assert out["partial_conjunction"]["at_least"] == 1
+    refused = calibrated | {"null_false_positive_calibrated": {"0.975": 0.02}}
+    out = replication_gate(
+        cells, simulations=sims, spreads={"apache": _spread_sim_for(cells["apache"], refused)}
+    )
+    assert out["exploratory"] == ["apache"] and "Bradley" in out["cells"]["apache"]["exploratory"]
+
+
+def test_an_organization_without_an_h2_cell_has_no_h2_read(admitted) -> None:
+    admitted(*_THREE)
+    assert registered_read("qt", hypothesis="H2")["cell"] == ["H2", "chromium"]
+    with pytest.raises(ValueError, match="openstack has no confirmatory H2 cell"):
+        registered_read("openstack", hypothesis="H2")
+    with pytest.raises(ValueError, match="no hypothesis 'H3'"):
+        registered_read("qt", hypothesis="H3")
+
+
+def test_a_cell_calibrated_at_its_k_and_its_spread_reads_the_smaller_critical_p(admitted) -> None:
+    """H2's K calibrates 0.0121 at 97.5%; its test spread calibrates 0.02 there: 0.0121 is read."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    h2_report["per_run"] = [0.0, 0.03, 0.06]
+    null = {
+        "null_false_positive": {"0.975": 0.03, "0.95": 0.03},
+        "critical_p": {"0.975": 0.02, "0.95": 0.02},
+        "null_false_positive_calibrated": {"0.975": 0.012, "0.95": 0.024},
+    }
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    out = confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary={o: _on_other(r) for o, r in reports.items()},
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        h2={"qt": h2_report},
+        h2_simulations={"qt": h2_sim},
+        h2_spreads={"qt": _spread_sim_for(h2_report, null)},
+    )
+    assert out["h2_cells"]["qt"]["critical_p"] == {0.975: 0.0121, 0.95: 0.02}
+
+
+def test_a_spread_refusal_at_a_level_the_family_does_not_read_decides_nothing(admitted) -> None:
+    """Qt withdrawn, H1 alone is read at 95%; a calibration refused only at 97.5% leaves the cell
+    in the family."""
+    admitted(*_THREE)
+    pairs = {o: _two_levels(o, *_PASS) for o in ("openstack", "wikimedia")}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    reports["openstack"]["per_run"] = [0.0, 0.03, 0.06]
+    null = {
+        "null_false_positive": {"0.975": 0.03, "0.95": 0.03},
+        "critical_p": {"0.975": 0.0005, "0.95": 0.0009},
+        # Above 1.5 x 0.0125 at 97.5% only.
+        "null_false_positive_calibrated": {"0.975": 0.02, "0.95": 0.024},
+    }
+
+    def gate(withdrawn: dict | None) -> dict:
+        rest = {o: x for o, x in reports.items()}
+        return confirmatory_gate(
+            rest,
+            simulations=sims,
+            coprimary=_narrow_coprimary(rest),
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            spreads={"openstack": _spread_sim_for(reports["openstack"], null)},
+            withdrawn=withdrawn,
+        )
+
+    out = gate({"qt": _failed_battery("leakage:qt-a")})
+    assert out["holm_levels"] == [0.95] and out["exploratory"] == []
+    assert out["cells"]["openstack"]["spread"]["refused_at"] == [0.975]
+
+
+def test_h1_untested_and_h2_passing_reads_the_organization_row() -> None:
+    """Table III's "not pass & pass": H1 anything but a pass, untested included."""
+    assert reading("not tested", "pass") == "organization"
+    assert reading("inconclusive", "pass") == "organization"
+    assert reading("pass", "pass") == "nested"
+
+
+def test_a_replication_member_has_no_h2_read(frozen) -> None:
+    frozen("apache")
+    with pytest.raises(ValueError, match="read on H1 alone"):
+        registered_read("apache", hypothesis="H2")
+
+
+def test_an_exploratory_cell_leaves_the_readings_across(admitted) -> None:
+    """A refused calibration has no critical p to scale by, so the cell leaves the readings across
+    as it leaves its hypothesis, whichever refusal it was."""
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    reports["openstack"]["per_run"] = [0.0, 0.03, 0.06]
+    null = {
+        "null_false_positive": {"0.95": 0.06},
+        "critical_p": {"0.95": 0.0},
+        "null_false_positive_calibrated": {"0.95": 0.0},
+    }
+    sims = {o: _gerrit_sim(o) for o in reports}
+    out = confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary=_narrow_coprimary(reports),
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        spreads={"openstack": _spread_sim_for(reports["openstack"], null)},
+    )
+    assert out["exploratory"] == ["H1:openstack"]
+    assert "its critical p is zero" in out["cells"]["openstack"]["exploratory"]
+    assert "Bradley" not in out["cells"]["openstack"]["exploratory"]
+    assert out["across"]["partial_conjunction"]["at_least"] == 1
+    assert out["across"]["random_effects"]["organizations"] == ["wikimedia"]
+
+
+def test_a_small_window_cell_stays_in_the_readings_across(admitted) -> None:
+    """Its p is valid if underpowered; only a refused calibration, with no critical p to scale
+    by, leaves the readings across."""
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999),
+        "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+    }
+    sims = {o: _gerrit_sim(o) for o in reports}
+    out = _h1(reports, sims, powers={"openstack": _power("openstack", detectable=0.02)})
+    assert "H1:openstack" in out["exploratory"]
+    assert out["across"]["partial_conjunction"]["at_least"] == 2
+    assert out["across"]["random_effects"]["organizations"] == ["openstack", "wikimedia"]
+
+
+def test_qt_s_cell_supported_where_its_s_prime_reading_is_not_reads_as_vocabulary(
+    admitted,
+) -> None:
+    """Stage 1 report, "Verdicts and Readings": for H2, an s cell supported where its s' reading
+    at the same level is not reads as Qt's vocabulary; binding no verdict."""
+    admitted(*_THREE)
+    out = _full(dict.fromkeys(_THREE, _PASS), _PASS)
+    qt = out["h2_cells"]["qt"]
+    assert qt["verdicts"] == {0.975: "supported", 0.95: "supported"}
+    # The fixture's s' reading: inconclusive at 97.5%, supported at 95%.
+    assert out["vocabulary"] == {"qt": {0.975: True, 0.95: False}}
+    assert out["verdicts"]["H2"] == "pass"
+    # The readings beside the verdicts are carried, binding none.
+    assert qt["joint"]["summed"]["confidence"] == 0.95
+    assert out["cells"]["openstack"]["positive_control"]["passed"] is True
+    assert "change_averaged" in out["cells"]["openstack"]
+
+
+def _without(record: dict, key: str) -> dict:
+    return {k: v for k, v in record.items() if k != key}
+
+
+@pytest.mark.parametrize(
+    ("h1_change", "h2_change", "match"),
+    [
+        (lambda r: _without(r, "positive_control"), None, "carries no crossed check 2"),
+        (
+            lambda r: (
+                r
+                | {
+                    "positive_control": r["positive_control"]
+                    | {
+                        "passed": False,
+                        "evidence": r["positive_control"]["evidence"] | {"low": -0.01},
+                    }
+                }
+            ),
+            None,
+            "check 2 failed; the organization is withdrawn",
+        ),
+        (
+            lambda r: (
+                r | {"positive_control": r["positive_control"] | {"name": "positive_control:x|s1"}}
+            ),
+            None,
+            "not the crossed read over its own runs",
+        ),
+        (
+            lambda r: (
+                r
+                | {
+                    "positive_control": r["positive_control"]
+                    | {"evidence": r["positive_control"]["evidence"] | {"runs": 23}}
+                }
+            ),
+            None,
+            "not the crossed read over its own runs",
+        ),
+        (
+            lambda r: (
+                r
+                | {
+                    "positive_control": r["positive_control"]
+                    | {"evidence": r["positive_control"]["evidence"] | {"confidence": 0.9}}
+                }
+            ),
+            None,
+            "not the crossed read over its own runs",
+        ),
+        (
+            lambda r: (
+                r
+                | {"positive_control": r["positive_control"] | {"passed": True}}
+                | {
+                    "positive_control": r["positive_control"]
+                    | {"evidence": r["positive_control"]["evidence"] | {"low": -0.01}}
+                }
+            ),
+            None,
+            "says passed True, low -0.01",
+        ),
+        (
+            lambda r: (
+                r
+                | {
+                    "positive_control": r["positive_control"]
+                    | {"evidence": r["positive_control"]["evidence"] | {"metric": "exact_match"}}
+                }
+            ),
+            None,
+            "not the crossed read over its own runs",
+        ),
+        # Every test read runs check 2 before its comparison, H2's too.
+        (None, lambda r: _without(r, "positive_control"), "carries no crossed check 2"),
+        (None, lambda r: _without(r, "joint"), "no joint reading with H1"),
+        (None, lambda r: r | {"joint": r["joint"] | {"h2": "chromium"}}, "no joint reading"),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"h2": {"foreign": "aosp"}}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"summed": {}}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"metric": COPRIMARY_METRIC}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"summed": r["joint"]["summed"] | {"low": 0.07}}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"summed": {"confidence": 0.95, "low": None}}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: (
+                r
+                | {
+                    "on_s_prime": r["on_s_prime"]
+                    | {"verdicts": {"0.975": "supported", "0.95": "supported"}}
+                }
+            ),
+            "do not follow from its intervals",
+        ),
+        (None, lambda r: r | {"joint": r["joint"] | {"runs": 10}}, "no joint reading with H1"),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"population": "all"}},
+            "no joint reading with H1",
+        ),
+        (None, lambda r: _without(r, "on_s_prime"), "carries no s' reading"),
+        (
+            None,
+            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"metric": "logprob_per_token"}},
+            "carries no s' reading",
+        ),
+        (
+            None,
+            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"runs": 10}},
+            "not over its 24 runs",
+        ),
+        (
+            None,
+            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"verdicts": {"0.95": "supported"}}},
+            "not at its s levels",
+        ),
+        (
+            None,
+            lambda r: (
+                r
+                | {"on_s_prime": r["on_s_prime"] | {"verdicts": {"0.975": "bounded", "0.95": "x"}}}
+            ),
+            "are not readings",
+        ),
+    ],
+)
+def test_a_test_read_without_its_registered_analyses_is_refused(
+    admitted, h1_change: Any, h2_change: Any, match: str
+) -> None:
+    admitted(*_THREE)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    coprimary = {o: _on_other(r) for o, r in reports.items()}
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    if h1_change is not None:
+        reports["wikimedia"] = h1_change(reports["wikimedia"])
+    if h2_change is not None:
+        h2_report = h2_change(h2_report)
+    with pytest.raises(ValueError, match=match):
+        confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary=coprimary,
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            h2={"qt": h2_report},
+            h2_simulations={"qt": h2_sim},
+        )
+
+
+def test_a_replication_member_without_its_crossed_check_2_is_refused(frozen) -> None:
+    frozen("apache")
+    with pytest.raises(ValueError, match="carries no crossed check 2"):
+        replication_gate({"apache": _without(_GOOD, "positive_control")}, simulations=_SIM)
+
+
+def test_a_withdrawn_replication_member_is_read_over_the_rest(frozen) -> None:
+    """A member whose crossed check 2 failed is withdrawn (Stage 1 report, "Outcome-Neutral
+    Tests"); the family is read over the rest."""
+    frozen("apache", "dotnet")
+    battery = _failed_battery("positive_control_crossed:dotnet")
+    out = replication_gate({"apache": _GOOD}, simulations=_SIM, withdrawn={"dotnet": battery})
+    assert out["withdrawn"] == {"dotnet": ["positive_control_crossed:dotnet"]}
+    assert set(out["cells"]) == {"apache"}
+    with pytest.raises(ValueError, match=r"no cells for \['dotnet'\]|must map"):
+        replication_gate({"apache": _GOOD}, simulations=_SIM)
+    with pytest.raises(ValueError, match="not among the frozen members"):
+        replication_gate(
+            {"apache": _GOOD},
+            simulations=_SIM,
+            withdrawn={"llvm": _failed_battery("positive_control_crossed:llvm")},
+        )
+    # One run's own check 2 withdraws nothing.
+    with pytest.raises(ValueError, match="failed no check that withdraws"):
+        replication_gate(
+            {"apache": _GOOD},
+            simulations=_SIM,
+            withdrawn={"dotnet": _failed_battery("positive_control:dotnet-a|s1")},
+        )
+
+
+def test_a_coprimary_test_read_without_its_crossed_check_2_is_refused(admitted) -> None:
+    admitted(*_THREE)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    coprimary = {o: _on_other(r) for o, r in reports.items()}
+    coprimary["qt"] = _without(coprimary["qt"], "positive_control")
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    with pytest.raises(ValueError, match="qt: the read carries no crossed check 2"):
+        confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary=coprimary,
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            h2={"qt": h2_report},
+            h2_simulations={"qt": h2_sim},
+        )
+
+
+def test_a_test_read_is_held_to_its_rank(admitted) -> None:
+    """The registered gate reads rank 32 alone; the rerun's gate reads rank 256 alone (Stage 1
+    report, "Rank 256")."""
+    admitted(*_THREE)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    h2_report, h2_sim = _h2_pair(*_PASS)
+
+    def gate(reports: dict, h2: dict, **kwargs: Any) -> dict:
+        return confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary={o: _on_other(r) for o, r in reports.items()},
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            h2={"qt": h2},
+            h2_simulations={"qt": h2_sim},
+            **kwargs,
+        )
+
+    assert gate(reports, h2_report)["lora_rank"] == 32
+    rerun = {o: r | {"lora_rank": 256} for o, r in reports.items()}
+    with pytest.raises(ValueError, match="at rank 256, read at 32"):
+        gate(rerun, h2_report | {"lora_rank": 256})
+    supplementary = gate(rerun, h2_report | {"lora_rank": 256}, lora_rank=256)
+    # Nothing it read can be quoted as the registered gate's: all of it is under `rerun`.
+    assert set(supplementary) == {"lora_rank", "supplementary", "rerun"}
+    assert supplementary["rerun"]["verdicts"] == gate(reports, h2_report)["verdicts"]
+    with pytest.raises(ValueError, match="qt: its runs are at rank 32, read at 256"):
+        gate(rerun, h2_report, lora_rank=256)
+    with pytest.raises(ValueError, match="at rank None"):
+        gate({**reports, "openstack": _without(reports["openstack"], "lora_rank")}, h2_report)
+    for rank in (64, True):
+        with pytest.raises(ValueError, match="registered 32, rerun 256"):
+            gate(reports, h2_report, lora_rank=rank)
+
+
+def _ranked(rank: int, h1: dict, h2: dict | None = None) -> dict:
+    """A gate output at `rank` with the given cells' verdicts by level."""
+    out = {
+        "lora_rank": rank,
+        "verdicts": {"H1": "inconclusive"},
+        "cells": {o: {"verdicts": v} for o, v in h1.items()},
+        "coprimary_cells": {o: {"verdicts": v} for o, v in h1.items()},
+    }
+    if h2 is not None:
+        out["h2_cells"] = {o: {"verdicts": v} for o, v in h2.items()}
+    return decomposition._marked_by_rank(out)
+
+
+def test_the_rank_256_rerun_reads_capacity_and_bounded_cells_beside_the_verdicts() -> None:
+    from sphragis.experiment.decomposition import rank_reading
+
+    at_32 = _ranked(
+        32,
+        {
+            "openstack": {0.95: "inconclusive", 0.975: "inconclusive"},
+            "wikimedia": {0.95: "bounded", 0.975: "bounded"},
+            "qt": {0.95: "supported", 0.975: "inconclusive"},
+        },
+        {"qt": {"0.95": "bounded", "0.975": "inconclusive"}},
+    )
+    at_256 = _ranked(
+        256,
+        {
+            "openstack": {0.95: "supported", 0.975: "inconclusive"},
+            "wikimedia": {0.95: "bounded", 0.975: "inconclusive"},
+            "qt": {0.95: "supported", 0.975: "supported"},
+        },
+        {"qt": {"0.95": "supported", "0.975": "supported"}},
+    )
+    at_256["rerun"]["verdicts"] = {"H1": "pass"}
+    out = rank_reading(at_32, at_256)
+    cells = out["readings"]["cells"]
+    assert cells["openstack"] == {0.95: "capacity-limited", 0.975: None}
+    assert cells["wikimedia"] == {0.95: "bounded at both ranks", 0.975: "bounded at 32 only"}
+    assert cells["qt"] == {0.95: None, 0.975: "capacity-limited"}
+    assert out["readings"]["h2_cells"]["qt"] == {
+        0.95: "bounded at 32 only",
+        0.975: "capacity-limited",
+    }
+    # Supplementary: the verdicts are the registered gate's, whatever the rerun read.
+    assert out["verdicts"] == {"H1": "inconclusive"}
+    with pytest.raises(ValueError, match="ranks 256 and 32"):
+        rank_reading(at_256, at_32)
+    # A rerun output not nested as a gate writes it is refused, and so is a rerun in both slots
+    # or a nested output whose own rank says 32.
+    with pytest.raises(ValueError, match="ranks 32 and 256"):
+        rank_reading(at_32, {**at_256["rerun"], "lora_rank": 256})
+    with pytest.raises(ValueError, match="ranks 256 and 256"):
+        rank_reading(at_256, at_256)
+    with pytest.raises(ValueError, match="ranks 32 and 32"):
+        rank_reading(at_32, {**at_256, "lora_rank": 32})
+    assert out["one_rank"] == {} and out["exploratory"] == {}
+    # A cell set aside at either rank carries its reason beside its reading.
+    at_256["rerun"]["cells"]["wikimedia"]["exploratory"] = "small window at 0.95"
+    marked = rank_reading(at_32, at_256)
+    assert marked["exploratory"] == {"cells": {"wikimedia": {256: "small window at 0.95"}}}
+    assert marked["readings"]["cells"]["wikimedia"][0.95] == "bounded at both ranks"
+    del at_256["rerun"]["cells"]["wikimedia"]["exploratory"]
+    # An organization withdrawn at one rank leaves the others read, and is listed.
+    fewer = _ranked(
+        256,
+        {"openstack": {0.95: "supported", 0.975: "supported"}},
+        {"qt": {"0.95": "supported", "0.975": "supported"}},
+    )
+    partial = rank_reading(at_32, fewer)
+    assert partial["readings"]["cells"] == {
+        "openstack": {0.95: "capacity-limited", 0.975: "capacity-limited"}
+    }
+    assert partial["one_rank"]["cells"] == ["qt", "wikimedia"]
+    other_levels = _ranked(
+        256,
+        {o: {0.95: "supported"} for o in ("openstack", "wikimedia", "qt")},
+        {"qt": {"0.95": "supported", "0.975": "supported"}},
+    )
+    with pytest.raises(ValueError, match="at other levels"):
+        rank_reading(at_32, other_levels)
+
+
+def test_a_replication_members_rerun_is_read_on_its_one_verdict() -> None:
+    from sphragis.experiment.decomposition import rank_reading
+
+    def family(rank: int, verdict: str) -> dict:
+        out = {"lora_rank": rank, "members": ("apache",), "cells": {"apache": {"verdict": verdict}}}
+        return decomposition._marked_by_rank(out)
+
+    out = rank_reading(family(32, "inconclusive"), family(256, "supported"))
+    assert out["readings"]["cells"] == {"apache": {REPLICATION_CONFIDENCE: "capacity-limited"}}
+    # Its r at 256 is nested too, never beside the registered family's.
+    assert "partial_conjunction" not in decomposition._marked_by_rank(
+        {"lora_rank": 256, "members": ("apache",), "partial_conjunction": {"at_least": 1}}
+    )
+    with pytest.raises(ValueError, match="replication gate's output"):
+        rank_reading(family(32, "inconclusive"), _ranked(256, {}, None))

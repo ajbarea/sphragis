@@ -20,31 +20,18 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from label_audit_agreement import readings  # noqa: E402
+from label_audit_agreement import differences, neutral_ids, readings, relative  # noqa: E402
 
 from sphragis.provenance import provenance_header  # noqa: E402
-
-ROOT = Path(__file__).resolve().parents[1]
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--report", type=Path, required=True, help="label_audit_agreement.py's output")
 parser.add_argument("--org", required=True)
 parser.add_argument("--out", type=Path, required=True)
-
-
-def neutral_ids(report: dict) -> list[str]:
-    """The neutral id of each label, in the report's order: the sorted ids less the excluded."""
-    excluded = set(report["excluded"])
-    total = len(report["labels"]) + len(excluded)
-    ids = sorted(set(f"item-{n:03d}" for n in range(1, total + 1)) - excluded)
-    if len(ids) != len(report["labels"]):
-        raise ValueError("the excluded ids are not among item-001 upward")
-    return ids
 
 
 def inputs(report: dict, keep: set[str] | None = None) -> dict:
@@ -86,18 +73,8 @@ def read(report: dict, keep: set[str] | None = None, *, against: str) -> dict[st
 def reproduces(recomputed: dict, recorded: dict) -> list[str]:
     """Every pair the recomputation and the report do not share, or do not agree on."""
     wrong = [f"{name}: only one side has it" for name in set(recomputed) ^ set(recorded)]
-    for name in sorted(set(recomputed) & set(recorded)):
-        for field in ("items", "raw_agreement", "kappa", "kappa_95", "ac1", "ac1_95"):
-            ours, theirs = recomputed[name][field], recorded[name][field]
-            pairs = zip(ours, theirs, strict=True) if isinstance(ours, list) else [(ours, theirs)]
-            if not all(math.isclose(x, y, abs_tol=1e-12) for x, y in pairs):
-                wrong.append(f"{name}.{field}: {ours} against {theirs}")
-    return wrong
-
-
-def _relative(path: Path) -> str:
-    resolved = path.resolve()
-    return str(resolved.relative_to(ROOT)) if resolved.is_relative_to(ROOT) else str(path)
+    shared = set(recomputed) & set(recorded)
+    return wrong + differences(recomputed, recorded, {n: n for n in shared})
 
 
 def main() -> None:
@@ -125,7 +102,7 @@ def main() -> None:
         json.dumps(
             {
                 "provenance": provenance_header(),
-                "from": _relative(args.report),
+                "from": relative(args.report),
                 "org": args.org,
                 "items": len(mine),
                 "pairs": pairs,
