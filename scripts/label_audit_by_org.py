@@ -24,11 +24,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from label_audit_agreement import differences, neutral_ids, readings  # noqa: E402
+from label_audit_agreement import differences, neutral_ids, readings, relative  # noqa: E402
 
 from sphragis.provenance import provenance_header  # noqa: E402
-
-ROOT = Path(__file__).resolve().parents[1]
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--report", type=Path, required=True, help="label_audit_agreement.py's output")
@@ -79,11 +77,6 @@ def reproduces(recomputed: dict, recorded: dict) -> list[str]:
     return wrong + differences(recomputed, recorded, {n: n for n in shared})
 
 
-def _relative(path: Path) -> str:
-    resolved = path.resolve()
-    return str(resolved.relative_to(ROOT)) if resolved.is_relative_to(ROOT) else str(path)
-
-
 def main() -> None:
     args = parser.parse_args()
     report = json.loads(args.report.read_text())
@@ -109,7 +102,7 @@ def main() -> None:
         json.dumps(
             {
                 "provenance": provenance_header(),
-                "from": _relative(args.report),
+                "from": relative(args.report),
                 "org": args.org,
                 "items": len(mine),
                 "pairs": pairs,

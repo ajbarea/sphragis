@@ -303,15 +303,13 @@ def test_the_second_rater_reading_pairs_every_reader_on_shared_items(tmp_path: P
     assert "u_a" not in json.dumps(reading) and "u_b" not in json.dumps(reading)
 
 
-def test_with_no_second_rater_the_reading_reproduces_the_committed_openstack_pairs(
-    tmp_path: Path,
-) -> None:
+def test_the_committed_report_reproduces_its_openstack_reading() -> None:
     """On the committed report every human pair, and the model raters' label pair on the
     checked items, reproduce label-audit-v2-openstack.json (the function refuses otherwise)."""
     results = _SCRIPTS.parent / "datasets" / "results"
     report = json.loads((results / "label-audit-v2.json").read_text())
     org_reading = json.loads((results / "label-audit-v2-openstack.json").read_text())
-    pairs = agreement_tool.second_rater_report(report, org_reading, tmp_path)["pairs"]
+    pairs = agreement_tool.report_readers(report, org_reading)[2]
     recorded = org_reading["pairs"]
     humans = [n for n in pairs if n.startswith("human~")]
     assert len(humans) == 12 and all(n in recorded for n in humans)
@@ -383,3 +381,23 @@ def test_the_store_rules_keep_each_raters_answers_to_them_and_the_owner() -> Non
     assert by_path["answers"] == {"path": "answers", "read": "owner", "write": "self"}
     assert by_path["answers/{self}"]["write"] == "interact"
     assert by_path[""]["write"] == "owner"
+
+
+def test_an_empty_export_is_refused(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit, match="no answers/<viewer id>/items"):
+        agreement_tool.read_second_raters(tmp_path, ["item-002"])
+
+
+def test_pseudonyms_survive_a_later_export(tmp_path: Path) -> None:
+    """A rater who starts later, with an earlier clock, renames nobody already named."""
+    items = ["item-002", "item-004"]
+    _export(tmp_path, {"u_first": {"item-002": _answer("valid", "2026-11-11T09:00:00Z")}})
+    assert list(agreement_tool.read_second_raters(tmp_path, items)) == ["L1"]
+    _export(tmp_path, {"u_second": {"item-002": _answer("partial", "2026-11-01T09:00:00Z")}})
+    got = agreement_tool.read_second_raters(tmp_path, items)
+    assert {k: v["item-002"]["label"] for k, v in got.items()} == {"L1": "valid", "L2": "partial"}
+
+
+def test_an_undefined_interval_is_written_as_null() -> None:
+    body = agreement_tool._nan_as_null({"kappa_95": [math.nan, math.nan], "ac1": 0.5})
+    assert json.dumps(body, allow_nan=False) == '{"kappa_95": [null, null], "ac1": 0.5}'

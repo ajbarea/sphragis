@@ -262,8 +262,8 @@ async function lockCurrent(){
 // A refusal ends saving for this visit; anything else leaves the answer unlocked to try again.
 function saveFailed(e){
   const code=e&&e.code;
-  if(code==="invalid_argument"||code==="not_granted"||code==="revoked"||code==="capability_disabled"||code==="capability_removed"){
-    mode="readonly"; notice(readonlyText()); render(); return;
+  if(code==="invalid_argument"||code==="transform_error"||code==="not_granted"||code==="revoked"||code==="capability_disabled"||code==="capability_removed"){
+    mode="readonly"; notice(refusedText()); render(); return;
   }
   const err=document.getElementById("err"); if(!err) return;
   err.textContent=code==="quota_exceeded"?"Not saved: this page's storage is full. Please tell AJ."
@@ -295,6 +295,7 @@ async function markSlip(item, field, on){
   if(failed) saveFailed(failed);
 }
 function readonlyText(){ return "Saving is not available in this view, so nothing you pick here is kept. Open the page from the link AJ sent you, signed in to Claude, to save your answers."; }
+function refusedText(){ return "This page could not save your answer, so nothing you pick here is kept. Your access may not allow saving; please tell AJ, who can change it. Answers you locked before are kept."; }
 
 document.addEventListener("keydown",e=>{
   if(e.target.tagName==="TEXTAREA"||e.ctrlKey||e.metaKey||e.altKey) return;
@@ -339,6 +340,6 @@ render();
       if(!loaded){ loaded=true; if(lockedCount()){ current=firstOpen(); if(screen==="intro") screen="items"; } }
     }
     render();
-  },()=>{ clearTimeout(timer); mode="readonly"; conn.textContent="Not saving"; notice(readonlyText()); render(); });
+  },()=>{ clearTimeout(timer); mode="readonly"; conn.textContent="Not saving"; notice(refusedText()); render(); });
 })();
 </script>
