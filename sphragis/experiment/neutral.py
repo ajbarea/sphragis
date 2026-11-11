@@ -258,14 +258,22 @@ WITHDRAWING_CHECKS = (
 
 def foreign_check(name: str) -> bool:
     """Whether a check is a foreign arm's (`foreign-<source>-for-<half>`): its failure leaves H2
-    exploratory and the organization in H1 (Stage 1 report, check 4), as `rq1_pilot.py` reads it."""
+    exploratory and the organization in H1, as `rq1_pilot.py` reads it. The Stage 1 report says so
+    of its pool over check 4; a foreign adapter failing check 3 is the foreign source's failure
+    too, so it is read the same way ("Without Qt or Chromium, H2 is exploratory")."""
     return "foreign-" in name
+
+
+def labelled_halves(label: str) -> set[str]:
+    """The organizations whose halves (`<org>-a`, `<org>-b`) a check's label names."""
+    return set(re.findall(r"([a-z0-9]+)-[ab](?![a-z0-9])", label))
 
 
 def withdrawing_failures(battery: Any, *, org: str) -> list[str]:
     """The failed checks of `org`'s recorded battery (`{"apparatus_holds", "checks": [{"name",
     "passed"}, ...]}`) that withdraw it, sorted: checks 2 to 6 (`WITHDRAWING_CHECKS`), not a
-    foreign arm's (`foreign_check`), each labelled with one of `org`'s halves where it is labelled.
+    foreign arm's (`foreign_check`), each labelled with `org`'s halves, or `org` itself, where it
+    is labelled (`labelled_halves`).
 
     Refused when `battery` records no checks, a check's `passed` is not a bool, a labelled check
     names another organization's halves, or the battery says it held while a check failed.
@@ -279,7 +287,8 @@ def withdrawing_failures(battery: Any, *, org: str) -> list[str]:
             raise ValueError(f"{org}: a check records no pass flag: {c!r}")
         name = str(c.get("name"))
         kind, _, label = name.partition(":")
-        if label and not foreign_check(name) and f"{org}-" not in label:
+        named = labelled_halves(label.split("|", 1)[0])
+        if label and not (named == {org} or (not named and label.split("|", 1)[0] == org)):
             raise ValueError(f"{org}: the battery's check {name!r} is another organization's")
         if not c["passed"]:
             failed.append((kind, name))

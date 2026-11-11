@@ -2636,8 +2636,28 @@ def test_a_withdrawn_organization_is_read_over_the_rest(admitted) -> None:
             {"wikimedia": _failed_battery("leakage:foreign-chromium-for-wikimedia-a->wikimedia-b")},
             "not a foreign arm's",
         ),
+        # A foreign adapter failing check 3 is the foreign source's failure too.
+        (
+            {"wikimedia": _failed_battery("manipulation:foreign-chromium-for-wikimedia-a|s1")},
+            "not a foreign arm's",
+        ),
         # Another organization's battery, a malformed flag, a battery that says it held.
         ({"wikimedia": _failed_battery("leakage:openstack-a")}, "another organization's"),
+        (
+            {
+                "wikimedia": _failed_battery("non_degeneracy")
+                | {
+                    "checks": [
+                        {
+                            "name": "leakage:foreign-chromium-for-openstack-a->openstack-b",
+                            "passed": True,
+                        },
+                        {"name": "non_degeneracy", "passed": False},
+                    ]
+                }
+            },
+            "another organization's",
+        ),
         ({"wikimedia": {"checks": [{"name": "non_degeneracy"}]}}, "records no pass flag"),
         (
             {"wikimedia": {"checks": [{"name": "non_degeneracy", "passed": "no"}]}},
@@ -2924,3 +2944,28 @@ def test_a_score_with_every_cell_exploratory_is_named_in_the_reading(admitted) -
     assert out["reading"] == (
         f"within-half; {COPRIMARY_METRIC} not tested (every cell exploratory)"
     )
+
+
+@pytest.mark.parametrize(
+    ("label", "org", "names"),
+    [
+        ("wikimedia-a|s1", "wikimedia", {"wikimedia"}),
+        ("wikimedia-b->wikimedia-a", "wikimedia", {"wikimedia"}),
+        ("foreign-chromium-for-qt-a->qt-b", "qt", {"qt"}),
+        ("openstack-a", "qt", {"openstack"}),
+        ("qt", "qt", set()),
+    ],
+)
+def test_a_checks_label_names_its_organizations_halves(label: str, org: str, names: set) -> None:
+    from sphragis.experiment.neutral import labelled_halves
+
+    assert labelled_halves(label) == names
+
+
+def test_a_whole_organization_label_is_its_own() -> None:
+    from sphragis.experiment.neutral import withdrawing_failures
+
+    battery = {"apparatus_holds": False, "checks": [{"name": "leakage:qt", "passed": False}]}
+    assert withdrawing_failures(battery, org="qt") == ["leakage:qt"]
+    with pytest.raises(ValueError, match="another organization's"):
+        withdrawing_failures(battery, org="wikimedia")

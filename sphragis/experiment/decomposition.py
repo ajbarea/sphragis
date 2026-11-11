@@ -266,8 +266,9 @@ ADMITTED_ORGANIZATIONS: tuple[str, ...] | None = None
 # caller, so no source can be chosen after a contrast is seen.
 FOREIGN_SOURCE: str | None = "chromium"
 
-# Why H2 was withdrawn from the confirmatory family after its source was fixed (a foreign pool
-# over check 4's threshold), set by the commit recording it; None while H2 stands.
+# Why H2 was withdrawn from the confirmatory family after its source was fixed (a foreign arm's
+# failed check: its pool over check 4's threshold, or its adapter failing check 3), set by the
+# commit recording it; None while H2 stands.
 H2_WITHDRAWN: str | None = None
 
 # `holdout.pool_digest` of the registered source's pool as the stop rule found it covering,
@@ -881,7 +882,7 @@ def _withdrawals(withdrawn: Mapping[str, Any] | None) -> dict[str, list[str]]:
     if unfailed:
         raise ValueError(
             f"withdrawn organization(s) {unfailed} failed no check that withdraws (2 to 6, not a "
-            "foreign arm's: a foreign pool over check 4 is recorded in H2_WITHDRAWN)"
+            "foreign arm's: a foreign arm's failed check is recorded in H2_WITHDRAWN)"
         )
     return {o: failed[o] for o in ORGANIZATIONS if o in failed}
 
