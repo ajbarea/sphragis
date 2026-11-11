@@ -36,10 +36,12 @@ export HF_HUB_CACHE="$SPHRAGIS_DATA/hf-cache/hub"
 export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"
 export TOKENIZERS_PARALLELISM=false
 # The commit this job starts on, which sphragis.provenance records in place of whatever the
-# checkout holds when the result is written. Empty outside a checkout.
+# checkout holds when the result is written, and the checkout it is read in, so provenance can
+# tell a job whose code came from another checkout. Empty outside a checkout.
 SPHRAGIS_GIT_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
 SPHRAGIS_GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
-export SPHRAGIS_GIT_COMMIT SPHRAGIS_GIT_BRANCH
+SPHRAGIS_GIT_TOP="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+export SPHRAGIS_GIT_COMMIT SPHRAGIS_GIT_BRANCH SPHRAGIS_GIT_TOP
 # Appended to every result and adapter path a job writes. Empty on TIGRIS, so existing names
 # hold; elsewhere the cluster name, so a run there cannot overwrite a GH200 result by omission.
 # RUN_TAG names it instead, and an explicitly empty RUN_TAG overwrites deliberately.

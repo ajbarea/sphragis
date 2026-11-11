@@ -7,6 +7,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -205,10 +206,19 @@ def test_every_name_a_job_script_imports_from_sphragis_exists(script: Path) -> N
 
 
 def _checkout_at(monkeypatch: pytest.MonkeyPatch, head: str | None) -> None:
-    answers = {("rev-parse", "HEAD"): head, ("rev-parse", "--abbrev-ref", "HEAD"): "main"}
+    monkeypatch.delenv("SPHRAGIS_GIT_TOP", raising=False)
+    top = Path("/checkout")
+    answers = {
+        ("-C", str(top), "rev-parse", "HEAD"): head,
+        ("-C", str(top), "rev-parse", "--abbrev-ref", "HEAD"): "main",
+        # The current directory is the code's own checkout.
+        ("rev-parse", "--show-toplevel"): str(top),
+    }
+    monkeypatch.setattr(provenance, "_code_checkout", lambda: top)
+    monkeypatch.setattr(provenance, "_script_checkout", lambda: top)
     monkeypatch.setattr(provenance, "_git", lambda *args: answers[args])
     # A clean tree: the status call that looks for uncommitted code finds none.
-    monkeypatch.setattr(provenance, "_changed_code", list)
+    monkeypatch.setattr(provenance, "_changed_code", lambda top, paths=(): [])
 
 
 def test_a_job_records_the_commit_it_started_on_not_the_one_deployed_since(
@@ -272,13 +282,14 @@ def test_a_script_writing_no_json_object_passes_on_its_provenance_call(tmp_path:
 
 
 def _repo(tmp_path: Path) -> Path:
+    tmp_path.mkdir(parents=True, exist_ok=True)
     for command in (
         ["git", "init", "-q"],
         ["git", "config", "user.email", "t@example.com"],
         ["git", "config", "user.name", "t"],
     ):
         subprocess.run(command, cwd=tmp_path, check=True)
-    for relative in ("scripts/attack.py", "sphragis/stats.py"):
+    for relative in ("scripts/attack.py", "sphragis/stats.py", "sphragis/provenance.py"):
         (tmp_path / relative).parent.mkdir(parents=True, exist_ok=True)
         (tmp_path / relative).write_text("x = 1\n")
     subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
@@ -286,11 +297,26 @@ def _repo(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def _code_in(monkeypatch: pytest.MonkeyPatch, repo: Path, script: Path | None = None) -> None:
+    """Record as if the `sphragis` package had been imported from `repo`, and the script run
+    from `script`'s checkout (the package's when None)."""
+    monkeypatch.setattr(provenance, "_PACKAGE", (repo / "sphragis").resolve())
+    top = (script or repo).resolve()
+    monkeypatch.setattr(provenance, "_script_checkout", lambda: top)
+
+
+def _head(repo: Path) -> str:
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
+    ).stdout.strip()
+
+
 def test_uncommitted_code_is_named_exactly_and_results_do_not_count(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The first status line loses its leading space to a strip; the path must not lose a letter."""
     repo = _repo(tmp_path)
+    _code_in(monkeypatch, repo)
     (repo / "scripts" / "attack.py").write_text("x = 2\n")
     (repo / "scripts" / "new_probe.py").write_text("y = 1\n")
     (repo / "datasets" / "results").mkdir(parents=True)
@@ -300,6 +326,8 @@ def test_uncommitted_code_is_named_exactly_and_results_do_not_count(
     record = provenance._git_record()
     assert record["uncommitted_code"] == ["scripts/attack.py", "scripts/new_probe.py"]
     assert len(record["uncommitted_code_sha256"]) == 64
+    # The script is in the package's checkout: its changes are listed once.
+    assert "script_uncommitted_code" not in record
 
 
 def test_an_untracked_file_git_would_quote_still_reaches_the_digest(
@@ -307,6 +335,7 @@ def test_an_untracked_file_git_would_quote_still_reaches_the_digest(
 ) -> None:
     """Under `core.quotePath` git C-quotes a non-ASCII name, which named no file on disk."""
     repo = _repo(tmp_path)
+    _code_in(monkeypatch, repo)
     subprocess.run(["git", "config", "core.quotePath", "true"], cwd=repo, check=True)
     untracked = repo / "scripts" / "análise.py"
     monkeypatch.chdir(repo)
@@ -323,6 +352,7 @@ def test_a_staged_rename_records_both_paths_not_an_arrow(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     repo = _repo(tmp_path)
+    _code_in(monkeypatch, repo)
     subprocess.run(["git", "mv", "scripts/attack.py", "scripts/probe.py"], cwd=repo, check=True)
     monkeypatch.chdir(repo)
     monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
@@ -334,6 +364,7 @@ def test_a_name_that_is_not_utf8_is_shown_escaped_and_still_digested(
 ) -> None:
     """Writers dump the record with ensure_ascii=False, which a lone surrogate would stop."""
     repo = _repo(tmp_path)
+    _code_in(monkeypatch, repo)
     untracked = os.fsencode(repo / "scripts") + b"/bad\xff.py"
     monkeypatch.chdir(repo)
     monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
@@ -350,6 +381,7 @@ def test_a_copy_records_its_new_path_and_reads_its_source_field_as_no_entry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     repo = _repo(tmp_path)
+    _code_in(monkeypatch, repo)
     body = "".join(f"x{i} = {i}\n" for i in range(40))
     (repo / "scripts" / "attack.py").write_text(body)
     subprocess.run(["git", "commit", "-qam", "longer"], cwd=repo, check=True)
@@ -360,7 +392,7 @@ def test_a_copy_records_its_new_path_and_reads_its_source_field_as_no_entry(
     subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
     monkeypatch.chdir(repo)
     monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
-    assert [status for status, _ in provenance._changed_code()] == [b"M ", b"C "]
+    assert [status for status, _ in provenance._changed_code(repo)] == [b"M ", b"C "]
     assert provenance._git_record()["uncommitted_code"] == [
         "scripts/attack.py",
         "scripts/attack2.py",
@@ -371,9 +403,249 @@ def test_a_clean_tree_carries_no_uncommitted_code_field(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     repo = _repo(tmp_path)
+    _code_in(monkeypatch, repo)
     monkeypatch.chdir(repo)
     monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
     assert "uncommitted_code" not in provenance._git_record()
+
+
+def test_the_commit_is_the_code_checkouts_when_run_from_another_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """sphragis#264: a script run from the main checkout with a worktree's code first on
+    PYTHONPATH named main's commit. The code's checkout is named; the other is recorded beside."""
+    code = _repo(tmp_path / "worktree")
+    (code / "sphragis" / "stats.py").write_text("x = 2\n")
+    subprocess.run(["git", "commit", "-qam", "fix"], cwd=code, check=True)
+    main = _repo(tmp_path / "main")
+    _code_in(monkeypatch, code)
+    monkeypatch.chdir(main)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    monkeypatch.delenv("SPHRAGIS_GIT_BRANCH", raising=False)
+    monkeypatch.delenv("SPHRAGIS_GIT_TOP", raising=False)
+    record = provenance._git_record()
+    assert record["commit"] == _head(code) != _head(main)
+    assert record["cwd_commit"] == _head(main)
+    assert "script_commit" not in record
+    # Uncommitted code in the current directory's checkout is not the code that ran.
+    (main / "scripts" / "attack.py").write_text("x = 3\n")
+    assert "uncommitted_code" not in provenance._git_record()
+    (code / "scripts" / "attack.py").write_text("x = 3\n")
+    assert provenance._git_record()["uncommitted_code"] == ["scripts/attack.py"]
+
+
+def test_a_script_run_from_another_checkout_records_that_checkouts_code(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`cd main && PYTHONPATH=<worktree> python scripts/x.py` runs main's script on the
+    worktree's package: both are the code that wrote the artifact."""
+    code = _repo(tmp_path / "worktree")
+    (code / "sphragis" / "stats.py").write_text("x = 2\n")
+    subprocess.run(["git", "commit", "-qam", "fix"], cwd=code, check=True)
+    main = _repo(tmp_path / "main")
+    _code_in(monkeypatch, code, script=main)
+    monkeypatch.chdir(main)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    monkeypatch.delenv("SPHRAGIS_GIT_TOP", raising=False)
+    record = provenance._git_record()
+    assert record["commit"] == _head(code)
+    assert record["script_commit"] == _head(main)
+    # The current directory is the script's checkout, recorded once.
+    assert "cwd_commit" not in record
+    assert "uncommitted_code" not in record
+    (main / "scripts" / "attack.py").write_text("x = 3\n")
+    dirty = provenance._git_record()
+    assert dirty["script_uncommitted_code"] == ["scripts/attack.py"]
+    assert "uncommitted_code" not in dirty
+    assert len(dirty["uncommitted_code_sha256"]) == 64
+    (main / "scripts" / "attack.py").write_text("x = 4\n")
+    assert provenance._git_record()["uncommitted_code_sha256"] != dirty["uncommitted_code_sha256"]
+
+
+def test_a_script_at_its_checkouts_top_is_read_for_changes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Outside scripts/, a new script is still code that ran: the commit named lacks it."""
+    import types
+
+    code = _repo(tmp_path / "worktree")
+    main = _repo(tmp_path / "main")
+    probe = main / "probe.py"
+    probe.write_text("x = 1\n")
+    _code_in(monkeypatch, code, script=main)
+    monkeypatch.setitem(sys.modules, "__main__", types.SimpleNamespace(__file__=str(probe)))
+    monkeypatch.chdir(main)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    monkeypatch.delenv("SPHRAGIS_GIT_TOP", raising=False)
+    record = provenance._git_record()
+    assert record["script_commit"] == _head(main)
+    assert record["script_uncommitted_code"] == ["probe.py"]
+    # Only the script itself joins the code read: other top-level files stay out.
+    (main / "notes.py").write_text("y = 1\n")
+    assert provenance._git_record()["script_uncommitted_code"] == ["probe.py"]
+    # Its name is read literally, never as a pattern.
+    glob = main / "a*.py"
+    glob.write_text("z = 1\n")
+    (main / "ab.py").write_text("z = 2\n")
+    monkeypatch.setitem(sys.modules, "__main__", types.SimpleNamespace(__file__=str(glob)))
+    assert provenance._git_record()["script_uncommitted_code"] == ["a*.py"]
+    # A literal-pathspec setting would read every code path as a file name and find no change.
+    monkeypatch.setenv("GIT_LITERAL_PATHSPECS", "1")
+    assert provenance._git_record()["script_uncommitted_code"] == ["a*.py"]
+
+
+def test_the_running_script_is_found_in_its_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import types
+
+    repo = _repo(tmp_path)
+    monkeypatch.setitem(
+        sys.modules, "__main__", types.SimpleNamespace(__file__=str(repo / "scripts/attack.py"))
+    )
+    assert provenance._script_checkout() == repo.resolve()
+    monkeypatch.setitem(sys.modules, "__main__", types.SimpleNamespace())
+    assert provenance._script_checkout() is None
+    # A tool in a git-ignored venv of the checkout is not its code.
+    (repo / ".gitignore").write_text(".venv/\n")
+    tool = repo / ".venv" / "bin" / "pytest"
+    tool.parent.mkdir(parents=True)
+    tool.write_text("")
+    monkeypatch.setitem(sys.modules, "__main__", types.SimpleNamespace(__file__=str(tool)))
+    assert provenance._script_checkout() is None
+
+
+def test_a_failed_checkout_lookup_is_asked_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _repo(tmp_path)
+    package = (repo / "sphragis").resolve()
+    real = provenance._git
+    monkeypatch.setattr(provenance, "_git", lambda *args: None)
+    assert provenance._checkout_of(package) is None
+    monkeypatch.setattr(provenance, "_git", real)
+    assert provenance._checkout_of(package) == repo.resolve()
+
+
+def test_a_git_hooks_repository_variables_do_not_reach_another_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A pre-commit hook exports GIT_INDEX_FILE; `-C` into another checkout would obey it."""
+    code = _repo(tmp_path / "code")
+    other = _repo(tmp_path / "other")
+    (other / "scripts" / "attack.py").write_text("x = 5\n")
+    subprocess.run(["git", "add", "-A"], cwd=other, check=True)
+    _code_in(monkeypatch, code)
+    monkeypatch.setenv("GIT_INDEX_FILE", str(other / ".git" / "index"))
+    monkeypatch.setenv("GIT_DIR", str(other / ".git"))
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    record = provenance._git_record()
+    assert record["commit"] == _head(code)
+    assert "uncommitted_code" not in record
+
+
+def test_the_code_checkout_run_from_records_no_second_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _repo(tmp_path)
+    _code_in(monkeypatch, repo)
+    monkeypatch.chdir(repo / "scripts")
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    record = provenance._git_record()
+    assert record["commit"] == _head(repo)
+    assert "cwd_commit" not in record
+
+
+def test_a_package_installed_inside_a_checkout_names_no_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A copy under a venv in the checkout sits in its tree, and is not the code it tracks."""
+    repo = _repo(tmp_path)
+    installed = repo / ".venv" / "lib" / "site-packages" / "sphragis"
+    installed.mkdir(parents=True)
+    (installed / "provenance.py").write_text("x = 1\n")
+    monkeypatch.setattr(provenance, "_PACKAGE", installed.resolve())
+    monkeypatch.setattr(provenance, "_script_checkout", lambda: None)
+    monkeypatch.chdir(tmp_path.parent)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    monkeypatch.delenv("SPHRAGIS_GIT_BRANCH", raising=False)
+    assert provenance._code_checkout() is None
+    assert provenance._git_record() == {"commit": None, "branch": None}
+
+
+def test_an_untracked_package_at_a_checkouts_top_names_no_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _repo(tmp_path)
+    subprocess.run(["git", "rm", "-q", "--cached", "sphragis/provenance.py"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "untrack"], cwd=repo, check=True)
+    _code_in(monkeypatch, repo)
+    assert provenance._code_checkout() is None
+
+
+def test_a_job_outside_any_checkout_keeps_the_commit_it_started_on(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(provenance, "_code_checkout", lambda: None)
+    monkeypatch.setattr(provenance, "_script_checkout", lambda: None)
+    monkeypatch.chdir(tmp_path)
+    # A job queued before cluster-env.sh recorded its checkout.
+    monkeypatch.delenv("SPHRAGIS_GIT_TOP", raising=False)
+    monkeypatch.setenv("SPHRAGIS_GIT_COMMIT", "a" * 40)
+    monkeypatch.setenv("SPHRAGIS_GIT_BRANCH", "main")
+    assert provenance._git_record() == {"commit": "a" * 40, "branch": "main"}
+
+
+def test_a_job_started_in_another_checkout_names_the_codes_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """cluster-env.sh records the job's checkout; code imported from another one is that one's."""
+    code = _repo(tmp_path / "code")
+    job = _repo(tmp_path / "job")
+    (job / "scripts" / "attack.py").write_text("x = 9\n")
+    subprocess.run(["git", "commit", "-qam", "job"], cwd=job, check=True)
+    _code_in(monkeypatch, code)
+    monkeypatch.chdir(job)
+    monkeypatch.setenv("SPHRAGIS_GIT_COMMIT", _head(job))
+    monkeypatch.setenv("SPHRAGIS_GIT_BRANCH", "job-branch")
+    monkeypatch.setenv("SPHRAGIS_GIT_TOP", str(job))
+    record = provenance._git_record()
+    assert record["commit"] == _head(code)
+    assert record["job_commit"] == _head(job)
+    assert "checkout_at_write" not in record
+    # The job's checkout is the current directory: recorded once, as the job's.
+    assert "cwd_commit" not in record
+    # A job in the code's own checkout keeps the commit it started on.
+    monkeypatch.setenv("SPHRAGIS_GIT_TOP", str(code))
+    monkeypatch.setenv("SPHRAGIS_GIT_COMMIT", "a" * 40)
+    record = provenance._git_record()
+    assert record["commit"] == "a" * 40
+    assert record["checkout_at_write"] == _head(code)
+    assert "job_commit" not in record
+
+
+def test_a_job_whose_code_is_in_no_checkout_does_not_borrow_the_jobs_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    job = _repo(tmp_path)
+    monkeypatch.setattr(provenance, "_code_checkout", lambda: None)
+    monkeypatch.setattr(provenance, "_script_checkout", lambda: None)
+    monkeypatch.chdir(job)
+    monkeypatch.setenv("SPHRAGIS_GIT_COMMIT", _head(job))
+    monkeypatch.setenv("SPHRAGIS_GIT_TOP", str(job))
+    record = provenance._git_record()
+    assert record["commit"] is None
+    assert record["job_commit"] == _head(job)
+
+
+def test_cluster_env_records_the_checkout_a_job_starts_in() -> None:
+    env = (_ROOT / "sphragis" / "experiment" / "cluster-env.sh").read_text()
+    assert 'SPHRAGIS_GIT_TOP="$(git rev-parse --show-toplevel' in env
+    assert re.search(r"^export .*\bSPHRAGIS_GIT_TOP\b", env, re.MULTILINE)
+
+
+def test_the_real_package_is_read_from_this_checkout() -> None:
+    assert provenance._code_checkout() == _ROOT
 
 
 #: The convention this guards: the provenance key belongs in the payload where the payload is
