@@ -8,6 +8,17 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **Issue #258, second raters for the label audit (AJ 2026-11-10): PR #260, review clean.**
+  `label_audit_page.py --second-rater` builds the page with no reveal for the human's 77 checked
+  OpenStack items; `label_audit_agreement.py --second-raters` reads the store export back
+  (research log, 2026-11-10). Eight fresh Opus rounds, the last clean (findings by round in the
+  PR). Page published privately at claude.ai/artifact/QwjuoMD8S33CmBjNnesngv (rules:
+  `scripts/label_audit/rater2-capabilities.json`; built from `scratch/audit-v2/batches`, rebuilt
+  from the September check page). AJ shares it by email as Editor (needs-you). Read-back once
+  labels arrive: `ArtifactData list answers`, then `list answers/<id>/items` with
+  `out_dir scratch/rater2/export` per rater, then the docstring command to
+  `datasets/results/label-audit-v2-rater2.json`. Follow-up: #259 (bootstrap speed).
+
 - **Issue #232, five registered-design decisions (AJ 2026-10-30).**
   PR #246, the sized runs, is merged (0d12cc3; research log, 2026-11-02, "Six-cell, s′ and
   calibrated H2 simulations"): every H1 cell on s and s′ and H2 at K = 40 calibrated detect below δ.

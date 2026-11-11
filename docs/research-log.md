@@ -11231,3 +11231,39 @@ does not loosen the test: the gate applies the smaller of α and the critical p
 stays the one fixed on 2026-10-22. Wikimedia's uncalibrated s′ run is committed beside the
 calibrated one as the record of the miss; the cell reads the calibrated one. These sizings move no registered decision: each K and
 calibration is the one the 2026-10-30 rules fix, and every cell can detect less than δ.
+
+### Second raters for the label audit: a page that reveals nothing, and the read-back (2026-11-10)
+
+The Stage 1 report reads one human against the model raters on OpenStack's 77 checked items
+(2026-10-15). Lab members will label the same items so that the audit also has a human-to-human
+figure. `label_audit_page.py --second-rater` builds their page from the agreement report: the
+items the human checked from one organization (`label_audit_agreement.checked_items`, item-003
+to item-153), in the same order and blinding. The builder reads no rater's labels, so the page
+cannot show one; its practice item is the rubric's invented worked example. A rater may change
+an answer until locking it; a locked answer is final, and a mis-click is marked as a slip beside
+it, as in the human check. Each viewer's answers are stored under their own id
+(`answers/<viewer id>/items/<item>`). The store's rules let only the artifact's owner read
+`answers`, and each viewer read only their own and, when shared at Contributor or above, write
+it.
+
+The blinded batches were no longer on disk. They were rebuilt from the September check page's
+embedded items, with the rater fields dropped. Rendering the check page again from the rebuilt
+batches reproduces that page's items exactly, and its rater A labels match `label-audit-v2.json`
+on all 383 scored items.
+
+`label_audit_agreement.py --second-raters` reads the store's export beside the committed report.
+Second raters are named L1, L2, ... in the order they first appear in an export, by first lock
+within one, and keep their names in later exports; viewer ids are not
+written. Every pair of readers is read on the items both answered: the five labels, valid
+against the rest, and outside names. Each reading gives raw agreement with a Wilson interval,
+and kappa and AC1 with bootstrap intervals. Each is read again without the items a slip
+touches. No second rater saw a label, so no pair of theirs is read by halves. The human and the
+model raters answered all 77 items, so their pairs are read on all of them and the model raters'
+pairs are named "on checked items", as in
+`label-audit-v2-openstack.json`, whose plain model pairs are on all 191. The read-back refuses
+to write unless every human pair in that file but the halves of the check, and the model
+raters' label pair, reproduce it. Where a statistic is undefined, as with one label throughout
+a short prefix, the reading writes null for it and for any interval undefined on every resample.
+A kappa or AC1 interval whose resamples all give one value (one or two shared items, or full
+agreement) states no uncertainty and is also written null; the Wilson interval on raw agreement
+is the reading there.

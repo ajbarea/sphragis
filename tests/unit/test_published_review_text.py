@@ -809,7 +809,13 @@ def test_text_held_as_keys_is_caught_under_a_withheld_field_and_elsewhere(tmp_pa
 
 def test_a_key_holding_whitespace_must_be_one_the_survey_found(tmp_path: Path) -> None:
     for i, document in enumerate(
-        ({"fix typo": 1}, {"relations": {"same project today": 1}}, {"other": {"same project": 1}})
+        (
+            {"fix typo": 1},
+            {"relations": {"same project today": 1}},
+            {"other": {"same project": 1}},
+            {"pairs": {"human~L1 please rename this": 1.0}},
+            {"pairs": {"L0~L1 outside_names": 1.0}},
+        )
     ):
         assert offending_in([_write(tmp_path / f"ws-{i}.json", document)]), document
     for i, ok in enumerate(
@@ -818,6 +824,8 @@ def test_a_key_holding_whitespace_must_be_one_the_survey_found(tmp_path: Path) -
             {"separation": {"bag_of_words - latest_year": 0.5}},
             {"ai_trailer_values": {"Generated-By: claude": 2}},
             {"pairs": {"human~A first half valid_vs_rest without slips": 1.0}},
+            {"pairs": {"L2~L13 outside_names without slips": 1.0}},
+            {"pairs": {"A~B valid_vs_rest on checked items": 1.0}},
             {"cuts": {"pfadapter kept local (v,o)": 1, "q_proj alone": 2}},
             {"within:qt:qt/qtbase vs qt/qtdoc": 1},
             {"x": {f"wikimedia:{CHANGE}:groups/Wikimedia/ Lingua.yaml:2:23": 1}},
