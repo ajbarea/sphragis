@@ -145,7 +145,8 @@ def design(
     input order does not matter, every result is ordered by `ORGANIZATIONS`. H1 is every admitted
     organization. H2 is confirmatory for `H2_PAIR`, both ways, when both are admitted; otherwise
     for `H2_ORGANIZATION` against `foreign_source`, when Qt is admitted and a source is given;
-    `h2_withdrawn` (a foreign pool over check 4's threshold) leaves H2 with no confirmatory cell.
+    `h2_withdrawn` (a foreign arm's failed check, `H2_WITHDRAWN`) leaves H2 with no confirmatory
+    cell.
     Every other admitted organization gets one exploratory H2 cell instead, paired with the first
     other admitted organization in registration order: computed and reported, never part of a
     verdict.
@@ -874,8 +875,8 @@ def _withdrawals(withdrawn: Mapping[str, Any] | None) -> dict[str, list[str]]:
     outside = sorted(set(withdrawn) - set(ADMITTED_ORGANIZATIONS or ()))
     if outside:
         raise ValueError(
-            f"withdrawn organization(s) {outside} are not among the admitted; a foreign pool over "
-            "check 4 is recorded in H2_WITHDRAWN"
+            f"withdrawn organization(s) {outside} are not among the admitted; a foreign arm's "
+            "failed check is recorded in H2_WITHDRAWN"
         )
     failed = {o: withdrawing_failures(battery, org=o) for o, battery in withdrawn.items()}
     unfailed = sorted(o for o, checks in failed.items() if not checks)

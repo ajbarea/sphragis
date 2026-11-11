@@ -2643,6 +2643,11 @@ def test_a_withdrawn_organization_is_read_over_the_rest(admitted) -> None:
         ),
         # Another organization's battery, a malformed flag, a battery that says it held.
         ({"wikimedia": _failed_battery("leakage:openstack-a")}, "another organization's"),
+        # A label naming its halves and another's is not the organization's alone.
+        (
+            {"wikimedia": _failed_battery("leakage:wikimedia-a->openstack-b")},
+            "another organization's",
+        ),
         (
             {
                 "wikimedia": _failed_battery("non_degeneracy")
