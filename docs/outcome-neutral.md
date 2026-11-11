@@ -64,8 +64,9 @@ clusters, strictly above zero (Stage 1 report, "Outcome-Neutral Tests";
 `partitions.positive_control_crossed`, read by `partition_pilot.py` before the cell). If it
 fails, the training setup is broken and the comparison between adapters means nothing: on the
 test window the organization is withdrawn, and the read writes the failed check as its battery.
-Each run's own check 2 is reported beside it and withdraws nothing. Every read takes it over its
-own runs, so Qt's H2 read, over H2's K runs, can withdraw Qt on its own.
+Each run's own check 2 is reported beside it and withdraws nothing. Every test read takes it over
+its own runs (a development read, where its runs carry s), so Qt's H2 read, over H2's K runs,
+can withdraw Qt on its own.
 
 Passed on OpenStack, deduplicated, both arms under the model's chat template: exact match
 0.074 base against 0.407 adapted, paired cluster bootstrap on the difference +0.333
