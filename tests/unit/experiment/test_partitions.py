@@ -1014,6 +1014,7 @@ def test_a_spread_simulation_without_its_calibration_is_refused() -> None:
         ("null_false_positive_calibrated", float("nan")),
         ("null_false_positive", -0.5),
         ("null_false_positive", None),
+        ("null_false_positive", 1.5),
     ],
 )
 def test_a_spread_calibration_out_of_range_is_refused(field: str, value: object) -> None:
