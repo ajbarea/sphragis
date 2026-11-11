@@ -11256,8 +11256,8 @@ written. Every pair of readers is read on the items both answered: the five labe
 against the rest, and outside names. Each reading gives raw agreement with a Wilson interval,
 and kappa and AC1 with bootstrap intervals. Each is read again without the items a slip
 touches. No second rater saw a label, so no pair of theirs is read by halves. Every pair is
-read on the 77 items, so the model raters' pairs here are `label-audit-v2-openstack.json`'s "on
-checked items" readings, not its readings on all 191. The read-back refuses to write unless
-every human pair and the model raters' label pair reproduce that file. Where a statistic is
-undefined on every resample, as with one label throughout a short prefix, its interval reads
-NaN.
+read on the 77 items, so the model raters' pairs are named "on checked items", as in
+`label-audit-v2-openstack.json`, whose plain model pairs are on all 191. The read-back refuses
+to write unless every human pair in that file but the halves of the check, and the model
+raters' label pair, reproduce it. Where a statistic is undefined, as with one label throughout
+a short prefix, the reading writes null for it and for any interval undefined on every resample.

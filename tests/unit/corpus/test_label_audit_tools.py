@@ -247,6 +247,7 @@ def test_each_second_rater_is_read_apart_under_a_pseudonym(tmp_path: Path) -> No
         (_answer("looks fine", "t"), "item-002", "not a locked answer"),
         ({**_answer("valid", "t"), "locked_at": None}, "item-002", "not a locked answer"),
         (_answer("valid", "t", slips=["reason"]), "item-002", "unknown slip"),
+        (_answer("valid", "t", slips=[["label"]]), "item-002", "unknown slip"),
         ({**_answer("valid", "t"), "slips": None}, "item-002", "unknown slip"),
         ({**_answer("valid", "t"), "outside_names": "no"}, "item-002", "not a locked answer"),
         (_answer("valid", "t"), "item-003", "not one of the page's items"),
@@ -313,7 +314,8 @@ def test_the_committed_report_reproduces_its_openstack_reading() -> None:
     recorded = org_reading["pairs"]
     humans = [n for n in pairs if n.startswith("human~")]
     assert len(humans) == 12 and all(n in recorded for n in humans)
-    names = {n: n for n in humans} | {"A~B": "A~B on checked items"}
+    assert "A~B on checked items" in pairs and "A~B" not in pairs
+    names = {n: n for n in [*humans, "A~B on checked items"]}
     assert agreement_tool.differences(pairs, recorded, names) == []
 
 
@@ -325,8 +327,12 @@ def test_a_reading_that_does_not_reproduce_the_organizations_is_refused(tmp_path
         agreement_tool.second_rater_report(report, tampered, tmp_path)
     renamed = _org_reading(report)
     del renamed["pairs"]["A~B on checked items"]
-    with pytest.raises(SystemExit, match="does not reproduce: A~B on checked items"):
+    with pytest.raises(SystemExit, match="A~B on checked items: not recorded"):
         agreement_tool.second_rater_report(report, renamed, tmp_path)
+    # A report whose human slips were lost cannot rebuild the readings without them.
+    slipless = {**report, "human_slips": {}}
+    with pytest.raises(SystemExit, match=r"human~A without slips: not rebuilt"):
+        agreement_tool.second_rater_report(slipless, _org_reading(report), tmp_path)
 
 
 def test_a_second_rater_with_one_item_is_read_with_undefined_intervals(tmp_path: Path) -> None:
@@ -401,3 +407,20 @@ def test_pseudonyms_survive_a_later_export(tmp_path: Path) -> None:
 def test_an_undefined_interval_is_written_as_null() -> None:
     body = agreement_tool._nan_as_null({"kappa_95": [math.nan, math.nan], "ac1": 0.5})
     assert json.dumps(body, allow_nan=False) == '{"kappa_95": [null, null], "ac1": 0.5}'
+
+
+def test_differences_read_two_undefined_values_as_equal() -> None:
+    nan = math.nan
+    ours = {
+        "p": {
+            "items": 3,
+            "raw_agreement": 1.0,
+            "kappa": nan,
+            "kappa_95": [nan, nan],
+            "ac1": 1.0,
+            "ac1_95": [1.0, 1.0],
+        }
+    }
+    theirs = {"p": {**ours["p"], "kappa": None, "kappa_95": [None, None]}}
+    assert agreement_tool.differences(ours, theirs, {"p": "p"}) == []
+    assert agreement_tool.differences(ours, {"p": {**theirs["p"], "kappa": 0.1}}, {"p": "p"})

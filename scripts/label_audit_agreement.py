@@ -28,9 +28,9 @@ store. Their answers are read from that store's export, beside the committed rep
 of readers (the model raters, the human and each second rater, under a pseudonym in the order
 they first locked an answer) on the items both answered, with raw agreement and its Wilson
 interval, kappa, AC1, valid against the rest and outside names, and again without the items a
-slip touches. No second rater saw any label, so no pair of theirs is read by halves. The human's
-pairs and the model raters' label pair must first reproduce the organization's own reading
-(`label_audit_by_org.py`) on the same items.
+slip touches. No second rater saw any label, so no pair of theirs is read by halves. Every human
+pair but the halves, and the model raters' label pair, must first reproduce the organization's
+own reading (`label_audit_by_org.py`) on the same items.
 
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
@@ -146,10 +146,15 @@ def _undefined_as_nan(interval) -> tuple[float, float]:
         return math.nan, math.nan
 
 
-def _pair(first: dict, second: dict, items: list[str], categories: list) -> dict:
+def _pair(
+    first: dict, second: dict, items: list[str], categories: list, *, undefined_ok: bool = False
+) -> dict:
+    """One pair's figures. An interval undefined on every resample raises, unless
+    `undefined_ok`, where it reads NaN (the second-rater reading, whose prefixes can be short)."""
     a, b = [first[i] for i in items], [second[i] for i in items]
-    low, high = _undefined_as_nan(lambda: kappa_interval(a, b, seed=20260924))
-    ac1_low, ac1_high = _undefined_as_nan(lambda: ac1_interval(a, b, categories, seed=20260924))
+    guard = _undefined_as_nan if undefined_ok else (lambda interval: interval())
+    low, high = guard(lambda: kappa_interval(a, b, seed=20260924))
+    ac1_low, ac1_high = guard(lambda: ac1_interval(a, b, categories, seed=20260924))
     return {
         "items": len(items),
         "raw_agreement": sum(x == y for x, y in zip(a, b, strict=True)) / len(items),
@@ -261,9 +266,18 @@ def differences(ours: dict, theirs: dict, names: dict[str, str]) -> list[str]:
         for field in REPRODUCED_FIELDS:
             a, b = ours[mine][field], theirs[recorded][field]
             pairs = zip(a, b, strict=True) if isinstance(a, list) else [(a, b)]
-            if not all(math.isclose(x, y, abs_tol=1e-12) for x, y in pairs):
+            if not all(
+                _undefined(x)
+                and _undefined(y)
+                or (not _undefined(x) and not _undefined(y) and math.isclose(x, y, abs_tol=1e-12))
+                for x, y in pairs
+            ):
                 wrong.append(f"{mine}.{field}: {a} against {b}")
     return wrong
+
+
+def _undefined(value) -> bool:
+    return value is None or (isinstance(value, float) and math.isnan(value))
 
 
 def neutral_ids(report: dict) -> list[str]:
@@ -302,7 +316,9 @@ def _answer(path: Path) -> dict:
     ):
         raise SystemExit(f"{path}: not a locked answer under the rubric")
     slips = body.get("slips", [])
-    if not isinstance(slips, list) or not set(slips) <= {"label", "outside_names"}:
+    if not isinstance(slips, list) or not all(
+        isinstance(s, str) and s in ("label", "outside_names") for s in slips
+    ):
         raise SystemExit(f"{path}: unknown slip fields {slips}")
     return {**body, "slips": sorted(slips)}
 
@@ -376,7 +392,7 @@ def reader_pairs(
                 for suffix, subset in subsets:
                     if not subset:
                         continue
-                    stats = _pair(a, b, subset, categories)
+                    stats = _pair(a, b, subset, categories, undefined_ok=True)
                     same = sum(a[i] == b[i] for i in subset)
                     stats["raw_agreement_95"] = list(wilson_interval(same, len(subset)))
                     pairs[f"{first}~{second}{question}{suffix}"] = stats
@@ -390,9 +406,10 @@ def report_readers(report: dict, org_reading: dict) -> tuple[list[str], dict[str
     """The report's own readers on the checked items of `org_reading`'s organization, and
     their pairs, refused unless those pairs reproduce `org_reading` (`label_audit_by_org.py`).
 
-    Reproduced: the human's pairs under their own names, and the model raters' label pair as
-    its "on checked items" reading (its other model pairs there are on all of the
-    organization's items). A wrong rebuild of the neutral ids cannot reproduce them.
+    Every pair here is on the checked items, so the model pairs are named "... on checked
+    items". Reproduced: every human pair `org_reading` records except the halves of the check
+    (none of them may be missing here), and the model raters' label pair on the checked items.
+    A wrong rebuild of the neutral ids, or of the human's slips, cannot reproduce them.
     """
     org = org_reading["org"]
     items = checked_items(report, org)
@@ -411,18 +428,22 @@ def report_readers(report: dict, org_reading: dict) -> tuple[list[str], dict[str
         )
         for name in ["human", *models]
     }
-    pairs = reader_pairs(readers, list(readers))
-    recorded = org_reading["pairs"]
-    names = {n: n for n in pairs if n.startswith("human~") and n in recorded}
-    names |= {
-        f"{a}~{b}": f"{a}~{b} on checked items"
-        for x, a in enumerate(models)
-        for b in models[x + 1 :]
+    # Every pair here is on the checked items; the model pairs take the name the organization's
+    # reading gives that reading, since its plain model pairs are on all of its items.
+    pairs = {
+        (f"{n} on checked items" if not n.startswith("human~") else n): stats
+        for n, stats in reader_pairs(readers, list(readers)).items()
     }
-    missing = [theirs for theirs in names.values() if theirs not in recorded]
-    present = {mine: theirs for mine, theirs in names.items() if theirs in recorded}
-    wrong = missing + differences(pairs, recorded, present)
-    if wrong or not any(n.startswith("human~") for n in present):
+    recorded = org_reading["pairs"]
+    halves = (" first half", " second half")
+    wanted = {n for n in recorded if n.startswith("human~") and not any(h in n for h in halves)} | {
+        f"{a}~{b} on checked items" for x, a in enumerate(models) for b in models[x + 1 :]
+    }
+    unbuilt = sorted(n for n in wanted if n not in pairs)
+    unrecorded = sorted(n for n in wanted if n not in recorded)
+    wrong = [f"{n}: not rebuilt" for n in unbuilt] + [f"{n}: not recorded" for n in unrecorded]
+    wrong += differences(pairs, recorded, {n: n for n in wanted - set(unbuilt) - set(unrecorded)})
+    if wrong or not any(n.startswith("human~") for n in wanted):
         raise SystemExit(f"the {org} reading does not reproduce: " + "; ".join(wrong))
     return items, readers, pairs
 
