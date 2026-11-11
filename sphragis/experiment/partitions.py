@@ -403,7 +403,11 @@ def null_reading(
     measured = by_level(entry["null_false_positive_calibrated"])
     if set(measured) != set(nominal):
         raise ValueError(f"{file}: calibrated rates at {sorted(measured)}, not {sorted(nominal)}")
-    loose = [c for c in nominal if measured[c] > BRADLEY_LIBERAL * nominal[c]]
+    # Above Bradley's bound, or a critical p of zero, which no p can fall below: the null's p
+    # resolves no alpha-quantile at its resamples, so the calibration is refused there too.
+    loose = [
+        c for c in nominal if measured[c] > BRADLEY_LIBERAL * nominal[c] or not critical[c] > 0.0
+    ]
     return read, within, critical, measured, loose
 
 
@@ -497,8 +501,8 @@ def run_spread(report: Mapping[str, Any]) -> float:
     """A test read's per-run spread: the standard deviation of its K runs' estimates, the
     quantity the sizing bound bounds (`spread_targets`)."""
     per_run = report.get("per_run")
-    if not isinstance(per_run, list) or len(per_run) < 2:
-        raise ValueError(f"a per-run spread needs at least two runs, got {per_run!r}")
+    if not isinstance(per_run, list) or len(per_run) < 2 or not all(map(is_real, per_run)):
+        raise ValueError(f"a per-run spread needs at least two finite runs, got {per_run!r}")
     return stdev(per_run)
 
 
@@ -567,7 +571,8 @@ def spread_reading(
         if not holds:
             raise ValueError(f"{name}: the spread simulation {file} {reason}")
     entry = simulation["by_target"][TEST_SPREAD_TARGET]
-    if not math.isclose(entry.get("calibration", {}).get("target", math.nan), spread):
+    target: Any = (entry.get("calibration") or {}).get("target")
+    if not (is_real(target) and math.isclose(target, spread)):
         raise ValueError(f"{name}: {file} calibrated its run shift to another spread")
     read, within, critical, measured, loose = null_reading(
         entry,

@@ -253,9 +253,6 @@ def main() -> None:
             raise SystemExit(str(error)) from error
     if h2 and args.replication:
         raise SystemExit("H2 is a Gerrit cell; --replication reads the GitHub family's H1")
-    # H2 is read on the registered score alone; its s' reading at its s level is secondary.
-    if h2 and args.metric == COPRIMARY_METRIC:
-        raise SystemExit("the co-primary score is H1's; H2 is read on the whole score")
     # Every check on the arguments alone, before any run is read.
     if args.replication != (args.org in REPLICATION_FAMILY):
         raise SystemExit(
@@ -345,6 +342,13 @@ def main() -> None:
         raise SystemExit(f"runs read on {sorted(windows)}, not one of the two windows")
     if h2 and args.exploratory and window != "development":
         raise SystemExit("H2's exploratory arm is read on the development window only")
+    # H2's confirmatory read is on the whole score; its s' reading at its s level is a secondary
+    # analysis (Stage 1 report, Analysis), which no registered test read here takes.
+    if h2 and args.metric == COPRIMARY_METRIC and window == "test":
+        raise SystemExit(
+            "H2's test read is on the whole score; its s' reading at its s level is secondary "
+            "and takes no registered test read"
+        )
     lexer_dropped = None
     if args.lexer_sure:
         if window != "development":

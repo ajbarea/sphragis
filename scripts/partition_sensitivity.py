@@ -664,10 +664,24 @@ def realised_effect(
     )
 
 
-def read_for_spread(report: dict, pilot: dict, args: argparse.Namespace) -> dict:
+def only_a_miss(
+    null: list[dict], levels: list, critical: dict[float, float] | None
+) -> dict[float, float] | None:
+    """`critical` where the null misses nominal at some level, else None: at a test read's spread
+    the rule calibrates a miss alone, as `partitions.null_reading` reads it."""
+    holds = all(fmean(t["supported"][c] for t in null) <= (1.0 - c) / 2.0 for c in levels)
+    return None if holds else critical
+
+
+def read_for_spread(
+    report: dict, pilot: dict, args: argparse.Namespace, *, runs_given: bool = False
+) -> dict:
     """What a test read gives the spread rule's simulation: its per-run spread, K and realised
     size, refused unless it is a test read of this pilot's organization, cell, metric and cluster
-    unit whose K was calibrated on this pilot, and whose spread exceeds its sizing bound."""
+    unit whose K was calibrated on this pilot, and whose spread exceeds its sizing bound; and when
+    a K was given besides (`runs_given`), since K is the read's."""
+    if runs_given:
+        raise ValueError("a test read gives the spread rule its K; give no --runs")
     if report.get("window") != "test":
         raise ValueError(f"read on the {report.get('window')} window, not the test window")
     checks = (
@@ -771,16 +785,21 @@ def main() -> None:
     test_read = None
     if args.test_read is not None:
         try:
-            test_read = read_for_spread(json.loads(args.test_read.read_text()), pilot, args)
+            test_read = read_for_spread(
+                json.loads(args.test_read.read_text()), pilot, args, runs_given=k_source == "--runs"
+            )
         except ValueError as error:
             raise SystemExit(f"{args.test_read}: {error}") from error
         # The read's own K and size, and its null alone: no detectable effect is searched here.
+        # The rule calibrates on a miss, so the second null half is always drawn; a null that
+        # holds is recorded uncalibrated (below).
         k_source, args.runs, args.size = (
             f"{args.test_read}: runs",
             test_read["runs"],
             test_read["changes"],
         )
         args.null_only = True
+        args.calibrate = True
     # A critical value is calibrated only where registered: H2's, at its registered K, and an H1
     # cell's on the co-primary score, should its null miss nominal at the cell's K (research
     # log, 2026-10-30); the whole score's H1 cells read their interval.
@@ -886,6 +905,7 @@ def main() -> None:
         "xi": sesoi,
         "runs": args.runs,
         "null_only": args.null_only,
+        # A test read's run records itself calibrated only where its null missed (below).
         "calibrated": args.calibrate,
         "levels": levels,
         "trials": args.trials,
@@ -920,7 +940,7 @@ def main() -> None:
             calibration = calibrate(executor, pool, args, target, seen_at)
             sigma_run = calibration["sigma_run"]
             print(
-                f"{label}: spread {target:.4f} at {pilot['changes']} changes -> sigma_run "
+                f"{label}: spread {target:.4f} at {seen_at} changes -> sigma_run "
                 f"{sigma_run:.4f} (realised {calibration['spread']:.4f})",
                 flush=True,
             )
@@ -938,6 +958,9 @@ def main() -> None:
             )
             null, fresh = studies[: args.null_trials], studies[args.null_trials :]
             critical = {c: critical_p(null, c) for c in levels} if args.calibrate else None
+            # At a test read's spread only a miss is calibrated (`partitions.null_reading`).
+            if test_read is not None:
+                critical = only_a_miss(null, levels, critical)
             entry: dict = {
                 "calibration": calibration,
                 "null_false_positive": {c: fmean(t["supported"][c] for t in null) for c in levels},
@@ -998,6 +1021,10 @@ def main() -> None:
                     )
             entry["lifts_simulated"] = len(at_lift)
             report["by_target"][label] = entry
+    if test_read is not None:
+        report["calibrated"] = any(
+            e["critical_p"] is not None for e in report["by_target"].values()
+        )
     report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {args.out}")

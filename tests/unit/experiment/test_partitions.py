@@ -976,3 +976,29 @@ def test_a_spread_simulation_calibrated_to_another_spread_is_refused() -> None:
     sim["by_target"][TEST_SPREAD_TARGET]["calibration"]["target"] = 0.02
     with pytest.raises(ValueError, match="calibrated its run shift to another spread"):
         spread_reading(report, sim, name="qt")
+
+
+def test_a_critical_p_of_zero_is_a_refused_calibration() -> None:
+    """No p falls below zero: the null resolves no alpha-quantile, so the cell is exploratory."""
+    report = _read(_WIDE)
+    null = {
+        "null_false_positive": {"0.975": 0.03, "0.95": 0.03},
+        "critical_p": {"0.975": 0.0, "0.95": 0.02},
+        "null_false_positive_calibrated": {"0.975": 0.0, "0.95": 0.024},
+    }
+    out = spread_reading(report, _spread_sim(report, null), name="qt")
+    assert out["refused_at"] == [0.975]
+
+
+@pytest.mark.parametrize("per_run", [[0.01], [0.01, None], [0.01, float("nan")], [0.01, True]])
+def test_a_per_run_spread_needs_two_finite_runs(per_run: list) -> None:
+    with pytest.raises(ValueError, match="two finite runs"):
+        run_spread({"per_run": per_run})
+
+
+def test_a_spread_simulation_without_its_calibration_is_refused() -> None:
+    report = _read(_WIDE)
+    sim = _spread_sim(report, {"null_false_positive": {"0.975": 0.012, "0.95": 0.024}})
+    sim["by_target"][TEST_SPREAD_TARGET]["calibration"] = None
+    with pytest.raises(ValueError, match="calibrated its run shift to another spread"):
+        spread_reading(report, sim, name="qt")

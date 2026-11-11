@@ -3353,3 +3353,37 @@ def test_a_spread_refusal_at_a_level_the_family_does_not_read_decides_nothing(ad
     out = gate({"qt": _failed_battery("leakage:qt-a")})
     assert out["holm_levels"] == [0.95] and out["exploratory"] == []
     assert out["cells"]["openstack"]["spread"]["refused_at"] == [0.975]
+
+
+def test_h1_untested_and_h2_passing_reads_the_organization_row() -> None:
+    """Table III's "not pass & pass": H1 anything but a pass, untested included."""
+    assert reading("not tested", "pass") == "organization"
+    assert reading("inconclusive", "pass") == "organization"
+    assert reading("pass", "pass") == "nested"
+
+
+def test_a_replication_member_has_no_h2_read(frozen) -> None:
+    frozen("apache")
+    with pytest.raises(ValueError, match="read on H1 alone"):
+        registered_read("apache", hypothesis="H2")
+
+
+def test_a_cell_refused_at_a_zero_critical_p_reads_across_without_it(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    reports["openstack"]["per_run"] = [0.0, 0.03, 0.06]
+    null = {
+        "null_false_positive": {"0.95": 0.06},
+        "critical_p": {"0.95": 0.0},
+        "null_false_positive_calibrated": {"0.95": 0.0},
+    }
+    sims = {o: _gerrit_sim(o) for o in reports}
+    out = confirmatory_gate(
+        reports,
+        simulations=sims,
+        coprimary=_narrow_coprimary(reports),
+        coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+        spreads={"openstack": _spread_sim_for(reports["openstack"], null)},
+    )
+    assert out["exploratory"] == ["H1:openstack"]
+    assert out["across"]["partial_conjunction"]["at_least"] == 2

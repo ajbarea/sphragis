@@ -1516,11 +1516,15 @@ def test_an_h2_test_read_refuses_bounds_or_a_k_made_for_h1(
         _main(monkeypatch, argv)
 
 
-def test_h2_is_read_on_the_whole_score_alone(
+def test_h2_is_read_on_the_whole_score_on_the_test_window(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """H2's s' reading at its s level is a registered secondary analysis: read on development
+    runs, never as a test read."""
     from sphragis.experiment.decomposition import COPRIMARY_METRIC
 
-    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
-    with pytest.raises(SystemExit, match="the co-primary score is H1's"):
-        _main(monkeypatch, [*argv, "--metric", COPRIMARY_METRIC, "--out", str(tmp_path / "o.json")])
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    argv = _on_coprimary(_h2_test_argv(tmp_path))
+    assert argv[argv.index("--metric") + 1] == COPRIMARY_METRIC
+    with pytest.raises(SystemExit, match="its s' reading at its s level is secondary"):
+        _main(monkeypatch, argv)

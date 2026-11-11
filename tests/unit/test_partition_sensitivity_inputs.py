@@ -496,3 +496,22 @@ def test_a_spread_simulation_refuses_a_read_that_is_not_this_pilots_cell(
     read = _spread_read(pilot, per_run or [0.0, 0.01, 0.02, 0.005], **fields)
     with pytest.raises(ValueError, match=match):
         partition_sensitivity.read_for_spread(read, pilot, _spread_args(tmp_path))
+
+
+def test_a_test_read_spread_is_calibrated_only_on_a_miss() -> None:
+    partition_sensitivity = _module()
+    critical = {0.975: 0.01, 0.95: 0.02}
+    # 2 of 200 supported at 97.5% (0.01, within 0.0125), 4 at 95% (0.02, within 0.025): holds.
+    null = [{"supported": {0.975: i < 2, 0.95: i < 4}} for i in range(200)]
+    assert partition_sensitivity.only_a_miss(null, [0.975, 0.95], critical) is None
+    # 3 at 97.5% (0.015): a miss, so the critical p is kept.
+    null = [{"supported": {0.975: i < 3, 0.95: i < 4}} for i in range(200)]
+    assert partition_sensitivity.only_a_miss(null, [0.975, 0.95], critical) == critical
+
+
+def test_a_test_read_takes_no_other_k(tmp_path: Path) -> None:
+    partition_sensitivity = _module()
+    pilot = _spread_pilot()
+    read = _spread_read(pilot, [0.0, 0.01, 0.02, 0.005])
+    with pytest.raises(ValueError, match="give no --runs"):
+        partition_sensitivity.read_for_spread(read, pilot, _spread_args(tmp_path), runs_given=True)

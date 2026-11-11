@@ -369,6 +369,8 @@ def registered_read(org: str, *, hypothesis: str = "H1") -> dict[str, Any]:
     outside them.
     """
     if org in REPLICATION_FAMILY:
+        if hypothesis != "H1":
+            raise ValueError(f"{org} is a replication member, read on H1 alone")
         if REPLICATION_MEMBERS is None or org not in REPLICATION_MEMBERS:
             raise ValueError(f"{org} is not a frozen replication member")
         return _read_at([REPLICATION_CONFIDENCE], cells=1, cluster_unit="change")
@@ -782,10 +784,12 @@ def _critical_at(cells: Mapping[str, Mapping[str, Any]], level: float) -> dict[s
     cell applies, so never above alpha (a level whose null held has its quantile at or above
     alpha)."""
     alpha = one_sided_alpha(level)
+    # A critical p of zero is a refused calibration (`partitions.null_reading`): that cell is
+    # exploratory at the level, and the readings across take its p as it stands.
     return {
         org: min(alpha, cell["critical_p"][level_key(level)])
         for org, cell in cells.items()
-        if cell.get("critical_p") is not None
+        if cell.get("critical_p") is not None and cell["critical_p"][level_key(level)] > 0.0
     }
 
 
@@ -1175,6 +1179,9 @@ def reading(h1: str, h2: str | None, *, mixed: bool = False) -> str:
     """
     if mixed and h1 != "pass" and h2 != "pass":
         return MIXED_READING
+    # "not pass & pass": H1 anything but a pass, untested included (the legend's "not pass").
+    if h2 == "pass" and h1 != "pass":
+        return READINGS[("bounded", "pass")]
     if h2 is None:
         return {"pass": "within-half", "bounded": "no within-half transfer"}.get(h1, "unresolved")
     return READINGS.get((h1, h2), "unresolved")

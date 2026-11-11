@@ -13,7 +13,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   calibrated bounded side (`p_bounded`), a failed check withdraws its organization on its
   recorded battery (`neutral.withdrawing_failures`), the small-window rule (`power_at_size.py`
   detectable effect, `small_window`), the mixed row; four Opus rounds and a verify pass. PR B
-  (branch `fix/253-spread-h2`, stacked on A): the spread rule (`partitions.spread_reading`,
+  (#262, branch `fix/253-spread-h2`): the spread rule (`partitions.spread_reading`,
   `partition_sensitivity.py --test-read`), H2's test read (`partition_pilot.py --hypothesis H2`
   on the test window, `registered_read(org, hypothesis="H2")`) and `confirmatory_gate` (was
   `h1_test_gate`) under Holm over both; the per-cell names reading. Next, PR C: re-read the
@@ -109,7 +109,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    set is frozen, `decomposition_gate` refuses every read: no decomposition-sensitivity artifact
    bounds Wikimedia's H1 cell or Qt's H2 cell (`detectable_effects` returns only H1 bounds, and
    the fullest artifact, `decomposition-sensitivity.json`, has them for OpenStack and Qt).
-   `confirmatory_gate` refuses until H2's test read over partitions is built. Qt can be admitted until
+   `confirmatory_gate` reads H2's test read beside H1 under Holm (#262). Qt can be admitted until
    2026-11-20 with its cells' bounds simulated and committed by then (PR #246 did). Chromium is
    not admitted (no split qualified by 2026-10-23) and supplies H2's foreign pool.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
