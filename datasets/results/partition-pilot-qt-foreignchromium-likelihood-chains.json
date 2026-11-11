@@ -295,7 +295,19 @@
     "changes": 403,
     "chains": 363
   },
-  "positive_control": null,
+  "positive_control": {
+    "name": "positive_control_crossed:qt",
+    "passed": true,
+    "evidence": {
+      "estimate": 0.390409813063437,
+      "low": 0.35739777896575586,
+      "high": 0.42456586434232063,
+      "confidence": 0.95,
+      "runs": 22,
+      "metric": "logprob_per_token",
+      "examples": 800
+    }
+  },
   "joint": {
     "h2": {
       "foreign": "chromium",
@@ -350,9 +362,9 @@
     "p_one_sided": 0.0959
   },
   "provenance": {
-    "generated_at": "2026-11-11T14:31:30.896526+00:00",
+    "generated_at": "2026-11-11T15:01:34.988646+00:00",
     "git": {
-      "commit": "ab4d48a376314eaf92d11b6cef0d1de888403845",
+      "commit": "873f7fb93c34962526b60683dd6edcf0453b3018",
       "branch": "feat/253-test-reads"
     },
     "python": "3.14.4",

@@ -11319,11 +11319,11 @@ unchanged, the pooled draws bit for bit; the readings, development only and bind
 | OpenStack, H1 on s | +0.0231 | +0.0144 [+0.0041, +0.0257] | +0.4080 [+0.3619, +0.4537] passes |
 | Wikimedia, H1 on s | +0.0058 | +0.0042 [-0.0012, +0.0098] | +0.4688 [+0.4315, +0.5087] passes |
 | Qt, H1 on s | +0.0101 | +0.0097 [+0.0035, +0.0159] | +0.3904 [+0.3574, +0.4246] passes |
-| Qt, H2 against Chromium | +0.0107 | +0.0084 [-0.0069, +0.0230] | (H2 read: none) |
+| Qt, H2 against Chromium | +0.0107 | +0.0084 [-0.0069, +0.0230] | +0.3904 [+0.3574, +0.4246] passes |
 
 Qt's joint reading over H2's 22 development runs on its C++ examples: H1 on C++ +0.0087 [-0.0006,
 +0.0212]; sum +0.0193 [+0.0072, +0.0322]; above zero H1 0.9642, H2 0.9471; runs 22, examples 425. H2
 on s′ at its s levels: +0.0058; 0.975: [-0.0045, +0.0147] inconclusive; 0.95: [-0.0031, +0.0136]
-inconclusive. Check 2 passes in every H1 cell; on the test window a failure would withdraw the
-organization. The change-averaged estimate lies below the pooled one in every cell: changes with
+inconclusive. Check 2 passes in every read, H2's included (its first 22 runs are Qt's H1 runs,
+so the two read the same contrast); on the test window a failure would withdraw the organization. The change-averaged estimate lies below the pooled one in every cell: changes with
 more examples carry more of the pooled gain.
