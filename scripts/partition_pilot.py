@@ -54,6 +54,7 @@ from sphragis.experiment.decomposition import (
     holm_levels,
     metric_sesoi,
     registered_read,
+    require_registered_analyses,
     valid_bound,
 )
 from sphragis.experiment.likelihood import COMPONENT_METRICS
@@ -67,8 +68,10 @@ from sphragis.experiment.partitions import (
     eval_ids,
     h1_over_partitions,
     h2_contrast,
+    joint_over_partitions,
     partition_run_windows,
     pilot_sizing,
+    positive_control_crossed,
     runs_needed,
     spread_targets,
 )
@@ -210,6 +213,27 @@ def cluster_by_chain(runs: list[tuple[dict, int]], chains: dict, org: str) -> di
         (row for results, _ in runs for rows in results.values() for row in rows), chain_of
     )
     return {"changes": len(seen), "chains": len({chain_of[c] for c in seen})}
+
+
+def carries(runs: list[tuple[dict, int]], metric: str) -> bool:
+    """Whether every arm of every run scores `metric`."""
+    return all(metric in row for results, _ in runs for rows in results.values() for row in rows)
+
+
+def withdraw(out: Path, org: str, check: Any) -> None:
+    """Write the failed check as the battery that withdraws `org` (`decomposition.confirmatory_
+    gate`'s `withdrawn`), and stop: none of its cells is read."""
+    battery = {
+        "org": org,
+        "apparatus_holds": False,
+        "checks": [{"name": check.name, "passed": check.passed, "evidence": check.evidence}],
+        "provenance": provenance_header(),
+    }
+    out.write_text(json.dumps(battery, indent=2) + "\n")
+    raise SystemExit(
+        f"not read: {check.name} failed ({check.evidence}); the organization is withdrawn, "
+        f"its battery written to {out}"
+    )
 
 
 def recorded_cluster(artifact: dict, path: Path) -> dict | None:
@@ -551,6 +575,33 @@ def main() -> None:
             raise SystemExit(f"{artifact} was made by {made_by}, this read is by {unit}")
         if made_from != cluster_unit.get("sha256"):
             raise SystemExit(f"{artifact} was made from other chains than {args.chains}")
+    # Outcome-neutral check 2 is read before the cell, once per organization: on its H1 read of
+    # the registered score, over the cell's runs on the crossed interval. On the test window a
+    # failure withdraws the organization; on the development window it is reported.
+    positive_control = None
+    if (
+        not h2
+        and args.metric == REGISTERED_METRIC
+        and (window == "test" or carries(runs[:runs_fixed], REGISTERED_METRIC))
+    ):
+        try:
+            check = positive_control_crossed(
+                runs,
+                org=args.org,
+                runs_fixed=runs_fixed,
+                bootstrap_seed=args.bootstrap_seed,
+                resamples=args.resamples,
+                metric=REGISTERED_METRIC,
+            )
+        except (KeyError, ValueError) as error:
+            raise SystemExit(f"not read: check 2: {error}") from error
+        if window == "test" and not check.passed:
+            withdraw(args.out, args.org, check)
+        positive_control = {
+            "name": check.name,
+            "passed": check.passed,
+            "evidence": check.evidence,
+        }
     contrast = {"contrast": h2_contrast(args.foreign_source)} if h2 else {}
     calibrated = k_from.get("critical_p") if k_from and k_from.get("calibrated") else None
     cell = h1_over_partitions(
@@ -566,6 +617,42 @@ def main() -> None:
         critical=calibrated,
         **contrast,
     )
+    # Beside H2's registered cell, binding no verdict: H1 and H2 on the same C++ examples and
+    # draws over H2's K runs, and H2 on s' at its s levels (Stage 1 report, "Verdicts and
+    # Readings"; Analysis, "Secondary and exploratory analyses").
+    joint = on_s_prime = None
+    if h2 and not args.exploratory and args.metric == REGISTERED_METRIC:
+        if not carries(runs[:runs_fixed], COPRIMARY_METRIC):
+            if window == "test":
+                raise SystemExit(f"not read: H2's runs carry no {COPRIMARY_METRIC} for its s' read")
+        else:
+            secondary = h1_over_partitions(
+                runs,
+                org=args.org,
+                runs_fixed=runs_fixed,
+                levels=levels,
+                bounds=None,
+                bootstrap_seed=args.bootstrap_seed,
+                resamples=args.resamples,
+                metric=COPRIMARY_METRIC,
+                sesoi=metric_sesoi(COPRIMARY_METRIC) or SESOI,
+                change_averaged=False,
+                **contrast,
+            )
+            on_s_prime = {
+                "metric": COPRIMARY_METRIC,
+                "runs": secondary["runs"],
+                **{k: secondary[k] for k in ("estimate", "intervals", "verdicts", "p_one_sided")},
+            }
+        joint = joint_over_partitions(
+            runs,
+            org=args.org,
+            source=args.foreign_source,
+            runs_fixed=runs_fixed,
+            bootstrap_seed=args.bootstrap_seed,
+            resamples=args.resamples,
+            metric=args.metric,
+        )
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"], xi=sesoi or SESOI)
     if sesoi is None:
         # The SESOI is 0.01 in exact match and means nothing on this metric, so the verdicts,
@@ -606,6 +693,7 @@ def main() -> None:
                 metric=args.metric,
                 sesoi=sesoi or SESOI,
                 critical=calibrated,
+                change_averaged=False,
                 **contrast,
             )
         except ValueError as error:
@@ -657,6 +745,9 @@ def main() -> None:
         "lexer_sure",
         "cluster_unit",
         "provenance",
+        "positive_control",
+        "joint",
+        "on_s_prime",
     }
     if head & set(cell):
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
@@ -681,11 +772,15 @@ def main() -> None:
         "without": without,
         "lexer_sure": lexer_dropped,
         "cluster_unit": cluster_unit,
+        "positive_control": positive_control,
+        "joint": joint,
+        "on_s_prime": on_s_prime,
         "provenance": provenance_header(),
     }
     if window == "test":
         try:
             require_test_read(report, org=args.org, expected=expected)
+            require_registered_analyses(report, org=args.org, expected=expected)
         except ValueError as error:
             raise SystemExit(f"not read: {error}") from error
     for c in levels:

@@ -29,6 +29,7 @@ from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.across import across_organizations, partial_conjunction
 from sphragis.experiment.cells import (
     MIN_RESAMPLES,
+    POSITIVE_CONTROL_CONFIDENCE,
     REGISTERED_METRIC,
     REGISTERED_SPREAD_TARGET,
     below_level,
@@ -589,6 +590,74 @@ def _below_projection(
     return below
 
 
+def require_registered_analyses(
+    report: Mapping[str, Any], *, org: str, expected: Mapping[str, Any]
+) -> None:
+    """Refuse a test read on the registered score without the analyses the Stage 1 report
+    registers beside its cell: an H1 read's outcome-neutral check 2, passed on the crossed 95%
+    interval over the read's own runs ("Outcome-Neutral Tests"); an H2 read's joint reading with
+    H1 on the same C++ examples and draws over its K runs, and its s' reading at its s levels
+    ("Verdicts and Readings"; Analysis, "Secondary and exploratory analyses")."""
+    if expected["metric"] != REGISTERED_METRIC:
+        return
+    runs = report.get("runs")
+    if tuple(expected.get("cell", ("H1", None)))[0] == "H1":
+        check = report.get("positive_control")
+        if not isinstance(check, Mapping):
+            raise ValueError(f"{org}: the read carries no crossed check 2")
+        evidence = check.get("evidence")
+        if not (
+            isinstance(evidence, Mapping)
+            and check.get("name") == f"positive_control_crossed:{org}"
+            and evidence.get("runs") == runs
+            and evidence.get("metric") == REGISTERED_METRIC
+            and evidence.get("confidence") == POSITIVE_CONTROL_CONFIDENCE
+        ):
+            raise ValueError(f"{org}: its check 2 is not the crossed read over its own runs")
+        low = evidence.get("low")
+        if not is_real(low) or check.get("passed") is not (low > 0.0):
+            raise ValueError(f"{org}: its check 2 says passed {check.get('passed')!r}, low {low!r}")
+        if check.get("passed") is not True:
+            raise ValueError(f"{org}: check 2 failed; the organization is withdrawn")
+        return
+    joint = report.get("joint")
+    summed = joint.get("summed") if isinstance(joint, Mapping) else None
+    if not (
+        isinstance(joint, Mapping)
+        and joint.get("runs") == runs
+        and joint.get("metric") == REGISTERED_METRIC
+        and joint.get("population") == H2_POPULATION
+        and (joint.get("h2") or {}).get("foreign") == tuple(expected["cell"])[1]
+        and isinstance(summed, Mapping)
+        and summed.get("confidence") == SUMMED_CONFIDENCE
+        and all(is_real(summed.get(k)) for k in ("estimate", "low", "high"))
+        and summed["low"] <= summed["high"]
+    ):
+        raise ValueError(f"{org}: the H2 read carries no joint reading with H1 over its K runs")
+    secondary = report.get("on_s_prime")
+    if not (isinstance(secondary, Mapping) and secondary.get("metric") == COPRIMARY_METRIC):
+        raise ValueError(f"{org}: the H2 read carries no s' reading")
+    if secondary.get("runs") != runs:
+        raise ValueError(f"{org}: its s' reading is not over its {runs} runs")
+    try:
+        verdicts = by_level(secondary.get("verdicts"))
+    except ValueError as error:
+        raise ValueError(f"{org}: its s' reading: {error}") from error
+    if set(verdicts) != {level_key(c) for c in expected["levels"]}:
+        raise ValueError(f"{org}: its s' reading is not at its s levels {expected['levels']}")
+    if not set(verdicts.values()) <= {"supported", "inconclusive"}:
+        raise ValueError(f"{org}: its s' verdicts {sorted(verdicts.values())} are not readings")
+    # With no bound or calibrated p, supported means a lower bound above zero (`read_intervals`).
+    try:
+        lows = {c: i["low"] for c, i in by_level(secondary.get("intervals")).items()}
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError(f"{org}: its s' intervals: {error}") from error
+    if set(lows) != set(verdicts) or any(
+        not is_real(lows[c]) or (verdicts[c] == "supported") != (lows[c] > 0.0) for c in verdicts
+    ):
+        raise ValueError(f"{org}: its s' verdicts do not follow from its intervals")
+
+
 def _registered_bounds(
     org: str, cell: Mapping[str, Any], simulation: Any, expected: Mapping[str, Any]
 ) -> dict[float, float]:
@@ -689,6 +758,7 @@ def _read_cells(
     for org, report in reports.items():
         simulation = simulations[org]
         readings = require_test_read(report, org=org, expected=expected)
+        require_registered_analyses(report, org=org, expected=expected)
         detectable[org] = _registered_bounds(org, report, simulation, expected)
         at = {c: intervals[c][org][level_key(c)] for c in levels}
         registered = (
@@ -720,6 +790,14 @@ def _read_cells(
             "exploratory": None,
             # The registered sensitivities the report read (partition_pilot.py --without).
             "without": readings,
+            # Reported beside the verdicts, binding none (Stage 1 report): the change-averaged
+            # estimate, check 2 on an H1 read, and on an H2 read its joint and s' readings.
+            "change_averaged": report.get("change_averaged"),
+            **{
+                key: report.get(key)
+                for key in ("positive_control", "joint", "on_s_prime")
+                if key in report
+            },
         }
     return cells, detectable
 
@@ -1013,6 +1091,16 @@ def confirmatory_gate(
             }
             for org in cells
         },
+        # Per H2 cell and level, binding no verdict: its s cell supported where its s' reading at
+        # the same level is not reads as Qt's vocabulary (Stage 1 report, "Verdicts and Readings").
+        "vocabulary": {
+            org: {
+                c: cell["verdicts"][c] == "supported"
+                and by_level(cell["on_s_prime"]["verdicts"])[level_key(c)] != "supported"
+                for c in cell["verdicts"]
+            }
+            for org, cell in h2_cells.items()
+        },
         "too_small": too_small,
         "scores": scores,
         "below_sesoi": below_sesoi(tested, passed_at, sesoi=sesoi),
@@ -1037,23 +1125,27 @@ def confirmatory_gate(
     }
 
 
-def _withdrawals(withdrawn: Mapping[str, Any] | None) -> dict[str, list[str]]:
+def _withdrawals(
+    withdrawn: Mapping[str, Any] | None,
+    among: Sequence[str] | None = None,
+    *,
+    who: str = "the admitted; a foreign arm's failed check is recorded in H2_WITHDRAWN",
+) -> dict[str, list[str]]:
     """Each withdrawn organization with the outcome-neutral checks it failed, read from the
-    battery recorded for it (`neutral.withdrawing_failures`): refused unless every one is an
-    admitted organization whose battery failed a check that withdraws, 2 to 6. Chromium's pool is
-    withdrawn from H2 by `H2_WITHDRAWN`, not here."""
+    battery recorded for it (`neutral.withdrawing_failures`): refused unless every one is one of
+    `among` (the admitted organizations when None) whose battery failed a check that withdraws,
+    2 to 6. Chromium's pool is withdrawn from H2 by `H2_WITHDRAWN`, not here."""
     from sphragis.experiment.neutral import withdrawing_failures
 
     if withdrawn is None:
         return {}
     if not isinstance(withdrawn, Mapping):
         raise ValueError(f"withdrawn must map organizations to batteries, got {type(withdrawn)}")
-    outside = sorted(set(withdrawn) - set(ADMITTED_ORGANIZATIONS or ()))
+    order = ORGANIZATIONS if among is None else tuple(among)
+    among = tuple(ADMITTED_ORGANIZATIONS or ()) if among is None else tuple(among)
+    outside = sorted(set(withdrawn) - set(among))
     if outside:
-        raise ValueError(
-            f"withdrawn organization(s) {outside} are not among the admitted; a foreign arm's "
-            "failed check is recorded in H2_WITHDRAWN"
-        )
+        raise ValueError(f"withdrawn organization(s) {outside} are not among {who}")
     failed = {o: withdrawing_failures(battery, org=o) for o, battery in withdrawn.items()}
     unfailed = sorted(o for o, checks in failed.items() if not checks)
     if unfailed:
@@ -1061,7 +1153,7 @@ def _withdrawals(withdrawn: Mapping[str, Any] | None) -> dict[str, list[str]]:
             f"withdrawn organization(s) {unfailed} failed no check that withdraws (2 to 6, not a "
             "foreign arm's: a foreign arm's failed check is recorded in H2_WITHDRAWN)"
         )
-    return {o: failed[o] for o in ORGANIZATIONS if o in failed}
+    return {o: failed[o] for o in order if o in failed}
 
 
 def replication_gate(
@@ -1070,8 +1162,13 @@ def replication_gate(
     simulations: Mapping[str, Mapping[str, Any]],
     powers: Mapping[str, Mapping[str, Any]] | None = None,
     spreads: Mapping[str, Mapping[str, Any]] | None = None,
+    withdrawn: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Each frozen member's H1 verdict and the family's partial conjunction r.
+
+    `withdrawn` maps each member that failed an outcome-neutral check to its recorded battery (a
+    failed crossed check 2 is written by `partition_pilot.py`), reported as the deviation; the
+    family is read over the rest, as `confirmatory_gate` reads the admitted organizations.
 
     The members are `REPLICATION_MEMBERS`, never an argument, so none joins after Stage 1; the
     gate refuses to run before they are frozen. `cells` holds each member's
@@ -1095,20 +1192,23 @@ def replication_gate(
     if REPLICATION_MEMBERS is None:
         raise ValueError("the replication family's members are not frozen yet (Stage 1)")
     family = replication(REPLICATION_MEMBERS)
+    lost = _withdrawals(withdrawn, family["members"], who="the frozen members")
+    members = tuple(o for o in family["members"] if o not in lost)
     for what, given in (("cells", cells), ("simulations", simulations)):
-        _require_exactly(given, family["members"], what=what)
+        _require_exactly(given, members, what=what)
     spreads = {} if spreads is None else spreads
-    extra = sorted(set(spreads) - set(family["members"]))
+    extra = sorted(set(spreads) - set(members))
     if extra:
         raise ValueError(f"spread simulations for {extra}, which are not members")
     level = level_key(REPLICATION_CONFIDENCE)
     alpha = one_sided_alpha(REPLICATION_CONFIDENCE)
     intervals = require_readable(cells, confidence=REPLICATION_CONFIDENCE, fields=_CELL_FIELDS)
     read: dict[str, dict[str, Any]] = {}
-    for org in family["members"]:
+    for org in members:
         cell, simulation = cells[org], simulations[org]
         expected = registered_read(org)
         readings = require_test_read(cell, org=org, expected=expected)
+        require_registered_analyses(cell, org=org, expected=expected)
         # Only H2's K and a co-primary score's are registered as calibrated.
         if (cell.get("k_from") or {}).get("calibrated"):
             raise ValueError(f"{org}: a replication member's K is never calibrated")
@@ -1155,6 +1255,7 @@ def replication_gate(
     }
     return {
         **family,
+        "withdrawn": lost,
         "cells": read,
         "exploratory": sorted(o for o, c in read.items() if c["exploratory"] is not None),
         "below_projection": _below_projection(read, powers),
@@ -1637,21 +1738,25 @@ def below_sesoi(
     )
 
 
-def _joint(
+def joint_reading(
     drawn: tuple[dict[str, float], dict[str, list[float]]],
     *,
     foreign: str,
     role: str,
     population: str,
 ) -> dict[str, Any]:
-    """H1 and H2 read jointly on shared draws: the share of draws in each sign quadrant and the
-    summed contrast; on the C++ population also H1 restricted there, reported only."""
+    """H1 and H2 read jointly on shared draws: the share of draws above zero for each and in
+    each sign quadrant, and the summed contrast; on the C++ population also H1 restricted there,
+    reported only."""
     estimates, draws = drawn
     pairs = list(zip(draws["H1"], draws["H2"], strict=True))
     low, high = percentile_interval([a + b for a, b in pairs], SUMMED_CONFIDENCE)
     joint: dict[str, Any] = {
         "h2": {"foreign": foreign, "role": role},
         "population": population,
+        "above_zero": {
+            name: sum(1 for d in draws[name] if d > 0) / len(draws[name]) for name in ("H1", "H2")
+        },
         "shares": {
             f"H1{'>' if a else '<='}0,H2{'>' if b else '<='}0": sum(
                 1 for x, y in pairs if (x > 0) == a and (y > 0) == b
@@ -1809,7 +1914,7 @@ def decomposition_gate(
         if "H2" in verdict_population:
             population = verdict_population["H2"]
             if set(by_population.get(population, {})) == {"H1", "H2"}:
-                joint[org] = _joint(
+                joint[org] = joint_reading(
                     drawn[population],
                     foreign=h2_pairs[org][0],
                     role=roles["H2"],

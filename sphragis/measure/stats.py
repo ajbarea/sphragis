@@ -18,6 +18,9 @@ class Cluster:
     change_id: str
     treatment: tuple[float, ...]
     control: tuple[float, ...]
+    #: Each example's own change, in `treatment`'s order, where the cluster is a relation chain
+    #: (`chains.relabel`); empty where the cluster is one change.
+    changes: tuple[str, ...] = ()
 
 
 def paired_difference(clusters: Sequence[Cluster]) -> float:
@@ -303,19 +306,43 @@ def stratified_crossed_draws(
 
 PartitionRun = Sequence[Sequence[Cluster]]
 
+#: A cluster's part of its half's statistic, a ratio of sums: (numerator, denominator).
+Totals = Callable[[Cluster], tuple[float, float]]
+
+
+def pooled_totals(cluster: Cluster) -> tuple[float, float]:
+    """Summed difference over the cluster's examples, and their count: a half's ratio is the
+    registered pooled difference (`paired_difference`)."""
+    return float(sum(cluster.treatment) - sum(cluster.control)), float(len(cluster.treatment))
+
+
+def change_totals(cluster: Cluster) -> tuple[float, float]:
+    """Each change's own mean difference summed over the cluster's changes, and their count: a
+    half's ratio is the change-averaged difference (`change_averaged_difference`), each change
+    counted once while whole clusters are resampled."""
+    if not cluster.changes:
+        return fmean(cluster.treatment) - fmean(cluster.control), 1.0
+    by_change: dict[str, list[float]] = {}
+    for change, treated, control in zip(
+        cluster.changes, cluster.treatment, cluster.control, strict=True
+    ):
+        by_change.setdefault(change, []).append(treated - control)
+    return sum(fmean(d) for d in by_change.values()), float(len(by_change))
+
 
 def _partition_table(
-    runs: Sequence[PartitionRun], *, min_clusters: int
-) -> tuple[list[str], list[dict[str, tuple[int, float, int]]]]:
-    """Every run's (half, summed difference, examples) per change, over one shared change set."""
+    runs: Sequence[PartitionRun], *, min_clusters: int, totals: Totals = pooled_totals
+) -> tuple[list[str], list[dict[str, tuple[int, float, float, int]]]]:
+    """Every run's (half, numerator, denominator, examples) per cluster under `totals`, over one
+    shared cluster set."""
     if len(runs) < 2:
         raise ValueError(f"a crossed bootstrap needs at least two runs, got {len(runs)}")
-    tables: list[dict[str, tuple[int, float, int]]] = []
+    tables: list[dict[str, tuple[int, float, float, int]]] = []
     shape: dict[str, int] | None = None
     for position, run in enumerate(runs):
         if len(run) != 2:
             raise ValueError(f"run {position} has {len(run)} halves, expected 2")
-        table: dict[str, tuple[int, float, int]] = {}
+        table: dict[str, tuple[int, float, float, int]] = {}
         for half, clusters in enumerate(run):
             if len(clusters) < min_clusters:
                 raise ValueError(
@@ -331,8 +358,8 @@ def _partition_table(
                     )
                 if len(c.treatment) != len(c.control):
                     raise ValueError(f"change {c.change_id!r} has unpaired examples")
-                table[c.change_id] = (half, sum(c.treatment) - sum(c.control), len(c.treatment))
-        sizes = {change: n for change, (_, _, n) in table.items()}
+                table[c.change_id] = (half, *totals(c), len(c.treatment))
+        sizes = {change: n for change, (_, _, _, n) in table.items()}
         if shape is None:
             shape = sizes
         elif sizes != shape:
@@ -344,13 +371,15 @@ def _partition_table(
     return sorted(tables[0]), tables
 
 
-def _equal_halves(table: Mapping[str, tuple[int, float, int]], counts: Mapping[str, int]) -> float:
-    """A run's two halves' pooled differences on weighted changes, weighted equally."""
-    num, den = [0.0, 0.0], [0, 0]
+def _equal_halves(
+    table: Mapping[str, tuple[int, float, float, int]], counts: Mapping[str, int]
+) -> float:
+    """A run's two halves' ratios on weighted clusters, weighted equally."""
+    num, den = [0.0, 0.0], [0.0, 0.0]
     for change, weight in counts.items():
-        half, difference, examples = table[change]
-        num[half] += weight * difference
-        den[half] += weight * examples
+        half, numerator, denominator, _ = table[change]
+        num[half] += weight * numerator
+        den[half] += weight * denominator
     return fmean(n / d if d else 0.0 for n, d in zip(num, den, strict=True))
 
 
@@ -359,12 +388,100 @@ def equal_halves(run: PartitionRun) -> float:
     return fmean(paired_difference(half) for half in run)
 
 
+def shared_partitioned_draws(
+    contrasts: Mapping[str, tuple[Sequence[PartitionRun], Totals]],
+    *,
+    seed: int,
+    resamples: int = 10_000,
+    min_clusters: int = MIN_CLUSTERS,
+) -> tuple[dict[str, float], dict[str, list[float]]]:
+    """`partitioned_crossed_draws` for several statistics on the SAME run and cluster draws.
+
+    Each entry is a contrast's runs and the `Totals` its halves' ratios take; every contrast
+    must cluster the same runs' examples into the same clusters, so one draw means one thing in
+    each. A replicate that leaves a half without examples in any contrast is drawn again for
+    all, so the draws stay paired; with one contrast they are `partitioned_crossed_draws`'s.
+    Shared draws read contrasts jointly, as the H1 and H2 contrasts that share the sibling
+    adapter with opposite signs (Stage 1 report, "Verdicts and Readings").
+    """
+    if not contrasts:
+        raise ValueError("no contrasts to bootstrap")
+    names = list(contrasts)
+    tables: dict[str, list[dict[str, tuple[int, float, float, int]]]] = {}
+    changes: list[str] = []
+    for name in names:
+        runs, totals = contrasts[name]
+        clusters, tables[name] = _partition_table(runs, min_clusters=min_clusters, totals=totals)
+        if name == names[0]:
+            changes = clusters
+        elif clusters != changes or len(tables[name]) != len(tables[names[0]]):
+            raise ValueError(
+                f"contrast {name!r} does not cluster the same runs and changes as "
+                f"{names[0]!r}; shared draws need one cluster set"
+            )
+    every = dict.fromkeys(changes, 1)
+    estimates = {
+        name: fmean(_equal_halves(table, every) for table in tables[name]) for name in names
+    }
+    # Each run's halves as vectors over `changes`, so a replicate is two dot products a half.
+    # For exact match the pooled sums are whole numbers, so every sum is exact and a draw equals
+    # `_equal_halves` on the same counts to the bit.
+    vectors = {
+        name: [
+            [
+                (
+                    [table[c][1] if table[c][0] == half else 0.0 for c in changes],
+                    [table[c][2] if table[c][0] == half else 0.0 for c in changes],
+                )
+                for half in (0, 1)
+            ]
+            for table in tables[name]
+        ]
+        for name in names
+    }
+    randrange = random.Random(seed).randrange
+    k, n = len(tables[names[0]]), len(changes)
+    draws: dict[str, list[float]] = {name: [] for name in names}
+    redrawn = 0
+    while len(draws[names[0]]) < resamples:
+        chosen = [randrange(k) for _ in range(k)]
+        weights = [0.0] * n
+        for _ in range(n):
+            weights[randrange(n)] += 1.0
+        values: dict[str, float] = {}
+        for name in names:
+            per_run = {}
+            for run in set(chosen):
+                halves = [
+                    (sumprod(weights, num), sumprod(weights, den))
+                    for num, den in vectors[name][run]
+                ]
+                if any(den == 0.0 for _, den in halves):
+                    break
+                per_run[run] = fmean(num / den for num, den in halves)
+            else:
+                values[name] = fmean(per_run[run] for run in chosen)
+                continue
+            break
+        if len(values) == len(names):
+            for name in names:
+                draws[name].append(values[name])
+            continue
+        # A replicate that leaves a half with no examples has no contrast for it; it is drawn
+        # again, so every draw is conditional on both halves being present.
+        redrawn += 1
+        if redrawn > resamples:
+            raise ValueError("most replicates leave a half empty; the halves are too small")
+    return estimates, draws
+
+
 def partitioned_crossed_draws(
     runs: Sequence[PartitionRun],
     *,
     seed: int,
     resamples: int = 10_000,
     min_clusters: int = MIN_CLUSTERS,
+    totals: Totals = pooled_totals,
 ) -> tuple[float, list[float]]:
     """H1 over repeated partitions: the estimate and its crossed runs-by-changes draws.
 
@@ -376,49 +493,13 @@ def partitioned_crossed_draws(
     are resampled over the organization rather than within each half, since a change moves
     between halves as the partition does, so a half's size varies across replicates; on one
     partition this agrees with `stratified_crossed_draws` to first order (the registered
-    partition's five seeds: [+0.0030, +0.0534] against [+0.0028, +0.0532]). Pooled only, the
-    registered estimator.
+    partition's five seeds: [+0.0030, +0.0534] against [+0.0028, +0.0532]). Pooled by default,
+    the registered estimator; `change_totals` gives the change-averaged one.
     """
-    changes, tables = _partition_table(runs, min_clusters=min_clusters)
-    every = dict.fromkeys(changes, 1)
-    estimate = fmean(_equal_halves(table, every) for table in tables)
-    # Each run's halves as vectors over `changes`, so a replicate is two dot products a half.
-    # Differences and example counts are whole numbers, so every sum is exact and a draw equals
-    # `_equal_halves` on the same counts to the bit.
-    vectors = [
-        [
-            (
-                [float(table[c][1]) if table[c][0] == half else 0.0 for c in changes],
-                [float(table[c][2]) if table[c][0] == half else 0.0 for c in changes],
-            )
-            for half in (0, 1)
-        ]
-        for table in tables
-    ]
-    randrange = random.Random(seed).randrange
-    k, n = len(tables), len(changes)
-    draws: list[float] = []
-    redrawn = 0
-    while len(draws) < resamples:
-        chosen = [randrange(k) for _ in range(k)]
-        weights = [0.0] * n
-        for _ in range(n):
-            weights[randrange(n)] += 1.0
-        contrasts = {}
-        for run in set(chosen):
-            halves = [(sumprod(weights, num), sumprod(weights, den)) for num, den in vectors[run]]
-            if any(den == 0.0 for _, den in halves):
-                break
-            contrasts[run] = fmean(num / den for num, den in halves)
-        else:
-            draws.append(fmean(contrasts[run] for run in chosen))
-            continue
-        # A replicate that leaves a half with no examples has no contrast for it; it is drawn
-        # again, so every draw is conditional on both halves being present.
-        redrawn += 1
-        if redrawn > resamples:
-            raise ValueError("most replicates leave a half empty; the halves are too small")
-    return estimate, draws
+    estimates, draws = shared_partitioned_draws(
+        {"cell": (runs, totals)}, seed=seed, resamples=resamples, min_clusters=min_clusters
+    )
+    return estimates["cell"], draws["cell"]
 
 
 def percentile_interval(draws: Sequence[float], confidence: float) -> tuple[float, float]:

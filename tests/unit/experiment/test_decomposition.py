@@ -656,6 +656,17 @@ def _replication_cell(
             for name in REGISTERED_SENSITIVITIES
         },
         "runs": 24,
+        # Outcome-neutral check 2, crossed over the read's runs, as partition_pilot.py writes it.
+        "positive_control": {
+            "name": f"positive_control_crossed:{org}",
+            "passed": True,
+            "evidence": {
+                "runs": 24,
+                "metric": "logprob_per_token",
+                "confidence": 0.95,
+                "low": 0.1,
+            },
+        },
         "k_from": {
             "kind": "k_coverage",
             "metric": "logprob_per_token",
@@ -2612,7 +2623,7 @@ def test_a_withdrawn_organization_is_read_over_the_rest(admitted) -> None:
         simulations={"wikimedia": _gerrit_sim("wikimedia")},
         coprimary={"wikimedia": _on_other(reports["wikimedia"])},
         coprimary_simulations={"wikimedia": _on_other(_gerrit_sim("wikimedia"))},
-        withdrawn={"openstack": _failed_battery("positive_control:openstack-a|s1")},
+        withdrawn={"openstack": _failed_battery("positive_control_crossed:openstack")},
     )
     assert out["design"]["H1"] == ("wikimedia",)
     assert out["verdicts"] == {"H1": "pass"}
@@ -2623,7 +2634,7 @@ def test_a_withdrawn_organization_is_read_over_the_rest(admitted) -> None:
             simulations={"wikimedia": _gerrit_sim("wikimedia")},
             coprimary={"wikimedia": _on_other(reports["wikimedia"])},
             coprimary_simulations={"wikimedia": _on_other(_gerrit_sim("wikimedia"))},
-            withdrawn={"openstack": _failed_battery("positive_control:openstack-a|s1")},
+            withdrawn={"openstack": _failed_battery("positive_control_crossed:openstack")},
         )
 
 
@@ -2638,6 +2649,8 @@ def test_a_withdrawn_organization_is_read_over_the_rest(admitted) -> None:
         ({"wikimedia": _failed_battery()}, r"failed no check that withdraws \(2 to 6,"),
         # Check 1 is a reported measurement: its failure withdraws nothing.
         ({"wikimedia": _failed_battery("contamination:wikimedia-a")}, "failed no check"),
+        # One run's own check 2 is reported; check 2 is read crossed over the cell's runs.
+        ({"wikimedia": _failed_battery("positive_control:wikimedia-a|s1")}, "failed no check"),
         (["wikimedia"], "must map organizations to batteries"),
         # A foreign arm's failure is H2's: Qt stays in H1 (check 4).
         (
@@ -2995,6 +3008,21 @@ def _h2_pair(low: float, high: float, p: float, **kwargs: Any) -> tuple[dict, di
     report, sim = _two_levels("qt", low, high, p, **kwargs)
     cell = {"hypothesis": "H2", "foreign_source": "chromium"}
     report |= cell
+    del report["positive_control"]
+    # Beside the cell, binding nothing: the joint reading over its K runs and H2 on s'.
+    report["joint"] = {
+        "runs": report["runs"],
+        "metric": "logprob_per_token",
+        "population": "cpp",
+        "summed": {"estimate": 0.04, "low": 0.02, "high": 0.06, "confidence": 0.95},
+        "h2": {"foreign": "chromium", "role": "confirmatory"},
+    }
+    report["on_s_prime"] = {
+        "metric": COPRIMARY_METRIC,
+        "runs": report["runs"],
+        "verdicts": {"0.975": "inconclusive", "0.95": "supported"},
+        "intervals": {"0.975": {"low": -0.001, "high": 0.03}, "0.95": {"low": 0.001, "high": 0.03}},
+    }
     report["k_from"] |= {"cell": ["H2", "chromium"], "calibrated": True, "critical_p": _H2_CRITICAL}
     report["sensitivity"] |= {"cell": ["H2", "chromium"], "cells": 1, "calibrated": True}
     bound = report["bounds"][0.95]
@@ -3407,3 +3435,209 @@ def test_a_small_window_cell_stays_in_the_readings_across(admitted) -> None:
     assert "H1:openstack" in out["exploratory"]
     assert out["across"]["partial_conjunction"]["at_least"] == 2
     assert out["across"]["random_effects"]["organizations"] == ["openstack", "wikimedia"]
+
+
+def test_qt_s_cell_supported_where_its_s_prime_reading_is_not_reads_as_vocabulary(
+    admitted,
+) -> None:
+    """Stage 1 report, "Verdicts and Readings": for H2, an s cell supported where its s' reading
+    at the same level is not reads as Qt's vocabulary; binding no verdict."""
+    admitted(*_THREE)
+    out = _full(dict.fromkeys(_THREE, _PASS), _PASS)
+    qt = out["h2_cells"]["qt"]
+    assert qt["verdicts"] == {0.975: "supported", 0.95: "supported"}
+    # The fixture's s' reading: inconclusive at 97.5%, supported at 95%.
+    assert out["vocabulary"] == {"qt": {0.975: True, 0.95: False}}
+    assert out["verdicts"]["H2"] == "pass"
+    # The readings beside the verdicts are carried, binding none.
+    assert qt["joint"]["summed"]["confidence"] == 0.95
+    assert out["cells"]["openstack"]["positive_control"]["passed"] is True
+    assert "change_averaged" in out["cells"]["openstack"]
+
+
+def _without(record: dict, key: str) -> dict:
+    return {k: v for k, v in record.items() if k != key}
+
+
+@pytest.mark.parametrize(
+    ("h1_change", "h2_change", "match"),
+    [
+        (lambda r: _without(r, "positive_control"), None, "carries no crossed check 2"),
+        (
+            lambda r: (
+                r
+                | {
+                    "positive_control": r["positive_control"]
+                    | {
+                        "passed": False,
+                        "evidence": r["positive_control"]["evidence"] | {"low": -0.01},
+                    }
+                }
+            ),
+            None,
+            "check 2 failed; the organization is withdrawn",
+        ),
+        (
+            lambda r: (
+                r | {"positive_control": r["positive_control"] | {"name": "positive_control:x|s1"}}
+            ),
+            None,
+            "not the crossed read over its own runs",
+        ),
+        (
+            lambda r: (
+                r
+                | {
+                    "positive_control": r["positive_control"]
+                    | {"evidence": r["positive_control"]["evidence"] | {"runs": 23}}
+                }
+            ),
+            None,
+            "not the crossed read over its own runs",
+        ),
+        (
+            lambda r: (
+                r
+                | {
+                    "positive_control": r["positive_control"]
+                    | {"evidence": r["positive_control"]["evidence"] | {"confidence": 0.9}}
+                }
+            ),
+            None,
+            "not the crossed read over its own runs",
+        ),
+        (
+            lambda r: (
+                r
+                | {"positive_control": r["positive_control"] | {"passed": True}}
+                | {
+                    "positive_control": r["positive_control"]
+                    | {"evidence": r["positive_control"]["evidence"] | {"low": -0.01}}
+                }
+            ),
+            None,
+            "says passed True, low -0.01",
+        ),
+        (None, lambda r: _without(r, "joint"), "no joint reading with H1"),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"h2": {"foreign": "aosp"}}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"summed": {}}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"metric": COPRIMARY_METRIC}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"summed": r["joint"]["summed"] | {"low": 0.07}}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"summed": {"confidence": 0.95, "low": None}}},
+            "no joint reading with H1",
+        ),
+        (
+            None,
+            lambda r: (
+                r
+                | {
+                    "on_s_prime": r["on_s_prime"]
+                    | {"verdicts": {"0.975": "supported", "0.95": "supported"}}
+                }
+            ),
+            "do not follow from its intervals",
+        ),
+        (None, lambda r: r | {"joint": r["joint"] | {"runs": 10}}, "no joint reading with H1"),
+        (
+            None,
+            lambda r: r | {"joint": r["joint"] | {"population": "all"}},
+            "no joint reading with H1",
+        ),
+        (None, lambda r: _without(r, "on_s_prime"), "carries no s' reading"),
+        (
+            None,
+            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"metric": "logprob_per_token"}},
+            "carries no s' reading",
+        ),
+        (
+            None,
+            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"runs": 10}},
+            "not over its 24 runs",
+        ),
+        (
+            None,
+            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"verdicts": {"0.95": "supported"}}},
+            "not at its s levels",
+        ),
+        (
+            None,
+            lambda r: (
+                r
+                | {"on_s_prime": r["on_s_prime"] | {"verdicts": {"0.975": "bounded", "0.95": "x"}}}
+            ),
+            "are not readings",
+        ),
+    ],
+)
+def test_a_test_read_without_its_registered_analyses_is_refused(
+    admitted, h1_change: Any, h2_change: Any, match: str
+) -> None:
+    admitted(*_THREE)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    # The co-primary twins carry no check 2, as the co-primary reads do not.
+    coprimary = {o: _on_other(_without(r, "positive_control")) for o, r in reports.items()}
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    if h1_change is not None:
+        reports["wikimedia"] = h1_change(reports["wikimedia"])
+    if h2_change is not None:
+        h2_report = h2_change(h2_report)
+    with pytest.raises(ValueError, match=match):
+        confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary=coprimary,
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            h2={"qt": h2_report},
+            h2_simulations={"qt": h2_sim},
+        )
+
+
+def test_a_replication_member_without_its_crossed_check_2_is_refused(frozen) -> None:
+    frozen("apache")
+    with pytest.raises(ValueError, match="carries no crossed check 2"):
+        replication_gate({"apache": _without(_GOOD, "positive_control")}, simulations=_SIM)
+
+
+def test_a_withdrawn_replication_member_is_read_over_the_rest(frozen) -> None:
+    """A member whose crossed check 2 failed is withdrawn (Stage 1 report, "Outcome-Neutral
+    Tests"); the family is read over the rest."""
+    frozen("apache", "dotnet")
+    battery = _failed_battery("positive_control_crossed:dotnet")
+    out = replication_gate({"apache": _GOOD}, simulations=_SIM, withdrawn={"dotnet": battery})
+    assert out["withdrawn"] == {"dotnet": ["positive_control_crossed:dotnet"]}
+    assert set(out["cells"]) == {"apache"}
+    with pytest.raises(ValueError, match=r"no cells for \['dotnet'\]|must map"):
+        replication_gate({"apache": _GOOD}, simulations=_SIM)
+    with pytest.raises(ValueError, match="not among the frozen members"):
+        replication_gate(
+            {"apache": _GOOD},
+            simulations=_SIM,
+            withdrawn={"llvm": _failed_battery("positive_control_crossed:llvm")},
+        )
+    # One run's own check 2 withdraws nothing.
+    with pytest.raises(ValueError, match="failed no check that withdraws"):
+        replication_gate(
+            {"apache": _GOOD},
+            simulations=_SIM,
+            withdrawn={"dotnet": _failed_battery("positive_control:dotnet-a|s1")},
+        )

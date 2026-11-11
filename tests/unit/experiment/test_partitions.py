@@ -341,6 +341,16 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
+        "positive_control": {
+            "name": "positive_control_crossed:apache",
+            "passed": True,
+            "evidence": {
+                "runs": 4,
+                "metric": "logprob_per_token",
+                "confidence": 0.95,
+                "low": 0.1,
+            },
+        },
         "without": {
             name: {"estimate": cell["estimate"], "intervals": cell["intervals"]}
             for name in REGISTERED_SENSITIVITIES
@@ -1027,3 +1037,107 @@ def test_a_spread_calibration_out_of_range_is_refused(field: str, value: object)
     null[field] = {**null[field], "0.975": value}
     with pytest.raises(ValueError, match=r"is not in \[0, 1\]"):
         spread_reading(report, _spread_sim(report, null), name="qt")
+
+
+def _with_base(results: dict, org: str, seed: int, *, base: float) -> dict:
+    """`results` with the base model scored `base` on every example of both halves."""
+    for window in (f"{org}-a", f"{org}-b"):
+        rows = results[run_id(EvalRun(f"adapter:{window}", window, seed))]
+        results[run_id(EvalRun("base", window, None))] = [
+            {"id": r["id"], "change_id": r["change_id"], "exact_match": base} for r in rows
+        ]
+    return results
+
+
+def test_check_2_reads_own_against_base_on_the_crossed_interval_over_the_cells_runs() -> None:
+    from sphragis.experiment.partitions import positive_control_crossed
+
+    everything = {"org-a": set(range(24)), "org-b": set(range(24, 48))}
+    nothing = {"org-a": set(), "org-b": set()}
+    runs = [(_with_base(_results(s, everything), "org", s, base=0.0), s) for s in (1, 2, 3)]
+    check = positive_control_crossed(
+        runs, org="org", runs_fixed=2, bootstrap_seed=7, resamples=500, metric="exact_match"
+    )
+    assert check.passed and check.name == "positive_control_crossed:org"
+    assert check.evidence["runs"] == 2 and check.evidence["confidence"] == 0.95
+    assert check.evidence["low"] > 0.0 and check.evidence["estimate"] == pytest.approx(1.0)
+    # An adapter no better than base fails, though one run past K would have passed.
+    flat = [(_with_base(_results(s, nothing), "org", s, base=0.0), s) for s in (1, 2)]
+    check = positive_control_crossed(
+        [*flat, runs[0]],
+        org="org",
+        runs_fixed=2,
+        bootstrap_seed=7,
+        resamples=500,
+        metric="exact_match",
+    )
+    assert not check.passed and check.evidence["low"] == 0.0
+    with pytest.raises(ValueError, match="reads 3 runs of the 2"):
+        positive_control_crossed(
+            flat, org="org", runs_fixed=3, bootstrap_seed=7, resamples=10, metric="exact_match"
+        )
+
+
+def test_a_cell_reports_its_change_averaged_estimate_beside_its_pooled_one() -> None:
+    everything = {"org-a": set(range(24)), "org-b": set(range(24, 48))}
+    some = {"org-a": set(range(6)), "org-b": set(range(24, 36))}
+    runs = [(_results(1, everything), 1), (_results(2, some), 2)]
+    with_it, without = (
+        h1_over_partitions(
+            runs,
+            org="org",
+            runs_fixed=2,
+            levels=[0.95],
+            bounds=None,
+            bootstrap_seed=0,
+            resamples=300,
+            change_averaged=averaged,
+        )
+        for averaged in (True, False)
+    )
+    # The pooled reading is the same draw for draw either way.
+    assert {k: v for k, v in with_it.items() if k != "change_averaged"} == {
+        k: v for k, v in without.items() if k != "change_averaged"
+    }
+    assert without["change_averaged"] is None
+    # One example per change: change-averaged and pooled agree.
+    averaged = with_it["change_averaged"]
+    assert averaged["estimate"] == pytest.approx(with_it["estimate"])
+    assert averaged["intervals"][0.95] == pytest.approx(with_it["intervals"][0.95])
+    assert 0.0 <= averaged["p_one_sided"] <= 1.0
+
+
+def test_the_joint_reading_sums_h1_and_h2_on_the_same_cpp_draws() -> None:
+    from sphragis.experiment.partitions import h2_contrast, joint_over_partitions
+
+    every_cpp = {i for i in range(40) if i % 2 == 0}
+    runs = [(_h2_results(1, every_cpp), 1), (_h2_results(2, set()), 2), (_h2_results(3, set()), 3)]
+    joint = joint_over_partitions(
+        runs,
+        org="qt",
+        source="aosp",
+        runs_fixed=2,
+        bootstrap_seed=7,
+        resamples=400,
+        metric="exact_match",
+    )
+    h2 = h1_over_partitions(
+        runs,
+        org="qt",
+        runs_fixed=2,
+        levels=[0.95],
+        bounds=None,
+        bootstrap_seed=7,
+        resamples=400,
+        contrast=h2_contrast("aosp"),
+    )
+    # Own against sibling and sibling against foreign share the sibling, so they sum to own
+    # against foreign: on C++ the own adapter never matches and the foreign arm never does.
+    assert joint["summed"]["estimate"] == pytest.approx(
+        joint["h1_on_cpp"]["estimate"] + h2["estimate"]
+    )
+    assert joint["h1_on_cpp"]["estimate"] == pytest.approx(-0.5)
+    assert joint["summed"]["estimate"] == pytest.approx(0.0)
+    assert joint["runs"] == 2 and joint["population"] == "cpp" and joint["examples"] == 20
+    assert set(joint["above_zero"]) == {"H1", "H2"}
+    assert sum(joint["shares"].values()) == pytest.approx(1.0)

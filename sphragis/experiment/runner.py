@@ -94,6 +94,9 @@ def to_clusters(
     if {r["id"] for r in treatment} != set(by_id_control):
         raise ValueError("both arms must be evaluated on the same examples")
     grouped: dict[str, tuple[list[float], list[float]]] = defaultdict(lambda: ([], []))
+    # Each example's own change, where the clusters are relation chains (`chains.relabel`).
+    sources: dict[str, list[str]] = defaultdict(list)
+    chained = any("source_change_id" in result for result in treatment)
     for result in treatment:
         change_id = result["change_id"]
         if not isinstance(change_id, str) or not change_id:
@@ -107,4 +110,14 @@ def to_clusters(
         arms = grouped[change_id]
         arms[0].append(pair[0])
         arms[1].append(pair[1])
-    return [Cluster(change_id, tuple(t), tuple(c)) for change_id, (t, c) in sorted(grouped.items())]
+        if chained:
+            source = result.get("source_change_id")
+            if not isinstance(source, str) or not source:
+                raise ValueError(
+                    f"example {result['id']!r} has no source change id in a relabelled arm"
+                )
+            sources[change_id].append(source)
+    return [
+        Cluster(change_id, tuple(t), tuple(c), tuple(sources[change_id]) if chained else ())
+        for change_id, (t, c) in sorted(grouped.items())
+    ]

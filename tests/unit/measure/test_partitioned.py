@@ -127,3 +127,70 @@ def test_halves_too_small_for_any_replicate_are_refused() -> None:
     ]
     with pytest.raises(ValueError, match="too small"):
         partitioned_crossed_draws(runs, seed=1, resamples=200, min_clusters=1)
+
+
+def _chain(i: int, sizes: tuple[int, ...], won: tuple[bool, ...]) -> Cluster:
+    """A relation chain of changes `c<i>.<j>`, each of `sizes[j]` examples, won or lost whole."""
+    changes = tuple(f"c{i}.{j}" for j, n in enumerate(sizes) for _ in range(n))
+    treatment = tuple(1.0 if won[j] else 0.0 for j, n in enumerate(sizes) for _ in range(n))
+    return Cluster(f"chain{i}", treatment, (0.0,) * len(treatment), changes)
+
+
+def test_change_totals_count_each_change_once_inside_its_chain() -> None:
+    from sphragis.measure.stats import change_averaged_difference, change_totals, pooled_totals
+
+    # One change of 9 examples lost, one of 1 won: pooled 0.1, change-averaged 0.5.
+    chain = _chain(0, (9, 1), (False, True))
+    assert pooled_totals(chain) == (1.0, 10.0)
+    assert change_totals(chain) == (1.0, 2.0)
+    # A cluster that is one change counts once, as the single-partition estimator does.
+    single = Cluster("c0", (1.0, 0.0, 1.0), (0.0, 0.0, 0.0))
+    assert change_totals(single) == (change_averaged_difference([single]), 1.0)
+
+
+def test_shared_draws_leave_the_pooled_draws_as_they_were_alone() -> None:
+    from sphragis.measure.stats import change_totals, pooled_totals, shared_partitioned_draws
+
+    run = [
+        [_chain(i, (1 + i % 3, 2), (i % 2 == 0, i % 5 == 0)) for i in range(12)],
+        [_chain(i, (2, 1 + i % 4), (i % 3 == 0, False)) for i in range(12, 24)],
+    ]
+    other = [run[1], run[0]]
+    alone, alone_draws = partitioned_crossed_draws([run, other], seed=3, resamples=500)
+    estimates, draws = shared_partitioned_draws(
+        {"pooled": ([run, other], pooled_totals), "change": ([run, other], change_totals)},
+        seed=3,
+        resamples=500,
+    )
+    assert estimates["pooled"] == alone and draws["pooled"] == alone_draws
+
+    # The change-averaged estimate: each half's changes averaged, halves weighted equally.
+    def by_change(half: list[Cluster]) -> float:
+        return fmean(
+            fmean(t for t, ch in zip(c.treatment, c.changes, strict=True) if ch == change)
+            for c in half
+            for change in dict.fromkeys(c.changes)
+        )
+
+    expected = fmean(fmean(by_change(h) for h in r) for r in (run, other))
+    assert estimates["change"] == pytest.approx(expected)
+    assert estimates["change"] != pytest.approx(estimates["pooled"])
+
+
+def test_shared_draws_refuse_contrasts_over_different_clusters() -> None:
+    from sphragis.measure.stats import pooled_totals, shared_partitioned_draws
+
+    run = _run(30, lambda i: i % 2, lambda i: True)
+    fewer = _run(28, lambda i: i % 2, lambda i: True)
+    with pytest.raises(ValueError, match="same runs and changes"):
+        shared_partitioned_draws(
+            {"a": ([run, run], pooled_totals), "b": ([fewer, fewer], pooled_totals)},
+            seed=0,
+            resamples=10,
+        )
+    with pytest.raises(ValueError, match="same runs and changes"):
+        shared_partitioned_draws(
+            {"a": ([run, run], pooled_totals), "b": ([run, run, run], pooled_totals)},
+            seed=0,
+            resamples=10,
+        )

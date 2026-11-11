@@ -47,8 +47,10 @@ from sphragis.experiment.model import (
 from sphragis.experiment.neutral import (
     LEAKAGE_MAX_RATE,
     LEAKAGE_THRESHOLD,
+    REPORTED_PER_RUN,
     Check,
     apparatus_holds,
+    check_kind,
     leakage_check,
     manipulation_check,
     non_degeneracy,
@@ -488,9 +490,17 @@ checks.append(non_degeneracy(results))
 for check in checks:
     print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
 holds = apparatus_holds(checks)
-failed = [c for c in checks if not c.passed]
+# A run's own check 2 withdraws nothing: check 2 is read crossed over the cell's runs.
+failed = [
+    c for c in checks if not c.passed and check_kind({"name": c.name}) not in REPORTED_PER_RUN
+]
 unread = "H2" if failed and all("foreign-" in c.name for c in failed) else "H1"
-print(f"APPARATUS {'holds' if holds else f'FAILS: {unread} would not be read'}", flush=True)
+if holds:
+    print("APPARATUS holds", flush=True)
+elif not failed:
+    print("APPARATUS holds; a run's own check 2 failed, reported (check 2 is read crossed)")
+else:
+    print(f"APPARATUS FAILS: {unread} would not be read", flush=True)
 
 args.out.write_text(
     json.dumps(

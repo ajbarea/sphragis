@@ -6,7 +6,9 @@ rather than a result, and the hypotheses are read over the remaining organizatio
 report, "Outcome-Neutral Tests"; `decomposition.confirmatory_gate`'s `withdrawn`). Each check
 returns its evidence beside its pass flag. The withdrawal rule lives in two places:
 `apparatus_holds` says whether a run's checks held, and `withdrawing_failures` reads which of an
-organization's failed checks withdraw it.
+organization's failed checks withdraw it. Check 2 is read once per organization on the crossed
+interval (`partitions.positive_control_crossed`); a run's own check 2 is reported and withdraws
+nothing (`REPORTED_PER_RUN`, `battery_holds`).
 
 The contamination battery is test 1 and is deliberately absent: its report returns no
 verdict, because with no published content cutoff a flat gap is ambiguous and the reading is
@@ -55,10 +57,11 @@ def positive_control(
     label: str,
     bootstrap_seed: int,
 ) -> Check:
-    """Test 2: an organization's own adapter beats the base model on its held-out data.
+    """Test 2 on one run: an organization's own adapter beats the base model on its held-out data.
 
-    Read with the same one-sided rule as the gate. If it fails, the training setup is broken
-    and the comparison between adapters means nothing.
+    Reported beside the run and withdrawing nothing: check 2 as registered is read once per
+    organization on the crossed interval over its cell's runs
+    (`partitions.positive_control_crossed`), which withdraws the organization when it fails.
     """
     interval = cluster_bootstrap(to_clusters(adapted, base), seed=bootstrap_seed)
     return Check(f"positive_control:{label}", supports_direction(interval), {"interval": interval})
@@ -246,14 +249,22 @@ def planted_convention(
 
 #: The checks whose failure withdraws an organization, by the name each `Check` carries before its
 #: label: 2 to 6. Check 1, the contamination battery, is a reported measurement and withdraws
-#: nothing (Stage 1 report, "Outcome-Neutral Tests").
+#: nothing (Stage 1 report, "Outcome-Neutral Tests"). Check 2 is the crossed read over the cell's
+#: runs ("the lower bound of its crossed 95% interval"), not each run's own.
 WITHDRAWING_CHECKS = (
-    "positive_control",
+    "positive_control_crossed",
     "manipulation",
     "leakage",
     "planted_convention",
     "non_degeneracy",
 )
+#: Checks a run records that withdraw nothing: each run's own check 2 (`positive_control`).
+REPORTED_PER_RUN = ("positive_control",)
+
+
+def check_kind(check: Mapping[str, Any]) -> str:
+    """A recorded check's kind, its name before the label."""
+    return str(check.get("name")).partition(":")[0]
 
 
 def foreign_check(name: str) -> bool:
@@ -347,12 +358,18 @@ def recorded_battery(run: Mapping[str, Any], path: Path) -> Mapping[str, Any] | 
 
 
 def battery_holds(battery: Any) -> bool:
-    """Whether a recorded battery held: `apparatus_holds` true and every recorded check passed."""
-    if not isinstance(battery, Mapping) or battery.get("apparatus_holds") is not True:
+    """Whether a recorded battery held: every recorded check passed but those that withdraw
+    nothing (`REPORTED_PER_RUN`), and its `apparatus_holds` flag says whether every check passed,
+    as the run computed it; a battery whose flag disagrees with its checks is not read."""
+    if not isinstance(battery, Mapping):
         return False
     checks = battery.get("checks")
-    return (
+    if not (
         isinstance(checks, list)
-        and bool(checks)
-        and all(isinstance(c, Mapping) and c.get("passed") is True for c in checks)
-    )
+        and checks
+        and all(isinstance(c, Mapping) and isinstance(c.get("passed"), bool) for c in checks)
+    ):
+        return False
+    if battery.get("apparatus_holds") is not all(c["passed"] for c in checks):
+        return False
+    return all(c["passed"] for c in checks if check_kind(c) not in REPORTED_PER_RUN)

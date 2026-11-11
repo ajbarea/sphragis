@@ -58,9 +58,13 @@ not on this battery.
 
 ## 2. Positive control
 
-Each organization's own adapter must beat the base model on that organization's data, read
-with the same one-sided rule as the gate. If it fails, the training setup is broken and the
-comparison between adapters means nothing.
+Each organization's own adapter must beat the base model on that organization's data, on s:
+the lower bound of its crossed 95% interval, over the cell's runs and resampling the cell's
+clusters, strictly above zero (Stage 1 report, "Outcome-Neutral Tests";
+`partitions.positive_control_crossed`, read by `partition_pilot.py` before the cell). If it
+fails, the training setup is broken and the comparison between adapters means nothing: on the
+test window the organization is withdrawn, and the read writes the failed check as its battery.
+Each run's own check 2 is reported beside it and withdraws nothing.
 
 Passed on OpenStack, deduplicated, both arms under the model's chat template: exact match
 0.074 base against 0.407 adapted, paired cluster bootstrap on the difference +0.333

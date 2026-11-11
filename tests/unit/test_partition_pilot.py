@@ -17,6 +17,7 @@ from sphragis.experiment.cells import (
     REGISTERED_SENSITIVITIES,
     require_test_read,
 )
+from sphragis.experiment.decomposition import COPRIMARY_METRIC
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
 from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, spread_targets
@@ -47,6 +48,11 @@ def _results(org: str, seed: int) -> dict:
                 }
                 for i in range(first, first + N)
             ]
+        # The base model, which every adapter beats on its own half (outcome-neutral check 2).
+        results[run_id(EvalRun("base", window, None))] = [
+            {"id": f"x{i}", "change_id": f"c{i}", "exact_match": 0.0}
+            for i in range(first, first + N)
+        ]
     return results
 
 
@@ -373,6 +379,7 @@ def _with_likelihood(argv: list[str]) -> None:
             for row in rows:
                 row["logprob_per_token"] = row["exact_match"] - 1.0
                 row["logprob"] = 10 * (row["exact_match"] - 1.0)
+                row["logprob_per_token:other"] = (row["exact_match"] - 1.0) / 2
         Path(path).write_text(json.dumps(run))
 
 
@@ -1528,3 +1535,82 @@ def test_h2_is_read_on_the_whole_score_on_the_test_window(
     assert argv[argv.index("--metric") + 1] == COPRIMARY_METRIC
     with pytest.raises(SystemExit, match="its s' reading at its s level is secondary"):
         _main(monkeypatch, argv)
+
+
+def _set_base(argv: list[str], metric: str, value: float) -> None:
+    """Score the base model `value` on `metric` in every written run."""
+    for path in argv:
+        if path.endswith(".json") and "run-" in path:
+            run = json.loads(Path(path).read_text())
+            for arm, rows in run["results"].items():
+                if arm.startswith("base|"):
+                    for row in rows:
+                        row[metric] = value
+            Path(path).write_text(json.dumps(run))
+
+
+def test_an_h1_read_on_the_registered_score_reads_check_2_crossed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _inputs(tmp_path, "openstack")
+    _with_likelihood(argv)
+    out = tmp_path / "out.json"
+    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
+    check = json.loads(out.read_text())["positive_control"]
+    assert check["name"] == "positive_control_crossed:openstack" and check["passed"] is True
+    assert check["evidence"]["runs"] == len(ADMISSIBLE)
+    assert check["evidence"]["metric"] == REGISTERED_METRIC
+    # On the development window a failed check 2 is reported, and the cell still read.
+    _set_base(argv, REGISTERED_METRIC, 0.0)
+    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
+    report = json.loads(out.read_text())
+    assert report["positive_control"]["passed"] is False and report["verdicts"]
+    # Another score's read leaves check 2 to the registered score's.
+    _main(monkeypatch, [*argv, "--out", str(out)])
+    assert json.loads(out.read_text())["positive_control"] is None
+
+
+def test_a_test_read_whose_crossed_check_2_fails_writes_the_withdrawal_and_stops(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _replication_argv(tmp_path, "test")
+    _set_base(argv, REGISTERED_METRIC, 0.0)
+    with pytest.raises(SystemExit, match="positive_control_crossed:apache failed"):
+        _main(monkeypatch, argv)
+    battery = json.loads((tmp_path / "pilot.json").read_text())
+    assert battery["apparatus_holds"] is False and battery["org"] == "apache"
+    assert "provenance" in battery
+    # It is the battery the gate withdraws an organization by.
+    from sphragis.experiment.neutral import withdrawing_failures
+
+    assert withdrawing_failures(battery, org="apache") == ["positive_control_crossed:apache"]
+
+
+def test_an_h2_read_on_the_registered_score_carries_its_joint_and_s_prime_readings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    _with_likelihood(argv)
+    out = tmp_path / "out.json"
+    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
+    report = json.loads(out.read_text())
+    joint, secondary = report["joint"], report["on_s_prime"]
+    assert joint["runs"] == report["runs"] == len(ADMISSIBLE)
+    assert joint["population"] == "cpp" and joint["metric"] == REGISTERED_METRIC
+    # On C++ the own adapter never matches and the sibling always does, the foreign arm never.
+    assert joint["h1_on_cpp"]["estimate"] == pytest.approx(-1.0)
+    assert report["estimate"] == pytest.approx(1.0)
+    assert joint["summed"]["estimate"] == pytest.approx(0.0)
+    assert secondary["metric"] == COPRIMARY_METRIC and secondary["runs"] == report["runs"]
+    assert set(secondary["verdicts"]) == set(report["verdicts"])
+    assert report["positive_control"] is None
+    # Without the s' score in its runs, a development read leaves it out.
+    for path in argv:
+        if path.endswith(".json") and "run-" in path:
+            run = json.loads(Path(path).read_text())
+            for rows in run["results"].values():
+                for row in rows:
+                    del row[COPRIMARY_METRIC]
+            Path(path).write_text(json.dumps(run))
+    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
+    assert json.loads(out.read_text())["on_s_prime"] is None
