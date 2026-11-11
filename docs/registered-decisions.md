@@ -102,7 +102,7 @@ is read for how many organizations show the effect, never as a second chance to 
 the Stage 1 report gives the case its own row: with some H1 cells supported and the rest bounded,
 at the family's first level, and H2 anything but a pass (untested included), the reading is
 "style transfers within a half in some cells, not all; read cell by cell, s against s′"
-(`is_mixed`; `MIXED_READING` names it).
+(`is_mixed`, `MIXED_READING`).
 
 The admitted organizations are Gerrit hosts whose splits qualify: OpenStack, Wikimedia and Qt.
 Chromium is not admitted (no split qualifies) and supplies H2's foreign pool. H1 is
@@ -453,20 +453,19 @@ that calibrated simulation, +0.0109 and +0.0103 nats per token at the two levels
 
 ### The test window's per-run spread: simulated above the sizing bound
 
-Registered by the Stage 1 report (papers#145, 2026-11-10). Every bound and K is read at the 90% upper bound of its development pilot's per-run spread
-(Stated power), and the interval's measured error rate is within nominal at that bound but not
-at every spread above it. So the Stage 1 report's Execution step 1 fixes each confirmatory cell's
-critical-value rule, not only the development critical values: a cell whose per-run spread on
-the test window, the standard deviation of its K runs' estimates (`partitions.run_spread`),
-exceeds that bound is simulated at that spread, at its K and realised size, with
-`COVERAGE_NULL_TRIALS` null studies (`partition_sensitivity.py --test-read`). A null that holds
-nominal there changes nothing. One that misses is calibrated as H2's is, and the cell reads at the
-smaller of that critical p and its K's own at each level, so calibration only tightens. A
-calibration whose rate on the second null half exceeds Bradley's 1.5α at a level the family
-reads, or whose critical p is zero there (no p falls below it), leaves the cell exploratory
-(`partitions.spread_reading`, `null_reading`). The rule applies
-to every cell, H2's and the GitHub family's too, since the family is read with the Gerrit cells'
-rules.
+Registered by the Stage 1 report (papers#145, 2026-11-10). Every bound and K is read at the 90%
+upper bound of its development pilot's per-run spread (Stated power), and the interval's measured
+error rate is within nominal at that bound but not at every spread above it. So the Stage 1 report's
+Execution step 1 fixes each confirmatory cell's critical-value rule, not only the development
+critical values: a cell whose per-run spread on the test window, the standard deviation of its K
+runs' estimates (`partitions.run_spread`), exceeds that bound is simulated at that spread, at its K
+and realised size, with `COVERAGE_NULL_TRIALS` null studies (`partition_sensitivity.py
+--test-read`). A null that holds nominal there changes nothing. One that misses is calibrated as
+H2's is, and the cell reads at the smaller of that critical p and its K's own at each level, so
+calibration only tightens. A calibration whose rate on the second null half exceeds Bradley's 1.5α
+at a level the family reads, or whose critical p is zero there (no p falls below it), leaves the
+cell exploratory (`partitions.spread_reading`, `null_reading`). The rule applies to every cell, H2's
+and the GitHub family's too, since the family is read with the Gerrit cells' rules.
 
 ### Stated power: sensitivity, not power at an observed effect
 

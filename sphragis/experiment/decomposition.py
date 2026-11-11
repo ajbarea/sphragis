@@ -1186,7 +1186,9 @@ def halves(org: str) -> tuple[str, str]:
 
 
 #: Table III's mixed row: some H1 cells supported, the rest bounded, H2 anything but a pass.
-MIXED_READING = "within-half in some cells, read cell by cell"
+MIXED_READING = (
+    "style transfers within a half in some cells, not all; read cell by cell, s against s′"
+)
 
 
 def reading(h1: str, h2: str | None, *, mixed: bool = False) -> str:
@@ -1698,8 +1700,8 @@ def decomposition_gate(
     `detectable` holds each cell's registered bound by Holm level (`detectable_effects`); a
     confirmatory cell without one at every level the design reads is refused, so no bound is
     chosen after the data. It reads single-partition development pilots
-    (`scripts/decomposition_pilot.py`). Test-window reads over partitions, H2's included, are
-    `confirmatory_gate`'s.
+    (`scripts/decomposition_pilot.py`). The confirmatory test-window reads over partitions, H2's
+    included, are `confirmatory_gate`'s.
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
