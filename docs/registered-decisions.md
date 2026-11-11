@@ -40,23 +40,27 @@ many C++ examples as the sibling, filled to N from the pool's other files, from 
 of Chromium, Fuchsia and AOSP, in that fixed order, whose host is admitted for this use and whose
 pool covers every matched draw (research log, 2026-10-14 and 2026-10-27).
 The two hypotheses share one family-wise level under Holm's step-down: both are read on a
-two-sided 97.5% interval, and if one passes, the other is read again on a 95% one. An
+two-sided 97.5% interval, and if one passes, the other is read again on a 95% one. A bounded
+reading is made only at the family's first level, and a second-level pass outranks it. An
 organization lost after acceptance is reported as a deviation and the hypotheses are read over
 the rest. An organization whose recorded battery fails an outcome-neutral check from 2 to 6 is
 withdrawn this way (Stage 1 report, "Outcome-Neutral Tests"): the gate takes the battery, names
 its failed checks, and refuses one that failed none of the organization's own
 (`confirmatory_gate`'s `withdrawn`, `neutral.withdrawing_failures`). A foreign arm's failed check
-withdraws H2 alone and leaves the organization in H1. Without Qt or Chromium's pool, or with H2
+withdraws H2 alone and leaves the organization in H1: the Stage 1 report says so of the foreign
+pool over check 4, and a foreign adapter failing check 3 is read the same way, as the foreign
+source's failure. Without Qt or Chromium's pool, or with H2
 withdrawn because a foreign arm fails a check (`H2_WITHDRAWN`; research log, 2026-10-14), H2 is
 exploratory and H1, the whole family, carries the whole family-wise level: it is read on the 95%
 interval alone, bounded against δ.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the SESOI δ (a one-sided equivalence test; research log, 2026-10-14), and **inconclusive**
-otherwise. A cell is read bounded only once its sensitivity simulation, its power, is registered.
+otherwise, reported as "not detected above" its upper bound. A cell is read bounded only once its sensitivity simulation, its power, is registered.
 The margin moved to δ after the development pilots were read (research log, 2026-10-14).
-A cell whose critical p is calibrated (H2's, a co-primary cell's whose null missed at its K, or
-any cell calibrated at its test spread, Number of runs) reads supported only where its one-sided
+A cell whose critical p is calibrated (H2's, H2's K; a co-primary cell whose null missed at its
+K, Number of runs; any cell calibrated at its test spread, The test window's per-run spread)
+reads supported only where its one-sided
 p, the share of draws at or below zero, is also below that critical p, and bounded only where its
 bounded-test p, the share of draws at or above δ, is below it too (Stage 1 report, "Verdicts";
 `read_intervals`). On an uncalibrated cell the bounded-test p repeats its interval: at 10,000
@@ -96,7 +100,8 @@ conjunction: it can report fewer than k when every cell passes, and its power fa
 is read for how many organizations show the effect, never as a second chance to pass. Table III of
 the Stage 1 report gives the case its own row: with some H1 cells supported and the rest bounded,
 at the family's first level, and H2 anything but a pass (untested included), the reading is
-"within-half in some cells, read cell by cell" (`is_mixed`, `MIXED_READING`).
+"style transfers within a half in some cells, not all; read cell by cell, s against s′"
+(`is_mixed`; `MIXED_READING` names it).
 
 The admitted organizations are Gerrit hosts whose splits qualify: OpenStack, Wikimedia and Qt.
 Chromium is not admitted (no split qualifies) and supplies H2's foreign pool. H1 is
@@ -184,9 +189,9 @@ holds more changes than that rate predicts (Wikimedia), the projection is a lowe
 enlarges the simulated bounds, provided arrivals do not fall below the training rate. So at fetch
 the realised change count is compared with the projection, and a window below it is reported
 beside the verdict with the simulation's power at the realised size, read with the cell's
-calibrated critical p where its K has one, as the read applies it at any size. Beside power, the
-smallest effect the cell detects at that size, by the simulation's own bisection at its registered
-per-cell power (`power_at_size.py`). A cell that then cannot detect δ, its detectable effect above
+calibrated critical p where its K has one, as the read applies it at any size. Beside power, `power_at_size.py`
+reports the smallest effect the cell detects at that size, by the simulation's own bisection at
+its registered per-cell power. A cell that then cannot detect δ, its detectable effect above
 δ at the family's first level, is exploratory: reported and left out of its hypothesis (Stage 1
 report, "Sample size"; `decomposition.small_window`). A hypothesis left with no cell is not
 tested, and the rest are read at the Holm levels of what remains.
@@ -251,7 +256,7 @@ hypothesis the gate reads, on the same draws, at the same levels:
   critical p (its critical p capped at α), so at the r = k step, which reads α, it counts exactly
   where its own reading does; each r < k reads α / (k - r + 1), where the scaling is an
   approximation, since the critical p was calibrated at α alone; and r = k is claimed only when
-  every smaller r is too. The organizations are disjoint corpora, so the cells are independent. A failed every-organization rule then still says how many show it.
+  every smaller r is too. The organizations are disjoint corpora, so the cells are independent. A failed every-organization rule then still says how many show it. A cell whose spread calibration is refused at the level read has no critical p to scale by, so it is left out of this reading and the summary below; a cell exploratory by a small window stays in them.
 - **Without AI-assisted targets.** The primary estimate recomputed without examples whose change's
   merged commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s rule, read
   at fetch time for the test window). Trailers are voluntary, so this bounds nothing; it shows
@@ -320,8 +325,7 @@ secondary, none binding a verdict:
   blindness to correct rewrites is measured rather than assumed.
 - **Renamed identifiers**: the base model's exact match with identifiers renamed against the
   original, post-cutoff against pre-cutoff, read descriptively as exposure through reused code.
-- **Label quality on the test window**: the label audit (model raters, the valid share with its
-  Wilson interval, Gwet's AC1 beside Cohen's κ) is measured again on a sample of the test window,
+- **Label quality on the test window**: the valid share is measured again on the test window,
   since model raters' labels estimate only the valid share and the audited sample spans train and
   development examples alone (Stage 1 report, "Label quality").
 - **A second foreign organization for H2** (registered 2026-10-30): Fuchsia, next after Chromium in
@@ -341,6 +345,9 @@ secondary, none binding a verdict:
 The threshold has to clear the measured train-into-dev rate, which is 0.97% for OpenStack on corpus v3. At
 Jaccard 0.8 that rate is 0.00% by construction, because dedup removes pairs at that threshold
 across windows as well as within them, so registering there would be a test that cannot fail.
+The same threshold applies to each sibling half's training window and to the foreign pool against
+the evaluated half's test window, since shared boilerplate would credit the sibling with
+something other than style (Stage 1 report, check 4).
 
 ## Decided by the measurements their rules named in advance
 
@@ -367,7 +374,8 @@ Qt, against 0.0125, and at the 95% level 0.019, 0.02475 and 0.025, against 0.025
 0.01875 (`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`). The rates in the
 rest of this section are the by-change simulations'. A run is one admissible partition at its
 own training seed; runs and clusters are crossed rather than nested, so they are resampled
-independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
+independently (Owen's pigeonhole bootstrap). The gate reads no half of fewer than 10 clusters
+(`stats.MIN_CLUSTERS`; Stage 1 report, "Measured calibration of the interval"). On one partition at three seeds and a seed effect of
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122. Over
 the registered runs, simulated on the registered metric, its one-sided false-positive rate at the
 stricter level is 0.00725 to 0.01125 for OpenStack and 0.0035 to 0.01325 for Wikimedia, against a
@@ -437,7 +445,7 @@ built. Its detectable effects are those of
 that calibrated simulation, +0.0109 and +0.0103 nats per token at the two levels (research log,
 2026-11-02), below δ.
 
-### The test window's per-run spread: simulated where it exceeds the sizing bound (registered 2026-11-10)
+### The test window's per-run spread: simulated where it exceeds the sizing bound (Stage 1 report, papers#145, 2026-11-10)
 
 Every bound and K is read at the 90% upper bound of its development pilot's per-run spread
 (Stated power), and the interval's measured error rate is within nominal at that bound but not

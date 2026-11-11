@@ -153,18 +153,21 @@ window is the most censored window in the corpus, so it is a pre-registration es
 than an unbiased preview.
 
 H1 on the development window over the pilot's 22 admissible partitions per organization, one
-training seed each, in nats per token (206 OpenStack changes, 429 Wikimedia):
+training seed each, resampling relation chains, the test read's unit, in nats per token
+(203 OpenStack chains, 422 Wikimedia, 363 Qt), each read against its cell's registered bound:
 
 | organization | Holm level | H1 estimate | interval | verdict |
 |---|---|---|---|---|
-| OpenStack | 97.5% | +0.0231 | [+0.0081, +0.0402] | supported |
-| OpenStack | 95% | +0.0231 | [+0.0097, +0.0376] | supported |
-| Wikimedia | 97.5% | +0.0058 | [-0.0004, +0.0125] | inconclusive |
-| Wikimedia | 95% | +0.0058 | [+0.0003, +0.0117] | supported |
+| OpenStack | 97.5% | +0.0231 | [+0.0082, +0.0400] | supported |
+| OpenStack | 95% | +0.0231 | [+0.0097, +0.0380] | supported |
+| Wikimedia | 97.5% | +0.0058 | [-0.0006, +0.0124] | bounded |
+| Wikimedia | 95% | +0.0058 | [+0.0001, +0.0116] | supported |
+| Qt | 97.5% | +0.0101 | [+0.0031, +0.0181] | supported |
+| Qt | 95% | +0.0101 | [+0.0041, +0.0169] | supported |
 
-OpenStack's contrast is positive at both levels, with its lower bounds below the smallest effect
-of interest (SESOI, 0.0161 nats per token); Wikimedia's intervals lie inside the band of plus or
-minus the SESOI at both. The development window holds a fraction
+OpenStack's and Qt's contrasts are positive at both levels. Wikimedia's intervals lie inside the
+band of plus or minus the smallest effect of interest (SESOI, 0.0161 nats per token) at both, and
+at 97.5%, the level a bounded reading is made at, its upper bound is below it: bounded. The development window holds a fraction
 of the test window's projected changes, so these readings size the design rather than preview
 its verdicts.
 
