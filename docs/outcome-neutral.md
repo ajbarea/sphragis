@@ -13,12 +13,13 @@ read over the remaining organizations. Without Qt, or with Chromium's pool over 
 threshold, `H2` has no confirmatory cell and `H1` alone is read, at 95%. Check 1, the
 contamination battery, is a reported measurement and withdraws nothing.
 
-The withdrawal rule is one function,
-[`apparatus_holds`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py),
-and it is true only when every check on an organization passed. There is no partial credit and
-no override: if it is false, none of that organization's cells is read. The gate takes each
-withdrawn organization with its recorded battery, refuses one whose battery failed no check from
-2 to 6, and reads the rest.
+The withdrawal rule lives in
+[`neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py):
+`apparatus_holds` is true only when every check on a run passed, and `withdrawing_failures` reads
+which failed checks withdraw an organization. There is no partial credit and no override: a
+withdrawn organization's cells are not read. The gate takes each withdrawn organization with its
+recorded battery, refuses one whose battery failed no check from 2 to 6 of its own (a foreign
+arm's failure is `H2`'s, recorded in `H2_WITHDRAWN`), and reads the rest.
 
 Each check returns its evidence beside its pass flag, so a run's JSON carries why it passed
 and not only that it did. The pilot figures below are what each check returned on real model

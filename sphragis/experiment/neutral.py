@@ -4,8 +4,9 @@ Pre-registered in design section 3. They run before the confirmatory comparison.
 withdraws the organization it fails on: it is reported as a deviation, an apparatus failure
 rather than a result, and the hypotheses are read over the remaining organizations (Stage 1
 report, "Outcome-Neutral Tests"; `decomposition.h1_test_gate`'s `withdrawn`). Each check returns
-its evidence beside its pass flag, and `apparatus_holds` is the one place the withdrawal rule
-lives.
+its evidence beside its pass flag. The withdrawal rule lives in two places: `apparatus_holds` says
+whether a run's checks held, and `withdrawing_failures` reads which of an organization's failed
+checks withdraw it.
 
 The contamination battery is test 1 and is deliberately absent: its report returns no
 verdict, because with no published content cutoff a flat gap is ambiguous and the reading is
@@ -255,18 +256,37 @@ WITHDRAWING_CHECKS = (
 )
 
 
-def withdrawing_failures(battery: Any) -> list[str]:
-    """The failed checks of a recorded battery (`{"checks": [{"name", "passed"}, ...]}`) that
-    withdraw its organization, sorted; refused when `battery` records no checks."""
+def foreign_check(name: str) -> bool:
+    """Whether a check is a foreign arm's (`foreign-<source>-for-<half>`): its failure leaves H2
+    exploratory and the organization in H1 (Stage 1 report, check 4), as `rq1_pilot.py` reads it."""
+    return "foreign-" in name
+
+
+def withdrawing_failures(battery: Any, *, org: str) -> list[str]:
+    """The failed checks of `org`'s recorded battery (`{"apparatus_holds", "checks": [{"name",
+    "passed"}, ...]}`) that withdraw it, sorted: checks 2 to 6 (`WITHDRAWING_CHECKS`), not a
+    foreign arm's (`foreign_check`), each labelled with one of `org`'s halves where it is labelled.
+
+    Refused when `battery` records no checks, a check's `passed` is not a bool, a labelled check
+    names another organization's halves, or the battery says it held while a check failed.
+    """
     checks = battery.get("checks") if isinstance(battery, Mapping) else None
     if not isinstance(checks, list) or not checks:
         raise ValueError(f"not a recorded battery: {battery!r}")
+    failed = []
+    for c in checks:
+        if not (isinstance(c, Mapping) and isinstance(c.get("passed"), bool)):
+            raise ValueError(f"{org}: a check records no pass flag: {c!r}")
+        name = str(c.get("name"))
+        kind, _, label = name.partition(":")
+        if label and not foreign_check(name) and f"{org}-" not in label:
+            raise ValueError(f"{org}: the battery's check {name!r} is another organization's")
+        if not c["passed"]:
+            failed.append((kind, name))
+    if failed and battery.get("apparatus_holds") is True:
+        raise ValueError(f"{org}: the battery says it held, and {[n for _, n in failed]} failed")
     return sorted(
-        str(c.get("name"))
-        for c in checks
-        if isinstance(c, Mapping)
-        and c.get("passed") is not True
-        and str(c.get("name")).split(":", 1)[0] in WITHDRAWING_CHECKS
+        name for kind, name in failed if kind in WITHDRAWING_CHECKS and not foreign_check(name)
     )
 
 

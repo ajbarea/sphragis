@@ -2548,7 +2548,7 @@ def test_the_h1_test_gate_refuses_a_bounded_test_p_from_other_draws(
 
 def _failed_battery(*failed: str) -> dict:
     """A recorded battery (`rq1_pilot.py`'s `outcome_neutral`) whose named checks failed."""
-    names = ["positive_control:x-a|s1", "manipulation:x-a|s1", "leakage:x-a", "non_degeneracy"]
+    names = ["non_degeneracy"]
     checks = [{"name": n, "passed": True} for n in names if n not in failed]
     return {
         "apparatus_holds": not failed,
@@ -2627,10 +2627,26 @@ def test_a_withdrawn_organization_is_read_over_the_rest(admitted) -> None:
         # A string is no evidence, and a battery that held withdraws nothing.
         ({"wikimedia": "check 5"}, "not a recorded battery"),
         ({"wikimedia": {"checks": []}}, "not a recorded battery"),
-        ({"wikimedia": _failed_battery()}, r"failed no check that withdraws \(2 to 6\)"),
+        ({"wikimedia": _failed_battery()}, r"failed no check that withdraws \(2 to 6,"),
         # Check 1 is a reported measurement: its failure withdraws nothing.
-        ({"wikimedia": _failed_battery("contamination:wikimedia")}, "failed no check"),
+        ({"wikimedia": _failed_battery("contamination:wikimedia-a")}, "failed no check"),
         (["wikimedia"], "must map organizations to batteries"),
+        # A foreign arm's failure is H2's: Qt stays in H1 (check 4).
+        (
+            {"wikimedia": _failed_battery("leakage:foreign-chromium-for-wikimedia-a->wikimedia-b")},
+            "not a foreign arm's",
+        ),
+        # Another organization's battery, a malformed flag, a battery that says it held.
+        ({"wikimedia": _failed_battery("leakage:openstack-a")}, "another organization's"),
+        ({"wikimedia": {"checks": [{"name": "non_degeneracy"}]}}, "records no pass flag"),
+        (
+            {"wikimedia": {"checks": [{"name": "non_degeneracy", "passed": "no"}]}},
+            "records no pass flag",
+        ),
+        (
+            {"wikimedia": _failed_battery("non_degeneracy") | {"apparatus_holds": True}},
+            "says it held",
+        ),
         (
             {
                 "openstack": _failed_battery("non_degeneracy"),
@@ -2829,8 +2845,8 @@ def test_a_cell_that_detects_nothing_under_the_bracket_is_exploratory(admitted) 
 
 
 def test_a_level_the_family_does_not_read_decides_no_cell_exploratory(admitted) -> None:
-    """Round-1 finding F1: Qt withdrawn, H1 is read at 95% alone, so a detectable effect above δ
-    at the unread 97.5% leaves the cell in the family."""
+    """Qt withdrawn, H1 is read at 95% alone, so a detectable effect above δ at the unread 97.5%
+    leaves the cell in the family."""
     admitted("openstack", "wikimedia", "qt")
     pairs = {
         "openstack": _two_levels("openstack", -0.001, 0.05, 0.3, changes=1_999),
@@ -2865,7 +2881,7 @@ def test_a_level_the_family_does_not_read_decides_no_cell_exploratory(admitted) 
 
 
 def test_a_replication_member_that_cannot_detect_delta_leaves_the_conjunction(frozen) -> None:
-    """Round-1 finding F3: the family is read with the Gerrit cells' rules."""
+    """The family is read with the Gerrit cells' rules (Stage 1 report, the GitHub family)."""
     frozen("apache", "llvm")
     cells = {
         "apache": _replication_cell(0.02, 0.05, 0.0001, changes=1_999),
@@ -2888,8 +2904,7 @@ def test_a_replication_member_that_cannot_detect_delta_leaves_the_conjunction(fr
 
 
 def test_a_score_with_every_cell_exploratory_is_named_in_the_reading(admitted) -> None:
-    """Round-1 finding F4: H1 is registered on s and s'; passing on s with every s' cell
-    exploratory says so."""
+    """H1 is registered on s and s'; passing on s with every s' cell exploratory says so."""
     admitted("openstack", "wikimedia")
     reports = {
         o: _gerrit_report(o, 0.01, 0.05, 0.001, changes=1_999) for o in ("openstack", "wikimedia")

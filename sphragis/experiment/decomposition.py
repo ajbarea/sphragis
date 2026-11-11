@@ -533,8 +533,8 @@ def small_window(size: Mapping[str, Any], sesoi: float, level: float) -> str | N
     """Why a cell read below its projected size is exploratory, or None: at `level`, the family's
     first, the smallest effect it detects at the realised size exceeds δ ("Sample size", Stage 1
     report: a cell that then cannot detect δ is exploratory). The first level is where every cell
-    is first read and the one its detectable effect is registered on (Table II); a level the
-    family does not read decides nothing."""
+    is first read, and with H2 confirmatory it is the 97.5% Table II reports detectable effects on;
+    a level the family does not read decides nothing."""
     above = []
     at_level = {c: at for c, at in (size.get("power") or {}).items() if c == level_key(level)}
     for c, at in at_level.items():
@@ -876,11 +876,12 @@ def _withdrawals(withdrawn: Mapping[str, Any] | None) -> dict[str, list[str]]:
             f"withdrawn organization(s) {outside} are not among the admitted; a foreign pool over "
             "check 4 is recorded in H2_WITHDRAWN"
         )
-    failed = {o: withdrawing_failures(battery) for o, battery in withdrawn.items()}
+    failed = {o: withdrawing_failures(battery, org=o) for o, battery in withdrawn.items()}
     unfailed = sorted(o for o, checks in failed.items() if not checks)
     if unfailed:
         raise ValueError(
-            f"withdrawn organization(s) {unfailed} failed no check that withdraws (2 to 6)"
+            f"withdrawn organization(s) {unfailed} failed no check that withdraws (2 to 6, not a "
+            "foreign arm's: a foreign pool over check 4 is recorded in H2_WITHDRAWN)"
         )
     return {o: failed[o] for o in ORGANIZATIONS if o in failed}
 

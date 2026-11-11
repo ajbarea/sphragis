@@ -404,7 +404,7 @@ def test_main_records_the_detectable_effect_and_the_sesoi(
 def test_only_an_unreached_power_reads_as_detecting_nothing(
     small_pool: list, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Round-1 finding F6: any other error in the trials is raised, never read as exploratory."""
+    """Any other error in the trials is raised, never read as exploratory."""
 
     real = power_at_size.trials_at
 
