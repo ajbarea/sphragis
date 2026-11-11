@@ -864,8 +864,9 @@ def confirmatory_gate(
     none left is named in the reading.
 
     Beside the verdicts, binding none: each H1 score's own reading, each cell's `FOUR_WAY`
-    outcome, the readings across organizations, and each cell's realised test size against its
-    simulation's projection ("Fetch horizon", registered-decisions.md).
+    outcome, the readings across organizations (`_across`: without a cell whose spread
+    calibration is refused at the level read, and None with none left), and each cell's realised
+    test size against its simulation's projection ("Fetch horizon", registered-decisions.md).
     """
     if ADMITTED_ORGANIZATIONS is None:
         raise ValueError("the admitted organizations are not frozen yet")

@@ -386,6 +386,9 @@ def null_reading(
     """
     nominal = {level_key(c): one_sided_alpha(c) for c in levels}
     read = by_level(entry["null_false_positive"])
+    bad = [(c, v) for c, v in read.items() if not (is_real(v) and 0.0 <= v <= 1.0)]
+    if bad:
+        raise ValueError(f"{file}: null rate {bad[0][1]!r} at {bad[0][0]} is not in [0, 1]")
     if set(read) != set(nominal):
         raise ValueError(f"{file}: null rates at {sorted(read)}, the read is at {sorted(nominal)}")
     within = all(read[c] <= nominal[c] for c in nominal)
