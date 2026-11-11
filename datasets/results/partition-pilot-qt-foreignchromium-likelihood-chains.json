@@ -263,6 +263,20 @@
   "examples": 800,
   "dropped": 0,
   "cell_examples": 425,
+  "change_averaged": {
+    "estimate": 0.008380082039354635,
+    "intervals": {
+      "0.975": {
+        "low": -0.009250558894900491,
+        "high": 0.024942840492597426
+      },
+      "0.95": {
+        "low": -0.00693375921948757,
+        "high": 0.023017511108444744
+      }
+    },
+    "p_one_sided": 0.1406
+  },
   "sizing": {
     "pilot_runs": 22,
     "sd": 0.010379741742493885,
@@ -281,11 +295,65 @@
     "changes": 403,
     "chains": 363
   },
+  "positive_control": null,
+  "joint": {
+    "h2": {
+      "foreign": "chromium",
+      "role": "confirmatory"
+    },
+    "population": "cpp",
+    "above_zero": {
+      "H1": 0.9642,
+      "H2": 0.9471
+    },
+    "shares": {
+      "H1>0,H2>0": 0.9113,
+      "H1>0,H2<=0": 0.0529,
+      "H1<=0,H2>0": 0.0358,
+      "H1<=0,H2<=0": 0.0
+    },
+    "summed": {
+      "estimate": 0.0193351524818863,
+      "low": 0.007222246821385051,
+      "high": 0.032207981550973,
+      "confidence": 0.95
+    },
+    "h1_on_cpp": {
+      "estimate": 0.008681673933026752,
+      "low": -0.0006433695290387592,
+      "high": 0.021153577222945256,
+      "confidence": 0.95
+    },
+    "runs": 22,
+    "metric": "logprob_per_token",
+    "examples": 425,
+    "dropped": 0
+  },
+  "on_s_prime": {
+    "metric": "logprob_per_token:other",
+    "runs": 22,
+    "estimate": 0.005756653904400386,
+    "intervals": {
+      "0.975": {
+        "low": -0.0044812271390580125,
+        "high": 0.014671153385775688
+      },
+      "0.95": {
+        "low": -0.0031189321636266977,
+        "high": 0.013563151583529616
+      }
+    },
+    "verdicts": {
+      "0.975": "inconclusive",
+      "0.95": "inconclusive"
+    },
+    "p_one_sided": 0.0959
+  },
   "provenance": {
-    "generated_at": "2026-11-11T11:34:43.355952+00:00",
+    "generated_at": "2026-11-11T14:31:30.896526+00:00",
     "git": {
-      "commit": "6f4d193ce1fa41de485b78af2aa2079638eb8b5e",
-      "branch": "fix/253-pilot-reread"
+      "commit": "ab4d48a376314eaf92d11b6cef0d1de888403845",
+      "branch": "feat/253-test-reads"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
