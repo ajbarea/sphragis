@@ -3763,9 +3763,14 @@ def test_the_rank_256_rerun_reads_capacity_and_bounded_cells_beside_the_verdicts
     assert out["verdicts"] == {"H1": "inconclusive"}
     with pytest.raises(ValueError, match="ranks 256 and 32"):
         rank_reading(at_256, at_32)
-    # A rerun output not nested as a gate writes it is refused.
+    # A rerun output not nested as a gate writes it is refused, and so is a rerun in both slots
+    # or a rank-32 output nested as if it were the rerun.
     with pytest.raises(ValueError, match="ranks 32 and 256"):
         rank_reading(at_32, {**at_256["rerun"], "lora_rank": 256})
+    with pytest.raises(ValueError, match="ranks 256 and 256"):
+        rank_reading(at_256, at_256)
+    with pytest.raises(ValueError, match="ranks 32 and 32"):
+        rank_reading(at_32, {**at_256, "lora_rank": 32})
     assert out["one_rank"] == {} and out["exploratory"] == {}
     # A cell set aside at either rank carries its reason beside its reading.
     at_256["rerun"]["cells"]["wikimedia"]["exploratory"] = "small window at 0.95"
