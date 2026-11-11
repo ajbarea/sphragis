@@ -9,18 +9,23 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **Issue #253, the code mirrors the Stage 1 report's registered rules (papers 1b6e349).**
-  Three PRs, each traced to the paper's lines. PR A (#261, branch `fix/253-verdict-rules`): the
-  calibrated bounded side (`p_bounded`), a failed check withdraws its organization on its
-  recorded battery (`neutral.withdrawing_failures`), the small-window rule (`power_at_size.py`
-  detectable effect, `small_window`), the mixed row; four Opus rounds and a verify pass. PR B
-  (#262, branch `fix/253-spread-h2`): the spread rule (`partitions.spread_reading`,
+  Three PRs, each traced to the paper's lines. ✅ #261 (b7e5dd1): the calibrated bounded side
+  (`p_bounded`), a failed check withdraws its organization on its recorded battery
+  (`neutral.withdrawing_failures`), the small-window rule (`power_at_size.py` detectable effect,
+  `small_window`), the mixed row. ✅ #262 (8cf872a): the spread rule (`partitions.spread_reading`,
   `partition_sensitivity.py --test-read`), H2's test read (`partition_pilot.py --hypothesis H2`
-  on the test window, `registered_read(org, hypothesis="H2")`) and `confirmatory_gate` (was
-  `h1_test_gate`) under Holm over both; the per-cell names reading. Next, PR C: re-read the
-  four development pilots with their registered sensitivities, registered-decisions.md, and the
-  research-log HSRO amendment. Follow-ups the paper registers outside the gate, not yet built:
-  check 2 on the crossed interval, the H1 + H2 sum over H2's K, H2's s′ test read and its
-  "Qt's vocabulary" reading, the change-averaged estimate, rank 256. Verify: `make verify`.
+  on the test window) and `confirmatory_gate` (was `h1_test_gate`) under Holm over both; the
+  per-cell names reading. 🔄 PR C (#263, branch `fix/253-pilot-reread`): the four development
+  pilots re-read with their registered sensitivities (research log, 2026-11-11; Wikimedia's 97.5%
+  cell now reads bounded, as the paper says), registered-decisions.md and the protocol page
+  mirror the paper's readings, and the HSRO amendment (research log, 2026-10-28). The re-read
+  runs inside the worktree so provenance names its commit (#264 makes provenance ask the
+  package's checkout); Qt's generation runs (sphragis-data-local/full-text/qt-generation-runs)
+  are linked beside its rescorings for the read, then removed. Follow-ups the paper registers
+  outside the gate, not yet built: check 2 on the crossed interval, the H1 + H2 sum over H2's K,
+  H2's s′ test read and its "Qt's vocabulary" reading, the change-averaged estimate, rank 256.
+  Verify: `make verify`, `make docs-harvest`, and papers' `harvest.py --check` at 1b6e349 with
+  `SPHRAGIS` set to this checkout.
 - **Issue #258, second raters for the label audit (AJ 2026-11-10): PR #260, review clean.**
   `label_audit_page.py --second-rater` builds the page with no reveal for the human's 77 checked
   OpenStack items; `label_audit_agreement.py --second-raters` reads the store export back

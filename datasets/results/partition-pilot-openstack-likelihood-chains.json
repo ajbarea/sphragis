@@ -1,6 +1,7 @@
 {
   "hypothesis": "H1",
   "foreign_source": null,
+  "exploratory": false,
   "run_files": [
     "datasets/results/likelihood-partition-openstack-p2-n1850-rp1.0.json",
     "datasets/results/likelihood-partition-openstack-p3-s2-n1850-rp1.0.json",
@@ -44,7 +45,32 @@
     0.95
   ],
   "window": "development",
-  "sensitivity": null,
+  "sensitivity": {
+    "file": "datasets/results/partition-sensitivity-openstack-rp1.0-cells6-logprob_per_token-chains-k10.json",
+    "org": "openstack",
+    "cell": [
+      "H1",
+      null
+    ],
+    "runs": 10,
+    "spread_target": "sizing_bound_90",
+    "cells": 6,
+    "spread_targets": {
+      "pilot_lower_90": 0.004542859469156211,
+      "pilot_estimate": 0.005394810315569553,
+      "sizing_bound_90": 0.006794358019861835,
+      "pilot_upper_99": 0.008288180494188778
+    },
+    "planned_changes": 1913,
+    "metric": "logprob_per_token",
+    "cluster_unit": {
+      "unit": "chain",
+      "file": "datasets/results/relation-chains-openstack.json",
+      "sha256": "de4e4adbe6d1ae988d7fdd2b72fffba39c1a7d85a0bcbea38e5e182b28eafbd2",
+      "planned_ratio": 0.9483282674772037
+    },
+    "calibrated": false
+  },
   "planted_convention": null,
   "outcome_neutral_runs": [
     {
@@ -209,6 +235,15 @@
     "0.975": "supported",
     "0.95": "supported"
   },
+  "four_way": {
+    "0.975": "supported",
+    "0.95": "supported"
+  },
+  "below": {
+    "0.975": false,
+    "0.95": false
+  },
+  "calibrated": false,
   "within_sesoi": {
     "0.975": false,
     "0.95": false
@@ -218,11 +253,12 @@
     "0.95": false
   },
   "p_one_sided": 0.0,
+  "p_bounded": 0.8266,
   "bootstrap_se": 0.007171880630272669,
   "resamples": 10000,
   "bounds": {
-    "0.975": null,
-    "0.95": null
+    "0.975": 0.012402343750000001,
+    "0.95": 0.0115234375
   },
   "examples": 501,
   "dropped": 0,
@@ -241,17 +277,18 @@
   "cluster_unit": {
     "unit": "chain",
     "file": "datasets/results/relation-chains-openstack.json",
+    "sha256": "de4e4adbe6d1ae988d7fdd2b72fffba39c1a7d85a0bcbea38e5e182b28eafbd2",
     "changes": 206,
     "chains": 203
   },
   "provenance": {
-    "generated_at": "2026-10-21T08:52:49.198169+00:00",
+    "generated_at": "2026-11-11T11:34:29.257383+00:00",
     "git": {
-      "commit": "977253f69f27d342f05ae1aa7fcf640af1c58f88",
-      "branch": "registration/relation-chains"
+      "commit": "6f4d193ce1fa41de485b78af2aa2079638eb8b5e",
+      "branch": "fix/253-pilot-reread"
     },
     "python": "3.14.4",
-    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
       "pygments": "2.21.0"
     }

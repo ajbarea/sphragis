@@ -61,6 +61,9 @@ COVERAGE = f"{RESULTS}/crossed-coverage.json"
 # The registered metric's pilots, simulations at each organization's K, and K sources.
 PARTITION_PILOT = f"{RESULTS}/partition-pilot-openstack-likelihood.json"
 PARTITION_PILOT_WM = f"{RESULTS}/partition-pilot-wikimedia-likelihood.json"
+PILOT_CHAINS_OS = f"{RESULTS}/partition-pilot-openstack-likelihood-chains.json"
+PILOT_CHAINS_WM = f"{RESULTS}/partition-pilot-wikimedia-likelihood-chains.json"
+PILOT_CHAINS_QT = f"{RESULTS}/partition-pilot-qt-likelihood-chains.json"
 AT_975 = ["intervals", "0.975"]
 AT_95 = ["intervals", "0.95"]
 PARTITION_SENSITIVITY = f"{RESULTS}/partition-sensitivity-openstack-rp1.0-logprob_per_token.json"
@@ -134,21 +137,29 @@ CLAIMS: list[tuple[Any, ...]] = [
         ["hashes", "test"],
         {"text": True, "occurrences": 2},
     ),
-    ("dev_runs", "protocol.md", "22", PARTITION_PILOT, ["runs"]),
-    ("dev_runs_wm", "protocol.md", "22", PARTITION_PILOT_WM, ["runs"]),
-    ("dev_changes", "protocol.md", "206", PARTITION_PILOT, ["changes"]),
-    ("dev_changes_wm", "protocol.md", "429", PARTITION_PILOT_WM, ["changes"]),
+    # The development reads by relation chain, the test read's unit, each against its bound.
+    ("dev_runs", "protocol.md", "22", PILOT_CHAINS_OS, ["runs"]),
+    ("dev_runs_wm", "protocol.md", "22", PILOT_CHAINS_WM, ["runs"]),
+    ("dev_runs_qt", "protocol.md", "22", PILOT_CHAINS_QT, ["runs"]),
+    ("dev_changes", "protocol.md", "203", PILOT_CHAINS_OS, ["changes"]),
+    ("dev_changes_wm", "protocol.md", "422", PILOT_CHAINS_WM, ["changes"]),
+    ("dev_changes_qt", "protocol.md", "363", PILOT_CHAINS_QT, ["changes"]),
     ("dev_sesoi", "protocol.md", "0.0161", SESOI, ["sesoi"]),
-    ("dev_h1", "protocol.md", "+0.0231", PARTITION_PILOT, ["estimate"], {"occurrences": 2}),
-    ("dev_h1_975_low", "protocol.md", "+0.0081", PARTITION_PILOT, [*AT_975, "low"]),
-    ("dev_h1_975_high", "protocol.md", "+0.0402", PARTITION_PILOT, [*AT_975, "high"]),
-    ("dev_h1_95_low", "protocol.md", "+0.0097", PARTITION_PILOT, [*AT_95, "low"]),
-    ("dev_h1_95_high", "protocol.md", "+0.0376", PARTITION_PILOT, [*AT_95, "high"]),
-    ("dev_h1_wm", "protocol.md", "+0.0058", PARTITION_PILOT_WM, ["estimate"], {"occurrences": 2}),
-    ("dev_h1_wm_975_low", "protocol.md", "-0.0004", PARTITION_PILOT_WM, [*AT_975, "low"]),
-    ("dev_h1_wm_975_high", "protocol.md", "+0.0125", PARTITION_PILOT_WM, [*AT_975, "high"]),
-    ("dev_h1_wm_95_low", "protocol.md", "+0.0003", PARTITION_PILOT_WM, [*AT_95, "low"]),
-    ("dev_h1_wm_95_high", "protocol.md", "+0.0117", PARTITION_PILOT_WM, [*AT_95, "high"]),
+    ("dev_h1", "protocol.md", "+0.0231", PILOT_CHAINS_OS, ["estimate"], {"occurrences": 2}),
+    ("dev_h1_975_low", "protocol.md", "+0.0082", PILOT_CHAINS_OS, [*AT_975, "low"]),
+    ("dev_h1_975_high", "protocol.md", "+0.0400", PILOT_CHAINS_OS, [*AT_975, "high"]),
+    ("dev_h1_95_low", "protocol.md", "+0.0097", PILOT_CHAINS_OS, [*AT_95, "low"]),
+    ("dev_h1_95_high", "protocol.md", "+0.0380", PILOT_CHAINS_OS, [*AT_95, "high"]),
+    ("dev_h1_wm", "protocol.md", "+0.0058", PILOT_CHAINS_WM, ["estimate"], {"occurrences": 2}),
+    ("dev_h1_wm_975_low", "protocol.md", "-0.0006", PILOT_CHAINS_WM, [*AT_975, "low"]),
+    ("dev_h1_wm_975_high", "protocol.md", "+0.0124", PILOT_CHAINS_WM, [*AT_975, "high"]),
+    ("dev_h1_wm_95_low", "protocol.md", "+0.0001", PILOT_CHAINS_WM, [*AT_95, "low"]),
+    ("dev_h1_wm_95_high", "protocol.md", "+0.0116", PILOT_CHAINS_WM, [*AT_95, "high"]),
+    ("dev_h1_qt", "protocol.md", "+0.0101", PILOT_CHAINS_QT, ["estimate"], {"occurrences": 2}),
+    ("dev_h1_qt_975_low", "protocol.md", "+0.0031", PILOT_CHAINS_QT, [*AT_975, "low"]),
+    ("dev_h1_qt_975_high", "protocol.md", "+0.0181", PILOT_CHAINS_QT, [*AT_975, "high"]),
+    ("dev_h1_qt_95_low", "protocol.md", "+0.0041", PILOT_CHAINS_QT, [*AT_95, "low"]),
+    ("dev_h1_qt_95_high", "protocol.md", "+0.0169", PILOT_CHAINS_QT, [*AT_95, "high"]),
     # registered-decisions.md
     # H2 at K = 40 by chain, its full simulation (research log, 2026-10-30).
     (
