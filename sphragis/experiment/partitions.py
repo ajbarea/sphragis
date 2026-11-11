@@ -29,6 +29,7 @@ from sphragis.experiment.cells import (
     cell_of,
     cluster_of,
     is_count,
+    is_real,
     level_key,
     same_calibration,
 )
@@ -360,6 +361,52 @@ def coverage_runs(
     }
 
 
+def null_reading(
+    entry: Mapping[str, Any],
+    levels: Sequence[float],
+    *,
+    calibrated: bool,
+    file: str,
+    at: str,
+) -> tuple[
+    dict[float, float],
+    bool,
+    dict[float, float] | None,
+    dict[float, float] | None,
+    list[float],
+]:
+    """What a simulated null at one spread point says: its rates by level, whether they hold
+    nominal at every level, the critical p calibrated where they do not, the calibrated test's rate
+    on the second, independent null half, and the levels where that rate is above Bradley's (1978)
+    liberal bound, 1.5 alpha, so the calibration did not carry over.
+
+    Only a miss is calibrated, so a simulation that holds nominal and was calibrated, or misses
+    and was not, is refused.
+    """
+    nominal = {level_key(c): one_sided_alpha(c) for c in levels}
+    read = by_level(entry["null_false_positive"])
+    if set(read) != set(nominal):
+        raise ValueError(f"{file}: null rates at {sorted(read)}, the read is at {sorted(nominal)}")
+    within = all(read[c] <= nominal[c] for c in nominal)
+    if within == calibrated:
+        raise ValueError(
+            f"{file}: the null {'holds' if within else 'misses'} nominal at {at}, and the "
+            f"simulation is {'' if calibrated else 'not '}calibrated; only a miss is calibrated"
+        )
+    if not calibrated:
+        return read, within, None, None, []
+    critical = by_level(entry["critical_p"])
+    if set(critical) != set(nominal):
+        raise ValueError(
+            f"{file}: critical p at {sorted(critical)}, the read is at {sorted(nominal)}"
+        )
+    measured = by_level(entry["null_false_positive_calibrated"])
+    if set(measured) != set(nominal):
+        raise ValueError(f"{file}: calibrated rates at {sorted(measured)}, not {sorted(nominal)}")
+    loose = [c for c in nominal if measured[c] > BRADLEY_LIBERAL * nominal[c]]
+    return read, within, critical, measured, loose
+
+
 def registered_coverage(
     pilot: Mapping[str, Any],
     simulation: Mapping[str, Any],
@@ -403,31 +450,20 @@ def registered_coverage(
         if not holds:
             raise ValueError(f"{file} {reason}")
     entry = simulation["by_target"][REGISTERED_SPREAD_TARGET]
-    read = by_level(entry["null_false_positive"])
-    if set(read) != set(levels):
-        raise ValueError(f"{file}: null rates at {sorted(read)}, the pilot reads {levels}")
-    within = all(read[c] <= nominal[c] for c in levels)
-    calibrated = bool(simulation.get("calibrated"))
-    if within == calibrated:
+    read, within, critical, measured, loose = null_reading(
+        entry,
+        levels,
+        calibrated=bool(simulation.get("calibrated")),
+        file=file,
+        at=f"K = {runs}",
+    )
+    if loose:
+        rates = [(measured or {})[c] for c in loose]
         raise ValueError(
-            f"{file}: the null {'holds' if within else 'misses'} nominal at K = {runs}, and the "
-            f"simulation is {'' if calibrated else 'not '}calibrated; only a miss is calibrated"
+            f"{file}: the calibrated test reads {rates} on the second null half at {loose}, "
+            f"above {BRADLEY_LIBERAL} alpha"
         )
-    critical = by_level(entry["critical_p"]) if calibrated else None
-    if critical is not None and set(critical) != set(levels):
-        raise ValueError(f"{file}: critical p at {sorted(critical)}, the pilot reads {levels}")
-    # The rate the calibrated test reads on the second, independent null half: above Bradley's
-    # liberal bound, 1.5 alpha, at either level, the calibration did not carry over.
-    measured = by_level(entry["null_false_positive_calibrated"]) if calibrated else None
-    if measured is not None:
-        if set(measured) != set(levels):
-            raise ValueError(f"{file}: calibrated rates at {sorted(measured)}, not {levels}")
-        loose = [c for c in levels if measured[c] > BRADLEY_LIBERAL * nominal[c]]
-        if loose:
-            raise ValueError(
-                f"{file}: the calibrated test reads {[measured[c] for c in loose]} on the second "
-                f"null half at {loose}, above {BRADLEY_LIBERAL} alpha"
-            )
+    calibrated = critical is not None
     return {
         "reproducibility_runs": None,
         "coverage_runs": None,
@@ -448,6 +484,107 @@ def registered_coverage(
         if measured is None
         else {str(c): v for c, v in measured.items()},
         "spread_targets": targets,
+    }
+
+
+#: The spread point a test read's own per-run spread is simulated at (Stage 1 report, Execution
+#: step 1 and "Measured calibration of the interval"): named apart from the development pilot's
+#: points, which the simulation keeps, so its calibration is checked against the read's K.
+TEST_SPREAD_TARGET = "run_spread"
+
+
+def run_spread(report: Mapping[str, Any]) -> float:
+    """A test read's per-run spread: the standard deviation of its K runs' estimates, the
+    quantity the sizing bound bounds (`spread_targets`)."""
+    per_run = report.get("per_run")
+    if not isinstance(per_run, list) or len(per_run) < 2:
+        raise ValueError(f"a per-run spread needs at least two runs, got {per_run!r}")
+    return stdev(per_run)
+
+
+def spread_reading(
+    report: Mapping[str, Any], simulation: Mapping[str, Any] | None, *, name: str
+) -> dict[str, Any]:
+    """The spread rule for one test-window cell (Stage 1 report, "Measured calibration of the
+    interval": a cell whose per-run test spread exceeds its bound is simulated at that spread and
+    calibrated if over nominal, exploratory if refused).
+
+    Within the sizing bound its K was read at (`REGISTERED_SPREAD_TARGET` of the read's K source),
+    nothing changes and no simulation is read. Above it, `simulation` must be the cell's own null
+    at the read's spread (`partition_sensitivity.py --test-read`): `org`'s cell on the read's
+    metric and cluster unit, calibrated on the pilot its K came from, at the read's K and realised
+    size, with `COVERAGE_NULL_TRIALS` null studies. A null that holds nominal there changes
+    nothing; one that misses carries the critical p calibrated on it, which the read then applies,
+    and the levels at which that calibration reads above Bradley's 1.5 alpha on the second null
+    half, where it is refused and the cell is exploratory (`null_reading`).
+    """
+    spread = run_spread(report)
+    try:
+        bound = report["k_from"]["spread_targets"][REGISTERED_SPREAD_TARGET]
+    except (KeyError, TypeError) as error:
+        raise ValueError(f"{name}: its K records no sizing bound ({error})") from error
+    out: dict[str, Any] = {"spread": spread, "bound": bound, "above": spread > bound}
+    if not out["above"]:
+        if simulation is not None:
+            raise ValueError(f"{name}: spread {spread:.5f} is within its bound; nothing to read")
+        return out | {"file": None, "critical_p": None, "refused_at": []}
+    if simulation is None:
+        raise ValueError(
+            f"{name}: per-run spread {spread:.5f} above its sizing bound {bound:.5f}, with no "
+            "simulation at that spread"
+        )
+    file = str(simulation.get("file", name))
+    recorded = simulation.get("test_read") or {}
+    checks = (
+        (simulation.get("org") == report.get("org"), f"simulates {simulation.get('org')}"),
+        (
+            simulation.get("metric", "exact_match") == report.get("metric", "exact_match"),
+            f"is on {simulation.get('metric', 'exact_match')}",
+        ),
+        (cell_of(simulation) == cell_of(report), f"simulates {cell_of(simulation)}"),
+        (cluster_of(simulation) == cluster_of(report), "was not drawn as the read was"),
+        (
+            same_calibration(simulation.get("spread_targets"), report["k_from"]["spread_targets"]),
+            "was calibrated on another pilot than the read's K",
+        ),
+        (
+            simulation.get("null_trials") == COVERAGE_NULL_TRIALS,
+            f"has {simulation.get('null_trials')} null studies, not {COVERAGE_NULL_TRIALS}",
+        ),
+        (simulation.get("runs") == report.get("runs"), f"is at K = {simulation.get('runs')!r}"),
+        (
+            simulation.get("planned_changes") == report.get("changes"),
+            f"is at {simulation.get('planned_changes')!r} changes, the read at "
+            f"{report.get('changes')!r}",
+        ),
+        (
+            is_real(recorded.get("spread")) and math.isclose(recorded["spread"], spread),
+            f"was simulated at spread {recorded.get('spread')!r}, the read's is {spread}",
+        ),
+        (TEST_SPREAD_TARGET in (simulation.get("by_target") or {}), "has no test-spread point"),
+    )
+    for holds, reason in checks:
+        if not holds:
+            raise ValueError(f"{name}: the spread simulation {file} {reason}")
+    entry = simulation["by_target"][TEST_SPREAD_TARGET]
+    if not math.isclose(entry.get("calibration", {}).get("target", math.nan), spread):
+        raise ValueError(f"{name}: {file} calibrated its run shift to another spread")
+    read, within, critical, measured, loose = null_reading(
+        entry,
+        report["levels"],
+        calibrated=bool(simulation.get("calibrated")),
+        file=file,
+        at="the test spread",
+    )
+    return out | {
+        "file": file,
+        "null_false_positive": read,
+        "within_nominal": within,
+        "critical_p": critical,
+        "null_false_positive_calibrated": measured,
+        # The levels where the calibration is refused: read at any of them, the cell is
+        # exploratory (`decomposition._mark_exploratory`).
+        "refused_at": loose,
     }
 
 

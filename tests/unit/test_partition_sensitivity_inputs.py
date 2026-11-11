@@ -424,3 +424,75 @@ def test_an_h2_simulation_against_an_unregistered_source_is_refused(tmp_path: Pa
     assert result.returncode != 0
     assert "registered foreign source is chromium, not aosp" in result.stderr
     assert not (tmp_path / "o.json").exists()
+
+
+def _spread_pilot() -> dict:
+    """An H1 development pilot of Qt, by chain, its four spread points from these runs."""
+    return {
+        "org": "qt",
+        "metric": "logprob_per_token",
+        "per_run": [0.01, 0.012, 0.009, 0.011, 0.0105],
+        "runs_left_out": [],
+        "sizing": {"sd_upper": 0.002},
+        "cluster_unit": {"unit": "chain", "file": "chains-qt.json", "sha256": "a" * 64},
+    }
+
+
+def _spread_read(pilot: dict, per_run: list[float], **fields: object) -> dict:
+    from sphragis.experiment.partitions import spread_targets
+
+    return {
+        "org": "qt",
+        "window": "test",
+        "metric": "logprob_per_token",
+        "runs": len(per_run),
+        "changes": 812,
+        "per_run": per_run,
+        "cluster_unit": pilot["cluster_unit"],
+        "k_from": {"spread_targets": spread_targets(pilot)},
+        **fields,
+    }
+
+
+def _spread_args(tmp_path: Path) -> object:
+    import argparse
+
+    return argparse.Namespace(
+        org="qt", metric="logprob_per_token", test_read=tmp_path / "read.json"
+    )
+
+
+def test_a_test_read_above_its_bound_gives_its_spread_k_and_size(tmp_path: Path) -> None:
+    """The spread rule's simulation is of the read's own cell, at its K and realised size."""
+    from statistics import stdev
+
+    partition_sensitivity = _module()
+    pilot = _spread_pilot()
+    wide = [0.0, 0.01, 0.02, 0.005]
+    out = partition_sensitivity.read_for_spread(
+        _spread_read(pilot, wide), pilot, _spread_args(tmp_path)
+    )
+    assert out["spread"] == pytest.approx(stdev(wide)) and out["bound"] == 0.002
+    assert (out["runs"], out["changes"]) == (4, 812)
+
+
+@pytest.mark.parametrize(
+    ("fields", "per_run", "match"),
+    [
+        ({}, [0.01, 0.0105, 0.011, 0.0102], "within its sizing bound"),
+        ({"window": "development"}, None, "not the test window"),
+        ({"org": "openstack"}, None, "openstack's read, not qt's"),
+        ({"hypothesis": "H2", "foreign_source": "chromium"}, None, "reads"),
+        ({"metric": "logprob_per_token:other"}, None, "is on"),
+        ({"cluster_unit": {"unit": "change"}}, None, "not drawn as the pilot was"),
+        ({"k_from": {"spread_targets": {"sizing_bound_90": 0.002}}}, None, "another pilot"),
+    ],
+)
+def test_a_spread_simulation_refuses_a_read_that_is_not_this_pilots_cell(
+    tmp_path: Path, fields: dict, per_run: list[float] | None, match: str
+) -> None:
+    partition_sensitivity = _module()
+    pilot = _spread_pilot()
+    read = _spread_read(pilot, per_run or [0.0, 0.01, 0.02, 0.005], **fields)
+    with pytest.raises(ValueError, match=match):
+        partition_sensitivity.read_for_spread(read, pilot, _spread_args(tmp_path))

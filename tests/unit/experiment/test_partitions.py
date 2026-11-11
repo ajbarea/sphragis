@@ -24,7 +24,7 @@ from sphragis.experiment.cells import (
     cluster_unit_of,
     sensitivity_bounds,
 )
-from sphragis.experiment.decomposition import SESOI
+from sphragis.experiment.decomposition import COPRIMARY_METRIC, SESOI
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.partitions import (
     BETA,
@@ -258,7 +258,7 @@ def test_sensitivity_bounds_read_the_named_spread_target_and_cell_count() -> Non
     with pytest.raises(ValueError, match="no bound for 3"):
         sensitivity_bounds(artifact, "pilot_estimate", [0.975], cells=3)
     h2 = artifact | {"hypothesis": "H2", "foreign_source": "aosp"}
-    with pytest.raises(ValueError, match="not H1's"):
+    with pytest.raises(ValueError, match=r"not \('H1', None\)"):
         sensitivity_bounds(h2, "pilot_estimate", [0.975], cells=1)
 
 
@@ -839,3 +839,140 @@ def test_a_registered_k_refuses_a_simulation_it_cannot_read(
         registered_coverage(
             _COVERAGE_PILOT, simulation, org="wikimedia", name="p", file="f", runs=runs
         )
+
+
+# --- The spread rule (Stage 1 report, Execution step 1; sphragis#253).
+
+from sphragis.experiment.partitions import (  # noqa: E402
+    BRADLEY_LIBERAL,
+    TEST_SPREAD_TARGET,
+    run_spread,
+    spread_reading,
+)
+
+_TARGETS = {
+    "pilot_lower_90": 0.004,
+    "pilot_estimate": 0.006,
+    "sizing_bound_90": 0.008,
+    "pilot_upper_99": 0.011,
+}
+_UNIT = {"unit": "chain", "file": "chains-qt.json", "sha256": "a" * 64}
+
+
+def _read(per_run: list[float]) -> dict:
+    """A test read of Qt's H1 cell at K = 4, its K calibrated on `_TARGETS`."""
+    return {
+        "org": "qt",
+        "metric": "logprob_per_token",
+        "runs": len(per_run),
+        "changes": 900,
+        "levels": [0.975, 0.95],
+        "per_run": per_run,
+        "cluster_unit": _UNIT,
+        "k_from": {"spread_targets": _TARGETS},
+    }
+
+
+def _spread_sim(report: dict, null: dict, **fields: object) -> dict:
+    """A null at `report`'s own spread, as `partition_sensitivity.py --test-read` writes it."""
+    spread = run_spread(report)
+    return {
+        "org": "qt",
+        "metric": "logprob_per_token",
+        "runs": report["runs"],
+        "planned_changes": report["changes"],
+        "null_trials": COVERAGE_NULL_TRIALS,
+        "spread_targets": _TARGETS,
+        "cluster_unit": _UNIT,
+        "calibrated": "critical_p" in null,
+        "test_read": {"spread": spread},
+        "by_target": {TEST_SPREAD_TARGET: {"calibration": {"target": spread}, **null}},
+        **fields,
+    }
+
+
+_WIDE = [0.0, 0.01, -0.01, 0.02]  # sd 0.0129, above the 0.008 bound
+_NARROW = [0.0, 0.001, -0.001, 0.002]  # sd 0.0013, within it
+
+
+def test_a_read_within_its_sizing_bound_reads_no_spread_simulation() -> None:
+    out = spread_reading(_read(_NARROW), None, name="qt")
+    assert out["above"] is False and out["critical_p"] is None and out["refused_at"] == []
+    with pytest.raises(ValueError, match="within its bound; nothing to read"):
+        spread_reading(_read(_NARROW), _spread_sim(_read(_NARROW), {}), name="qt")
+
+
+def test_a_read_above_its_bound_needs_its_spread_simulated() -> None:
+    assert run_spread(_read(_WIDE)) == pytest.approx(stdev(_WIDE))
+    with pytest.raises(ValueError, match="above its sizing bound 0.00800, with no simulation"):
+        spread_reading(_read(_WIDE), None, name="qt")
+
+
+def test_a_null_that_holds_at_the_test_spread_changes_nothing() -> None:
+    report = _read(_WIDE)
+    null = {"null_false_positive": {"0.975": 0.012, "0.95": 0.024}}
+    out = spread_reading(report, _spread_sim(report, null), name="qt")
+    assert out["above"] and out["within_nominal"] and out["critical_p"] is None
+    assert out["refused_at"] == []
+
+
+def test_a_miss_at_the_test_spread_is_calibrated() -> None:
+    report = _read(_WIDE)
+    null = {
+        "null_false_positive": {"0.975": 0.019, "0.95": 0.03},
+        "critical_p": {"0.975": 0.008, "0.95": 0.02},
+        "null_false_positive_calibrated": {"0.975": 0.013, "0.95": 0.026},
+    }
+    out = spread_reading(report, _spread_sim(report, null), name="qt")
+    assert out["within_nominal"] is False
+    assert out["critical_p"] == {0.975: 0.008, 0.95: 0.02} and out["refused_at"] == []
+    # Only a miss is calibrated: a miss without a critical p is refused.
+    plain = {"null_false_positive": null["null_false_positive"]}
+    with pytest.raises(ValueError, match="misses nominal at the test spread"):
+        spread_reading(report, _spread_sim(report, plain), name="qt")
+
+
+def test_a_calibration_above_bradleys_bound_is_refused_at_its_level() -> None:
+    report = _read(_WIDE)
+    nominal = one_sided_alpha(0.975)
+    null = {
+        "null_false_positive": {"0.975": 0.03, "0.95": 0.03},
+        "critical_p": {"0.975": 0.004, "0.95": 0.02},
+        # At 0.975 above 1.5 alpha; at 0.95 exactly at it, which holds.
+        "null_false_positive_calibrated": {
+            "0.975": BRADLEY_LIBERAL * nominal + 0.001,
+            "0.95": BRADLEY_LIBERAL * one_sided_alpha(0.95),
+        },
+    }
+    out = spread_reading(report, _spread_sim(report, null), name="qt")
+    assert out["refused_at"] == [0.975]
+
+
+@pytest.mark.parametrize(
+    ("fields", "match"),
+    [
+        ({"org": "openstack"}, "simulates openstack"),
+        ({"metric": COPRIMARY_METRIC}, "is on"),
+        ({"hypothesis": "H2", "foreign_source": "chromium"}, "simulates"),
+        ({"cluster_unit": {"unit": "change"}}, "was not drawn as the read was"),
+        ({"spread_targets": {**_TARGETS, "sizing_bound_90": 0.009}}, "another pilot"),
+        ({"null_trials": 1_000}, "1000 null studies"),
+        ({"runs": 5}, "is at K = 5"),
+        ({"planned_changes": 1_913}, "is at 1913 changes, the read at 900"),
+        ({"test_read": {"spread": 0.02}}, "was simulated at spread 0.02"),
+        ({"by_target": {"sizing_bound_90": {}}}, "has no test-spread point"),
+    ],
+)
+def test_a_spread_simulation_must_be_the_reads_own(fields: dict, match: str) -> None:
+    report = _read(_WIDE)
+    null = {"null_false_positive": {"0.975": 0.012, "0.95": 0.024}}
+    with pytest.raises(ValueError, match=match):
+        spread_reading(report, _spread_sim(report, null, **fields), name="qt")
+
+
+def test_a_spread_simulation_calibrated_to_another_spread_is_refused() -> None:
+    report = _read(_WIDE)
+    sim = _spread_sim(report, {"null_false_positive": {"0.975": 0.012, "0.95": 0.024}})
+    sim["by_target"][TEST_SPREAD_TARGET]["calibration"]["target"] = 0.02
+    with pytest.raises(ValueError, match="calibrated its run shift to another spread"):
+        spread_reading(report, sim, name="qt")

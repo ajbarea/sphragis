@@ -63,7 +63,12 @@ from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.across import one_sided_p
-from sphragis.experiment.cells import cell_of, cluster_of
+from sphragis.experiment.cells import (
+    REGISTERED_SPREAD_TARGET,
+    cell_of,
+    cluster_of,
+    same_calibration,
+)
 from sphragis.experiment.decomposition import (
     COPRIMARY_METRIC,
     FAMILY_ALPHA,
@@ -79,7 +84,9 @@ from sphragis.experiment.decomposition import (
 from sphragis.experiment.partitions import (
     K_MAX,
     K_MIN,
+    TEST_SPREAD_TARGET,
     pilot_sizing,
+    run_spread,
     spread_targets,
 )
 from sphragis.experiment.power import (
@@ -183,6 +190,13 @@ parser.add_argument(
     "--foreign-source",
     choices=FOREIGN_SOURCES,
     help="H2's source: the pilot must be H2's cell against it; none for H1",
+)
+# The spread rule (Stage 1 report, Execution step 1): a test read whose per-run spread exceeds its
+# sizing bound is simulated at that spread, at its K and realised size, and calibrated on a miss.
+parser.add_argument(
+    "--test-read",
+    type=Path,
+    help="a partition_pilot.py test read: simulate its cell's null at the read's own spread",
 )
 parser.add_argument("--out", type=Path, required=True)
 
@@ -650,6 +664,43 @@ def realised_effect(
     )
 
 
+def read_for_spread(report: dict, pilot: dict, args: argparse.Namespace) -> dict:
+    """What a test read gives the spread rule's simulation: its per-run spread, K and realised
+    size, refused unless it is a test read of this pilot's organization, cell, metric and cluster
+    unit whose K was calibrated on this pilot, and whose spread exceeds its sizing bound."""
+    if report.get("window") != "test":
+        raise ValueError(f"read on the {report.get('window')} window, not the test window")
+    checks = (
+        (report.get("org") == args.org, f"is {report.get('org')}'s read, not {args.org}'s"),
+        (cell_of(report) == cell_of(pilot), f"reads {cell_of(report)}, the pilot {cell_of(pilot)}"),
+        (
+            report.get("metric", "exact_match") == args.metric,
+            f"is on {report.get('metric', 'exact_match')}, not {args.metric}",
+        ),
+        (cluster_of(report) == cluster_of(pilot), "was not drawn as the pilot was"),
+        (
+            same_calibration(
+                (report.get("k_from") or {}).get("spread_targets"), spread_targets(pilot)
+            ),
+            "took its K from another pilot",
+        ),
+    )
+    for holds, reason in checks:
+        if not holds:
+            raise ValueError(reason)
+    spread = run_spread(report)
+    bound = report["k_from"]["spread_targets"][REGISTERED_SPREAD_TARGET]
+    if not spread > bound:
+        raise ValueError(f"per-run spread {spread:.5f} is within its sizing bound {bound:.5f}")
+    return {
+        "file": str(args.test_read),
+        "spread": spread,
+        "bound": bound,
+        "runs": report["runs"],
+        "changes": report["changes"],
+    }
+
+
 def _cached_trials(
     at_lift: dict[float, list[dict]], executor, pool, args, lift, sigma_run, levels
 ) -> list[dict]:
@@ -717,12 +768,31 @@ def main() -> None:
     k_source = f"{args.pilot}: sizing.runs" if args.runs is None else "--runs"
     args.runs = sized if args.runs is None else args.runs
     hypothesis, foreign_source = cell_of(pilot)
+    test_read = None
+    if args.test_read is not None:
+        try:
+            test_read = read_for_spread(json.loads(args.test_read.read_text()), pilot, args)
+        except ValueError as error:
+            raise SystemExit(f"{args.test_read}: {error}") from error
+        # The read's own K and size, and its null alone: no detectable effect is searched here.
+        k_source, args.runs, args.size = (
+            f"{args.test_read}: runs",
+            test_read["runs"],
+            test_read["changes"],
+        )
+        args.null_only = True
     # A critical value is calibrated only where registered: H2's, at its registered K, and an H1
     # cell's on the co-primary score, should its null miss nominal at the cell's K (research
     # log, 2026-10-30); the whole score's H1 cells read their interval.
     if hypothesis == "H2" and args.metric == COPRIMARY_METRIC:
         raise SystemExit("the co-primary score is H1's; H2 is read on the whole score")
-    if args.calibrate and hypothesis == "H1" and args.metric != COPRIMARY_METRIC:
+    # At a test read's spread every cell is calibrated on a miss (the spread rule).
+    if (
+        args.calibrate
+        and test_read is None
+        and hypothesis == "H1"
+        and args.metric != COPRIMARY_METRIC
+    ):
         raise SystemExit("--calibrate is registered for H2 and H1's co-primary score alone")
     if args.calibrate and hypothesis == "H2" and args.runs != H2_RUNS:
         raise SystemExit(f"H2 is calibrated at its registered K = {H2_RUNS}, not {args.runs}")
@@ -734,8 +804,10 @@ def main() -> None:
         raise SystemExit(f"--partitions {args.partitions}: two disjoint sets of {K_MAX} are drawn")
     if not K_MIN <= args.runs <= K_MAX:
         raise SystemExit(f"the pilot's K {args.runs} lies outside [{K_MIN}, {K_MAX}]")
-    # The per-run spread the simulation is calibrated to, each point named for what it is.
+    # The per-run spread the simulation is calibrated to, each point named for what it is; a test
+    # read's run is calibrated to that read's spread alone, the pilot's points kept as its record.
     targets = spread_targets(pilot)
+    points = targets if test_read is None else {TEST_SPREAD_TARGET: test_read["spread"]}
     continuous = args.metric != "exact_match"
     if args.redraw is None:
         args.redraw = 0.0 if continuous else BINARY_REDRAW
@@ -826,10 +898,14 @@ def main() -> None:
         "partitions_pooled": len(partitions),
         "partition_seeds_tried": tried,
         "spread_targets": targets,
-        "calibration_changes": pilot["changes"],
+        "calibration_changes": pilot["changes"] if test_read is None else test_read["changes"],
+        "test_read": test_read,
         "calibration_trials": args.calibration_trials,
         "by_target": {},
     }
+    if test_read is not None:
+        report["inputs"]["planned_changes"] = f"{args.test_read}: changes, the realised size"
+        report["inputs"]["calibration_changes"] = f"{args.test_read}: changes"
     # The detectable effect as the registered sensitivity reads it: the realised difference per
     # half, averaged (`decomposition_sensitivity.py`), here over the halves of the first pooled
     # partition, which is the first admissible one.
@@ -838,8 +914,10 @@ def main() -> None:
     with ProcessPoolExecutor(
         args.workers, initializer=_init, initargs=worker_args(partitions, args.metric, noise)
     ) as executor:
-        for label, target in targets.items():
-            calibration = calibrate(executor, pool, args, target, pilot["changes"])
+        for label, target in points.items():
+            # Each point is calibrated at the size its spread was seen at.
+            seen_at = pilot["changes"] if test_read is None else test_read["changes"]
+            calibration = calibrate(executor, pool, args, target, seen_at)
             sigma_run = calibration["sigma_run"]
             print(
                 f"{label}: spread {target:.4f} at {pilot['changes']} changes -> sigma_run "
