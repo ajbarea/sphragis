@@ -282,10 +282,10 @@
     "chains": 203
   },
   "provenance": {
-    "generated_at": "2026-11-11T09:06:10.003104+00:00",
+    "generated_at": "2026-11-11T11:34:29.257383+00:00",
     "git": {
-      "commit": "34a67bb9ad3a59a1a2112eb7c0f6d0d07a0639ba",
-      "branch": "main"
+      "commit": "6f4d193ce1fa41de485b78af2aa2079638eb8b5e",
+      "branch": "fix/253-pilot-reread"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

@@ -282,9 +282,9 @@
     "chains": 363
   },
   "provenance": {
-    "generated_at": "2026-11-11T09:07:34.228275+00:00",
+    "generated_at": "2026-11-11T11:34:39.633786+00:00",
     "git": {
-      "commit": "fc4b7571b2676981d253285b89f81beaf3dd34ca",
+      "commit": "6f4d193ce1fa41de485b78af2aa2079638eb8b5e",
       "branch": "fix/253-pilot-reread"
     },
     "python": "3.14.4",
