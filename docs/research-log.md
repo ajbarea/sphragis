@@ -11324,6 +11324,7 @@ unchanged, the pooled draws bit for bit; the readings, development only and bind
 Qt's joint reading over H2's 22 development runs on its C++ examples: H1 on C++ +0.0087 [-0.0006,
 +0.0212]; sum +0.0193 [+0.0072, +0.0322]; above zero H1 0.9642, H2 0.9471; runs 22, examples 425. H2
 on s′ at its s levels: +0.0058; 0.975: [-0.0045, +0.0147] inconclusive; 0.95: [-0.0031, +0.0136]
-inconclusive. Check 2 passes in every read, H2's included (its first 22 runs are Qt's H1 runs,
-so the two read the same contrast); on the test window a failure would withdraw the organization. The change-averaged estimate lies below the pooled one in every cell: changes with
-more examples carry more of the pooled gain.
+inconclusive. Check 2 passes in every read, H2's included (its first 22 runs are Qt's H1 runs, so
+the two read the same contrast); on the test window a failure would withdraw the organization. The
+change-averaged estimate lies below the pooled one in every cell: changes with more examples carry
+more of the pooled gain.

@@ -828,9 +828,9 @@ def positive_control_crossed(
     """Outcome-neutral check 2 as registered: each half's own adapter against the base model on
     that half, over the cell's first `runs_fixed` runs, read on the crossed interval (runs by
     clusters, as the cell is) at `POSITIVE_CONTROL_CONFIDENCE`; it passes when the lower bound
-    is above zero. Read once per organization, on the registered score, it withdraws the
-    organization when it fails (`neutral.WITHDRAWING_CHECKS`); each run's own check 2 is
-    reported beside it."""
+    is above zero. Read before every read's cell, over that read's runs, on the registered score,
+    it withdraws the organization when it fails (`neutral.WITHDRAWING_CHECKS`), so Qt's H2 read
+    over its K runs can withdraw Qt on its own; each run's own check 2 is reported beside it."""
     if runs_fixed < 2 or len(runs) < runs_fixed:
         raise ValueError(f"check 2 reads {runs_fixed} runs of the {len(runs)} computed")
     clusters, examples = common_runs(

@@ -791,7 +791,7 @@ def _read_cells(
             # The registered sensitivities the report read (partition_pilot.py --without).
             "without": readings,
             # Reported beside the verdicts, binding none (Stage 1 report): the change-averaged
-            # estimate, check 2 on an H1 read, and on an H2 read its joint and s' readings.
+            # estimate, the read's check 2, and on an H2 read its joint and s' readings.
             "change_averaged": report.get("change_averaged"),
             **{
                 key: report.get(key)

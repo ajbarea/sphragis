@@ -6,9 +6,9 @@ rather than a result, and the hypotheses are read over the remaining organizatio
 report, "Outcome-Neutral Tests"; `decomposition.confirmatory_gate`'s `withdrawn`). Each check
 returns its evidence beside its pass flag. The withdrawal rule lives in two places:
 `apparatus_holds` says whether a run's checks held, and `withdrawing_failures` reads which of an
-organization's failed checks withdraw it. Check 2 is read once per organization on the crossed
-interval (`partitions.positive_control_crossed`); a run's own check 2 is reported and withdraws
-nothing (`REPORTED_PER_RUN`, `battery_holds`).
+organization's failed checks withdraw it. Check 2 is read before every read's cell on the
+crossed interval over that read's runs (`partitions.positive_control_crossed`); a run's own check
+2 is reported and withdraws nothing (`REPORTED_PER_RUN`, `battery_holds`).
 
 The contamination battery is test 1 and is deliberately absent: its report returns no
 verdict, because with no published content cutoff a flat gap is ambiguous and the reading is
