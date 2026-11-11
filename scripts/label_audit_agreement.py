@@ -351,9 +351,13 @@ def pseudonyms(export: Path, by_viewer: dict[str, dict[str, dict]]) -> dict[str,
     """
     kept = export / "pseudonyms.json"
     names: dict[str, str] = json.loads(kept.read_text()) if kept.exists() else {}
+    if len(set(names.values())) != len(names):
+        raise SystemExit(f"{kept}: two viewers share a pseudonym")
+    taken = max((int(n[1:]) for n in names.values()), default=0)
     first = {v: min(a["locked_at"] for a in got.values()) for v, got in by_viewer.items()}
     for viewer in sorted(set(by_viewer) - set(names), key=lambda v: (first[v], v)):
-        names[viewer] = f"L{len(names) + 1}"
+        taken += 1
+        names[viewer] = f"L{taken}"
     kept.write_text(json.dumps(names, indent=1) + "\n")
     return names
 
@@ -436,14 +440,18 @@ def report_readers(report: dict, org_reading: dict) -> tuple[list[str], dict[str
     }
     recorded = org_reading["pairs"]
     halves = (" first half", " second half")
-    wanted = {n for n in recorded if n.startswith("human~") and not any(h in n for h in halves)} | {
+    # Both ways, as label_audit_by_org.reproduces: a human pair either side lacks is refused.
+    human = [n for n in [*recorded, *pairs] if n.startswith("human~")]
+    wanted = {n for n in human if not any(h in n for h in halves)} | {
         f"{a}~{b} on checked items" for x, a in enumerate(models) for b in models[x + 1 :]
     }
     unbuilt = sorted(n for n in wanted if n not in pairs)
     unrecorded = sorted(n for n in wanted if n not in recorded)
     wrong = [f"{n}: not rebuilt" for n in unbuilt] + [f"{n}: not recorded" for n in unrecorded]
     wrong += differences(pairs, recorded, {n: n for n in wanted - set(unbuilt) - set(unrecorded)})
-    if wrong or not any(n.startswith("human~") for n in wanted):
+    if not any(n.startswith("human~") for n in wanted):
+        wrong.append("neither side reads a human pair")
+    if wrong:
         raise SystemExit(f"the {org} reading does not reproduce: " + "; ".join(wrong))
     return items, readers, pairs
 

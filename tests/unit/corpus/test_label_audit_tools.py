@@ -329,6 +329,15 @@ def test_a_reading_that_does_not_reproduce_the_organizations_is_refused(tmp_path
     del renamed["pairs"]["A~B on checked items"]
     with pytest.raises(SystemExit, match="A~B on checked items: not recorded"):
         agreement_tool.second_rater_report(report, renamed, tmp_path)
+    # A reading that lacks pairs the rebuild reads cannot vouch for them.
+    thinned = _org_reading(report)
+    thinned["pairs"] = {n: s for n, s in thinned["pairs"].items() if "without slips" not in n}
+    with pytest.raises(SystemExit, match=r"human~A without slips: not recorded"):
+        agreement_tool.second_rater_report(report, thinned, tmp_path)
+    no_human = _org_reading(report)
+    no_human["pairs"] = {n: s for n, s in no_human["pairs"].items() if "human" not in n}
+    with pytest.raises(SystemExit, match="human~A: not recorded"):
+        agreement_tool.second_rater_report(report, no_human, tmp_path)
     # A report whose human slips were lost cannot rebuild the readings without them.
     slipless = {**report, "human_slips": {}}
     with pytest.raises(SystemExit, match=r"human~A without slips: not rebuilt"):
@@ -424,3 +433,14 @@ def test_differences_read_two_undefined_values_as_equal() -> None:
     theirs = {"p": {**ours["p"], "kappa": None, "kappa_95": [None, None]}}
     assert agreement_tool.differences(ours, theirs, {"p": "p"}) == []
     assert agreement_tool.differences(ours, {"p": {**theirs["p"], "kappa": 0.1}}, {"p": "p"})
+
+
+def test_a_pseudonym_file_with_a_gap_names_nobody_twice(tmp_path: Path) -> None:
+    _export(tmp_path, {"u_b": {"item-002": _answer("valid", "2026-11-11T09:00:00Z")}})
+    (tmp_path / "pseudonyms.json").write_text('{"u_a": "L1", "u_c": "L3"}')
+    agreement_tool.read_second_raters(tmp_path, ["item-002"])
+    names = json.loads((tmp_path / "pseudonyms.json").read_text())
+    assert names["u_b"] == "L4" and len(set(names.values())) == 3
+    (tmp_path / "pseudonyms.json").write_text('{"u_a": "L1", "u_b": "L1"}')
+    with pytest.raises(SystemExit, match="share a pseudonym"):
+        agreement_tool.read_second_raters(tmp_path, ["item-002"])

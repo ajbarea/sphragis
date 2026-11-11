@@ -259,12 +259,12 @@ async function lockCurrent(){
     busy=false; render(); saveFailed(e);
   }
 }
-// A refusal ends saving for this visit; anything else leaves the answer unlocked to try again.
+// A refusal ends saving for this visit; anything else is worth trying again.
+const REFUSALS=["invalid_argument","transform_error","not_granted","revoked","capability_disabled","capability_removed"];
+function isRefusal(code){ return REFUSALS.includes(code); }
 function saveFailed(e){
   const code=e&&e.code;
-  if(code==="invalid_argument"||code==="transform_error"||code==="not_granted"||code==="revoked"||code==="capability_disabled"||code==="capability_removed"){
-    mode="readonly"; notice(refusedText()); render(); return;
-  }
+  if(isRefusal(code)){ mode="readonly"; notice(refusedText()); render(); return; }
   const err=document.getElementById("err"); if(!err) return;
   err.textContent=code==="quota_exceeded"?"Not saved: this page's storage is full. Please tell AJ."
     :code==="resource_exhausted"?"Not saved: too many saves at once. Wait a moment and try again."
@@ -343,7 +343,7 @@ render();
   },e=>{
     clearTimeout(timer); mode="readonly"; conn.textContent="Not saving";
     const code=e&&e.code;
-    notice(code==="invalid_argument"||code==="revoked"?refusedText():"Your saved answers can't be reached right now, so nothing you pick here is kept. Please reload the page in a few minutes.");
+    notice(isRefusal(code)?refusedText():"Your saved answers can't be reached right now, so nothing you pick here is kept. Please reload the page in a few minutes.");
     render();
   });
 })();
