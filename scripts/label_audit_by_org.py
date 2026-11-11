@@ -20,12 +20,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from label_audit_agreement import neutral_ids, readings  # noqa: E402
+from label_audit_agreement import differences, neutral_ids, readings  # noqa: E402
 
 from sphragis.provenance import provenance_header  # noqa: E402
 
@@ -76,13 +75,8 @@ def read(report: dict, keep: set[str] | None = None, *, against: str) -> dict[st
 def reproduces(recomputed: dict, recorded: dict) -> list[str]:
     """Every pair the recomputation and the report do not share, or do not agree on."""
     wrong = [f"{name}: only one side has it" for name in set(recomputed) ^ set(recorded)]
-    for name in sorted(set(recomputed) & set(recorded)):
-        for field in ("items", "raw_agreement", "kappa", "kappa_95", "ac1", "ac1_95"):
-            ours, theirs = recomputed[name][field], recorded[name][field]
-            pairs = zip(ours, theirs, strict=True) if isinstance(ours, list) else [(ours, theirs)]
-            if not all(math.isclose(x, y, abs_tol=1e-12) for x, y in pairs):
-                wrong.append(f"{name}.{field}: {ours} against {theirs}")
-    return wrong
+    shared = set(recomputed) & set(recorded)
+    return wrong + differences(recomputed, recorded, {n: n for n in shared})
 
 
 def _relative(path: Path) -> str:

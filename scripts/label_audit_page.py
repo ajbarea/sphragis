@@ -7,9 +7,11 @@ and not counted. Checks are saved to the published page's own store, under the r
 and read back into `label_audit_agreement.py --human`.
 
 The second-rater page (`--second-rater`) shows the items the human checked from one
-organization, in the same order and blinding, and reveals nothing: it never reads a rater's
-labels, so none can reach the page. Its practice item is the rubric's invented worked example.
-Each viewer's locked answers are saved under their own id in the page's store and read back by
+organization, in the same order and blinding, and reveals nothing: it takes only item ids from
+the agreement report and only the shown fields from the batches, so no label can reach the
+page. Its practice item is the rubric's invented worked example. Each viewer's locked answers
+are saved under their own id in the page's store, under the rules in
+`label_audit/rater2-capabilities.json` (publish the page with them), and read back by
 `label_audit_agreement.py --second-raters`.
 
 Both pages carry corpus text, so they are written under `scratch/` and published privately,

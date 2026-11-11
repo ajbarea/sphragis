@@ -28,7 +28,8 @@ store. Their answers are read from that store's export, beside the committed rep
 of readers (the model raters, the human and each second rater, under a pseudonym in the order
 they first locked an answer) on the items both answered, with raw agreement and its Wilson
 interval, kappa, AC1, valid against the rest and outside names, and again without the items a
-slip touches. No second rater saw any label, so no pair of theirs is read by halves.
+slip touches. No second rater saw any label, so no pair of theirs is read by halves. Every pair
+the organization's own reading (`label_audit_by_org.py`) also reads must reproduce it first.
 
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
@@ -39,7 +40,8 @@ sheet is corpus text, so neither is committed.
         --rater B=scratch/audit-v2/raters/B/labels.json \\
         --human scratch/audit-v2/human.json --out datasets/results/label-audit-v2.json
     uv run --no-sync --no-active python scripts/label_audit_agreement.py \\
-        --from-report datasets/results/label-audit-v2.json --org openstack \\
+        --from-report datasets/results/label-audit-v2.json \\
+        --org-reading datasets/results/label-audit-v2-openstack.json \\
         --second-raters scratch/rater2/export --out datasets/results/label-audit-v2-rater2.json
 """
 
@@ -84,7 +86,9 @@ parser.add_argument(
     "--exclude", action="append", default=[], help="item ids left out, e.g. the rubric's example"
 )
 parser.add_argument("--from-report", type=Path, help="the committed report second raters join")
-parser.add_argument("--org", help="the organization whose checked items second raters labelled")
+parser.add_argument(
+    "--org-reading", type=Path, help="label_audit_by_org.py's reading of that organization"
+)
 parser.add_argument(
     "--second-raters", type=Path, help="the second-rater page's store export (answers/...)"
 )
@@ -128,7 +132,9 @@ def _undefined_as_nan(interval) -> tuple[float, float]:
     resample (one label throughout, as on a second rater's first few items)."""
     try:
         return interval()
-    except ValueError:
+    except ValueError as error:
+        if "undefined on every resample" not in str(error):
+            raise
         return math.nan, math.nan
 
 
@@ -237,6 +243,21 @@ def readings(
     return pairs
 
 
+REPRODUCED_FIELDS = ("items", "raw_agreement", "kappa", "kappa_95", "ac1", "ac1_95")
+
+
+def differences(ours: dict, theirs: dict, names: dict[str, str]) -> list[str]:
+    """Each named pair whose recomputed figures and recorded figures disagree beyond 1e-12."""
+    wrong = []
+    for mine, recorded in sorted(names.items()):
+        for field in REPRODUCED_FIELDS:
+            a, b = ours[mine][field], theirs[recorded][field]
+            pairs = zip(a, b, strict=True) if isinstance(a, list) else [(a, b)]
+            if not all(math.isclose(x, y, abs_tol=1e-12) for x, y in pairs):
+                wrong.append(f"{mine}.{field}: {a} against {b}")
+    return wrong
+
+
 def neutral_ids(report: dict) -> list[str]:
     """The neutral id of each label, in the report's order: the sorted ids less the excluded."""
     excluded = set(report["excluded"])
@@ -273,7 +294,7 @@ def _answer(path: Path) -> dict:
     ):
         raise SystemExit(f"{path}: not a locked answer under the rubric")
     slips = body.get("slips", [])
-    if not set(slips) <= {"label", "outside_names"}:
+    if not isinstance(slips, list) or not set(slips) <= {"label", "outside_names"}:
         raise SystemExit(f"{path}: unknown slip fields {slips}")
     return {**body, "slips": sorted(slips)}
 
@@ -333,8 +354,16 @@ def reader_pairs(
     return pairs
 
 
-def second_rater_report(report: dict, org: str, export: Path) -> dict:
-    """The second raters' readings beside the report's own readers, on `org`'s checked items."""
+def second_rater_report(report: dict, org_reading: dict, export: Path) -> dict:
+    """The second raters' readings beside the report's own readers, on the checked items of
+    the organization `org_reading` (`label_audit_by_org.py`'s output) was read on.
+
+    Refused unless every pair the two readings share reproduces `org_reading`: the human's
+    pairs under their own names, and the model raters' label pair as its "on checked items"
+    reading (its other model pairs there are on all of the organization's items). A wrong
+    rebuild of the neutral ids cannot reproduce them.
+    """
+    org = org_reading["org"]
     items = checked_items(report, org)
     ids = neutral_ids(report)
     by_neutral = dict(zip(ids, report["labels"].values(), strict=True))
@@ -361,6 +390,19 @@ def second_rater_report(report: dict, org: str, export: Path) -> dict:
             {f: {i for i, a in got.items() if f in a["slips"]} for f in ("label", "outside_names")},
         )
     order = ["human", *models, *second]
+    pairs = reader_pairs(readers, order)
+    recorded = org_reading["pairs"]
+    names = {n: n for n in pairs if n.startswith("human~") and n in recorded}
+    names |= {
+        f"{a}~{b}": f"{a}~{b} on checked items"
+        for x, a in enumerate(models)
+        for b in models[x + 1 :]
+    }
+    missing = [theirs for theirs in names.values() if theirs not in recorded]
+    present = {mine: theirs for mine, theirs in names.items() if theirs in recorded}
+    wrong = missing + differences(pairs, recorded, present)
+    if wrong or not any(n.startswith("human~") for n in present):
+        raise SystemExit(f"the {org} reading does not reproduce: " + "; ".join(wrong))
     return {
         "org": org,
         "items": len(items),
@@ -381,7 +423,7 @@ def second_rater_report(report: dict, org: str, export: Path) -> dict:
             for name in second
         },
         "valid_shares": {name: _share(readers[name][0]) for name in order if readers[name][0]},
-        "pairs": reader_pairs(readers, order),
+        "pairs": pairs,
     }
 
 
@@ -403,14 +445,17 @@ def _print_pairs(pairs: dict[str, dict]) -> None:
 def main() -> None:
     args = parser.parse_args()
     if args.second_raters:
-        if not (args.from_report and args.org):
-            parser.error("--second-raters takes --from-report and --org")
+        if not (args.from_report and args.org_reading):
+            parser.error("--second-raters takes --from-report and --org-reading")
         reading = second_rater_report(
-            json.loads(args.from_report.read_text()), args.org, args.second_raters
+            json.loads(args.from_report.read_text()),
+            json.loads(args.org_reading.read_text()),
+            args.second_raters,
         )
+        sources = {"from": str(args.from_report), "org_reading": str(args.org_reading)}
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(
-            json.dumps({"provenance": provenance_header(), **reading}, indent=2) + "\n"
+            json.dumps({"provenance": provenance_header(), **sources, **reading}, indent=2) + "\n"
         )
         _print_pairs(reading["pairs"])
         print(f"wrote {args.out}")

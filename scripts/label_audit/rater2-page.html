@@ -88,7 +88,7 @@ function rubricDetails(open){
   d.appendChild(el("p","note","1. The label: did the reviewer ask for a change, and is the rewrite the author's answer to it? Pick one."));
   d.appendChild(rubricList());
   d.appendChild(el("p","note","context_dependent is about understanding the request. A clear request answered with names defined elsewhere is still valid; that is question 2. Several comments: judge the requests together. All made is valid, some is partial, none is unrelated_rewrite; ignore comments that ask for nothing when others do. A deletion the comment asked for is valid, and a question the author answers by changing the code counts as a request. Judge only what is shown; do not guess the project or the author."));
-  d.appendChild(el("p","note","2. Names from outside: does the rewrite use a name or value that appears nowhere in the item (a helper, constant, module, class, config key, file name, version or hash defined elsewhere)? A name the comment spells out counts as shown. New local variable names, plain rewording and ordinary library or language names (open, len, std::move) do not count. Answer it for every item, whatever its label."));
+  d.appendChild(el("p","note","2. Names from outside: does the rewrite use a name or value that appears nowhere in the item, not in the before lines, the surrounding lines or the comment (a helper, constant, module, class, config key, file name, version or hash defined elsewhere)? A name the comment spells out counts as shown. New local variable names, plain rewording and ordinary library or language names (open, len, std::move) do not count. Answer it for every item, whatever its label."));
   d.appendChild(el("p","note","Keys: 1 to 5 pick a label, x toggles question 2, Enter locks, n and p move to the next and previous item."));
   return d;
 }
@@ -256,11 +256,19 @@ async function lockCurrent(){
     await ref.set(body);
     answers[ex.item]=body; busy=false; afterLock();
   }catch(e){
-    busy=false; render();
-    const err=document.getElementById("err");
-    if(e&&(e.code==="invalid_argument"||e.code==="not_granted"||e.code==="revoked")){ mode="readonly"; notice(readonlyText()); render(); }
-    else if(err) err.textContent="Not saved. Check your connection and press Lock again.";
+    busy=false; render(); saveFailed(e);
   }
+}
+// A refusal ends saving for this visit; anything else leaves the answer unlocked to try again.
+function saveFailed(e){
+  const code=e&&e.code;
+  if(code==="invalid_argument"||code==="not_granted"||code==="revoked"||code==="capability_disabled"||code==="capability_removed"){
+    mode="readonly"; notice(readonlyText()); render(); return;
+  }
+  const err=document.getElementById("err"); if(!err) return;
+  err.textContent=code==="quota_exceeded"?"Not saved: this page's storage is full. Please tell AJ."
+    :code==="resource_exhausted"?"Not saved: too many saves at once. Wait a moment and try again."
+    :"Not saved. Check your connection and try again.";
 }
 function afterLock(){
   if(current<ITEMS.length-1&&lockedCount()<ITEMS.length) current=firstOpenAfter(current);
@@ -280,9 +288,11 @@ async function markSlip(item, field, on){
   const cur=new Set(s.slips||[]); on?cur.add(field):cur.delete(field);
   const slips=[...cur].sort();
   busy=true; render();
+  let failed=null;
   try{ await db.doc("answers/"+uid+"/items/"+item).update({slips}); answers[item]={...answers[item],slips}; }
-  catch(e){ const err=document.getElementById("err"); if(err) err.textContent="Not saved. Try again."; }
+  catch(e){ failed=e; }
   busy=false; render();
+  if(failed) saveFailed(failed);
 }
 function readonlyText(){ return "Saving is not available in this view, so nothing you pick here is kept. Open the page from the link AJ sent you, signed in to Claude, to save your answers."; }
 

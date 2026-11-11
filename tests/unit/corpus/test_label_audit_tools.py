@@ -92,6 +92,7 @@ def test_the_template_holds_one_placeholder_and_the_rubric_labels() -> None:
 # The second-rater page: same items and order, nothing revealed, each viewer's answers apart.
 
 agreement_tool = _load("label_audit_agreement")
+by_org_tool = _load("label_audit_by_org")
 _SHOWN_KEYS = {"item", "path", "comments", "cb", "b", "a", "ca"}
 
 
@@ -133,7 +134,7 @@ def test_the_second_rater_page_reveals_no_rater_answer() -> None:
     assert template.count("PRACTICE.label") == 1
 
 
-def test_the_second_rater_builder_never_reads_a_rater(tmp_path: Path, monkeypatch) -> None:
+def test_the_second_rater_builder_refuses_a_rater_file(tmp_path: Path, monkeypatch) -> None:
     labels = tmp_path / "labels.json"
     labels.write_text("{}")
     argv = ["x", "--second-rater", "--batches", str(tmp_path), "--rater", str(labels)]
@@ -205,6 +206,12 @@ def _export(root: Path, viewers: dict[str, dict[str, dict]]) -> Path:
     return root
 
 
+def _org_reading(report: dict) -> dict:
+    """label_audit_by_org.py's reading of the fixture report on openstack."""
+    mine = {eid for eid in report["labels"] if eid.startswith("openstack:")}
+    return {"org": "openstack", "pairs": by_org_tool.read(report, mine, against="A")}
+
+
 def test_checked_items_are_the_humans_items_of_one_organization() -> None:
     chosen = agreement_tool.checked_items(_report(), "openstack")
     # openstack is every n not divisible by 3; the human checked n <= 11.
@@ -240,6 +247,8 @@ def test_each_second_rater_is_read_apart_under_a_pseudonym(tmp_path: Path) -> No
         (_answer("looks fine", "t"), "item-002", "not a locked answer"),
         ({**_answer("valid", "t"), "locked_at": None}, "item-002", "not a locked answer"),
         (_answer("valid", "t", slips=["reason"]), "item-002", "unknown slip"),
+        ({**_answer("valid", "t"), "slips": None}, "item-002", "unknown slip"),
+        ({**_answer("valid", "t"), "outside_names": "no"}, "item-002", "not a locked answer"),
         (_answer("valid", "t"), "item-003", "not one of the page's items"),
     ],
 )
@@ -275,7 +284,7 @@ def test_the_second_rater_reading_pairs_every_reader_on_shared_items(tmp_path: P
             },
         },
     )
-    reading = agreement_tool.second_rater_report(report, "openstack", export)
+    reading = agreement_tool.second_rater_report(report, _org_reading(report), export)
     pairs = reading["pairs"]
     assert reading["items"] == len(items)
     assert pairs["human~L1"]["raw_agreement"] == 1.0
@@ -297,16 +306,29 @@ def test_the_second_rater_reading_pairs_every_reader_on_shared_items(tmp_path: P
 def test_with_no_second_rater_the_reading_reproduces_the_committed_openstack_pairs(
     tmp_path: Path,
 ) -> None:
-    """On the committed report the human and model pairs reproduce label-audit-v2-openstack.json."""
+    """On the committed report every human pair, and the model raters' label pair on the
+    checked items, reproduce label-audit-v2-openstack.json (the function refuses otherwise)."""
     results = _SCRIPTS.parent / "datasets" / "results"
     report = json.loads((results / "label-audit-v2.json").read_text())
-    recorded = json.loads((results / "label-audit-v2-openstack.json").read_text())["pairs"]
-    pairs = agreement_tool.second_rater_report(report, "openstack", tmp_path)["pairs"]
-    same = {"A~B": "A~B on checked items"}
-    for name in ("human~A", "human~B", "human~A without slips", "human~B outside_names", "A~B"):
-        theirs = recorded[same.get(name, name)]
-        for field in ("items", "raw_agreement", "kappa", "ac1", "kappa_95", "ac1_95"):
-            assert pairs[name][field] == pytest.approx(theirs[field], abs=1e-12), (name, field)
+    org_reading = json.loads((results / "label-audit-v2-openstack.json").read_text())
+    pairs = agreement_tool.second_rater_report(report, org_reading, tmp_path)["pairs"]
+    recorded = org_reading["pairs"]
+    humans = [n for n in pairs if n.startswith("human~")]
+    assert len(humans) == 12 and all(n in recorded for n in humans)
+    names = {n: n for n in humans} | {"A~B": "A~B on checked items"}
+    assert agreement_tool.differences(pairs, recorded, names) == []
+
+
+def test_a_reading_that_does_not_reproduce_the_organizations_is_refused(tmp_path: Path) -> None:
+    report = _report()
+    tampered = _org_reading(report)
+    tampered["pairs"]["human~A"] = {**tampered["pairs"]["human~A"], "kappa": 0.123}
+    with pytest.raises(SystemExit, match=r"does not reproduce: human~A\.kappa"):
+        agreement_tool.second_rater_report(report, tampered, tmp_path)
+    renamed = _org_reading(report)
+    del renamed["pairs"]["A~B on checked items"]
+    with pytest.raises(SystemExit, match="does not reproduce: A~B on checked items"):
+        agreement_tool.second_rater_report(report, renamed, tmp_path)
 
 
 def test_a_second_rater_with_one_item_is_read_with_undefined_intervals(tmp_path: Path) -> None:
@@ -314,6 +336,50 @@ def test_a_second_rater_with_one_item_is_read_with_undefined_intervals(tmp_path:
     report = _report()
     first = agreement_tool.checked_items(report, "openstack")[0]
     export = _export(tmp_path, {"u_1": {first: _answer("valid", "2026-11-11T09:00:00Z")}})
-    pair = agreement_tool.second_rater_report(report, "openstack", export)["pairs"]["human~L1"]
+    pair = agreement_tool.second_rater_report(report, _org_reading(report), export)["pairs"][
+        "human~L1"
+    ]
     assert pair["items"] == 1
     assert all(math.isnan(x) for x in pair["kappa_95"])
+
+
+def test_the_second_rater_builder_writes_the_checked_items_and_no_answer(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Through main(): the report's checked items of one organization, shown fields only."""
+    report = _report()
+    rows = [
+        {
+            "item": f"item-{n:03d}",
+            "path": "a.py",
+            "comments": [f"c{n}"],
+            "context_before": "",
+            "before": "x",
+            "after": "y",
+            "context_after": "",
+        }
+        for n in range(1, 14)
+    ]
+    batches = tmp_path / "batches"
+    batches.mkdir()
+    (batches / "batch-1.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (tmp_path / "report.json").write_text(json.dumps(report))
+    out = tmp_path / "page.html"
+    argv = ["x", "--second-rater", "--batches", str(batches), "--report"]
+    argv += [str(tmp_path / "report.json"), "--org", "openstack", "--out", str(out)]
+    monkeypatch.setattr("sys.argv", argv)
+    page_tool.main()
+    data = _page_data(out.read_text())
+    assert [d["item"] for d in data] == agreement_tool.checked_items(report, "openstack")
+    assert all(set(d) == _SHOWN_KEYS for d in data)
+    for answer in ("partial", "non_actionable"):  # labels in the report, never in the data
+        assert answer not in json.dumps(data)
+
+
+def test_the_store_rules_keep_each_raters_answers_to_them_and_the_owner() -> None:
+    """The committed rules: only the owner reads answers; each viewer writes only their own."""
+    rules = json.loads((page_tool.PAGES / "rater2-capabilities.json").read_text())["db"]["rules"]
+    by_path = {r["path"]: r for r in rules}
+    assert by_path["answers"] == {"path": "answers", "read": "owner", "write": "self"}
+    assert by_path["answers/{self}"]["write"] == "interact"
+    assert by_path[""]["write"] == "owner"
