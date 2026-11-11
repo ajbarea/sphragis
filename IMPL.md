@@ -19,8 +19,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   `h1_test_gate`) under Holm over both; the per-cell names reading. Next, PR C: re-read the
   four development pilots with their registered sensitivities, registered-decisions.md, and the
   research-log HSRO amendment. Follow-ups the paper registers outside the gate, not yet built:
-  check 2 on the crossed interval, the H1 + H2 sum over H2's K, the change-averaged estimate,
-  rank 256. Verify: `make verify`.
+  check 2 on the crossed interval, the H1 + H2 sum over H2's K, H2's s′ test read and its
+  "Qt's vocabulary" reading, the change-averaged estimate, rank 256. Verify: `make verify`.
 - **Issue #258, second raters for the label audit (AJ 2026-11-10): PR #260, review clean.**
   `label_audit_page.py --second-rater` builds the page with no reveal for the human's 77 checked
   OpenStack items; `label_audit_agreement.py --second-raters` reads the store export back

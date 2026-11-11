@@ -988,6 +988,7 @@ def test_a_critical_p_of_zero_is_a_refused_calibration() -> None:
     }
     out = spread_reading(report, _spread_sim(report, null), name="qt")
     assert out["refused_at"] == [0.975]
+    assert out["refused_why"] == {"0.975": "its critical p is zero, which no p falls below"}
 
 
 @pytest.mark.parametrize("per_run", [[0.01], [0.01, None], [0.01, float("nan")], [0.01, True]])

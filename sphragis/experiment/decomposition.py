@@ -732,9 +732,10 @@ def _mark_exploratory(cell: dict[str, Any], sesoi: float, levels: Sequence[float
     spread = cell["spread"]
     refused = [c for c in spread["refused_at"] if c in {level_key(x) for x in levels}]
     if refused:
+        why = "; ".join(f"at {c}, {spread['refused_why'][str(c)]}" for c in refused)
         reasons.append(
             f"per-run spread {spread['spread']:.5f} above its bound {spread['bound']:.5f}; its "
-            f"calibration there reads above Bradley's 1.5 alpha at {refused}"
+            f"calibration there is refused: {why}"
         )
     cell["exploratory"] = "; ".join(r for r in reasons if r) or None
 
@@ -784,13 +785,29 @@ def _critical_at(cells: Mapping[str, Mapping[str, Any]], level: float) -> dict[s
     cell applies, so never above alpha (a level whose null held has its quantile at or above
     alpha)."""
     alpha = one_sided_alpha(level)
-    # A critical p of zero is a refused calibration (`partitions.null_reading`): that cell is
-    # exploratory at the level, and the readings across take its p as it stands.
     return {
         org: min(alpha, cell["critical_p"][level_key(level)])
         for org, cell in cells.items()
-        if cell.get("critical_p") is not None and cell["critical_p"][level_key(level)] > 0.0
+        if cell.get("critical_p") is not None
     }
+
+
+def _across(
+    reports: Mapping[str, Mapping[str, Any]],
+    cells: Mapping[str, Mapping[str, Any]],
+    level: float,
+) -> dict[str, Any] | None:
+    """The readings across organizations over the cells that stand: an exploratory cell leaves
+    them as it leaves its hypothesis (a refused calibration has no critical p to scale by), as
+    `replication_gate` leaves one out of its conjunction; None with none standing."""
+    standing = {org: cell for org, cell in cells.items() if cell["exploratory"] is None}
+    if not standing:
+        return None
+    return across_organizations(
+        {org: reports[org] for org in standing},
+        confidence=level,
+        critical=_critical_at(standing, level),
+    )
 
 
 def _same_runs(whole: Mapping[str, Any], other: Mapping[str, Any], org: str) -> None:
@@ -1009,12 +1026,8 @@ def confirmatory_gate(
         "below_projection": _below_projection(cells, powers),
         "coprimary_below_projection": _below_projection(other_cells, coprimary_powers),
         "h2_below_projection": _below_projection(h2_cells, h2_powers),
-        "across": across_organizations(
-            reports, confidence=levels[0], critical=_critical_at(cells, levels[0])
-        ),
-        "coprimary_across": across_organizations(
-            coprimary, confidence=levels[0], critical=_critical_at(other_cells, levels[0])
-        ),
+        "across": _across(reports, cells, levels[0]),
+        "coprimary_across": _across(coprimary, other_cells, levels[0]),
     }
 
 

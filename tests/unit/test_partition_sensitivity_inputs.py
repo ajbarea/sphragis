@@ -515,3 +515,30 @@ def test_a_test_read_takes_no_other_k(tmp_path: Path) -> None:
     read = _spread_read(pilot, [0.0, 0.01, 0.02, 0.005])
     with pytest.raises(ValueError, match="give no --runs"):
         partition_sensitivity.read_for_spread(read, pilot, _spread_args(tmp_path), runs_given=True)
+
+
+@pytest.mark.parametrize(
+    ("env", "args", "status"),
+    [
+        ({"TEST_READ": "read.json"}, "--test-read read.json", 0),
+        ({"TEST_READ": "read.json", "RUNS": "40"}, "", 1),
+        ({"TEST_READ": "read.json", "CALIBRATE": "1"}, "", 1),
+        ({}, "", 0),
+    ],
+)
+def test_the_sbatch_passes_a_test_read_and_takes_nothing_beside_it(
+    env: dict, args: str, status: int
+) -> None:
+    """The TEST_READ block of `partition_sensitivity.sbatch`, run by bash on its own."""
+    sbatch = (ROOT / "scripts" / "partition_sensitivity.sbatch").read_text()
+    start = sbatch.index("# TEST_READ=")
+    end = sbatch.index("# CELLS=")
+    script = (
+        "COVERAGE_ARGS=(); RESULT_SUFFIX=''\n" + sbatch[start:end] + 'echo "${COVERAGE_ARGS[*]}"\n'
+    )
+    run = subprocess.run(
+        ["bash", "-c", script], env={"PATH": "/usr/bin:/bin", **env}, capture_output=True, text=True
+    )
+    assert run.returncode == status
+    if status == 0:
+        assert run.stdout.strip() == args

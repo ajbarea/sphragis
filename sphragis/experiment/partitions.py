@@ -373,12 +373,13 @@ def null_reading(
     bool,
     dict[float, float] | None,
     dict[float, float] | None,
-    list[float],
+    dict[float, str],
 ]:
     """What a simulated null at one spread point says: its rates by level, whether they hold
     nominal at every level, the critical p calibrated where they do not, the calibrated test's rate
-    on the second, independent null half, and the levels where that rate is above Bradley's (1978)
-    liberal bound, 1.5 alpha, so the calibration did not carry over.
+    on the second, independent null half, and why the calibration is refused at each level where it
+    is: that rate above Bradley's (1978) liberal bound, 1.5 alpha, so it did not carry over, or a
+    critical p of zero, which no p falls below.
 
     Only a miss is calibrated, so a simulation that holds nominal and was calibrated, or misses
     and was not, is refused.
@@ -394,7 +395,7 @@ def null_reading(
             f"simulation is {'' if calibrated else 'not '}calibrated; only a miss is calibrated"
         )
     if not calibrated:
-        return read, within, None, None, []
+        return read, within, None, None, {}
     critical = by_level(entry["critical_p"])
     if set(critical) != set(nominal):
         raise ValueError(
@@ -403,12 +404,17 @@ def null_reading(
     measured = by_level(entry["null_false_positive_calibrated"])
     if set(measured) != set(nominal):
         raise ValueError(f"{file}: calibrated rates at {sorted(measured)}, not {sorted(nominal)}")
-    # Above Bradley's bound, or a critical p of zero, which no p can fall below: the null's p
-    # resolves no alpha-quantile at its resamples, so the calibration is refused there too.
-    loose = [
-        c for c in nominal if measured[c] > BRADLEY_LIBERAL * nominal[c] or not critical[c] > 0.0
-    ]
-    return read, within, critical, measured, loose
+    # A critical p of zero: the null's p resolves no alpha-quantile at its resamples.
+    refused = {}
+    for c in nominal:
+        if not critical[c] > 0.0:
+            refused[c] = "its critical p is zero, which no p falls below"
+        elif measured[c] > BRADLEY_LIBERAL * nominal[c]:
+            refused[c] = (
+                f"its calibrated test reads {measured[c]} on the second null half, above "
+                f"Bradley's {BRADLEY_LIBERAL} alpha"
+            )
+    return read, within, critical, measured, refused
 
 
 def registered_coverage(
@@ -454,18 +460,17 @@ def registered_coverage(
         if not holds:
             raise ValueError(f"{file} {reason}")
     entry = simulation["by_target"][REGISTERED_SPREAD_TARGET]
-    read, within, critical, measured, loose = null_reading(
+    read, within, critical, measured, refused = null_reading(
         entry,
         levels,
         calibrated=bool(simulation.get("calibrated")),
         file=file,
         at=f"K = {runs}",
     )
-    if loose:
-        rates = [(measured or {})[c] for c in loose]
+    if refused:
         raise ValueError(
-            f"{file}: the calibrated test reads {rates} on the second null half at {loose}, "
-            f"above {BRADLEY_LIBERAL} alpha"
+            f"{file}: the calibration is refused: "
+            + "; ".join(f"at {c}, {why}" for c, why in refused.items())
         )
     calibrated = critical is not None
     return {
@@ -531,7 +536,7 @@ def spread_reading(
     if not out["above"]:
         if simulation is not None:
             raise ValueError(f"{name}: spread {spread:.5f} is within its bound; nothing to read")
-        return out | {"file": None, "critical_p": None, "refused_at": []}
+        return out | {"file": None, "critical_p": None, "refused_at": [], "refused_why": {}}
     if simulation is None:
         raise ValueError(
             f"{name}: per-run spread {spread:.5f} above its sizing bound {bound:.5f}, with no "
@@ -574,7 +579,7 @@ def spread_reading(
     target: Any = (entry.get("calibration") or {}).get("target")
     if not (is_real(target) and math.isclose(target, spread)):
         raise ValueError(f"{name}: {file} calibrated its run shift to another spread")
-    read, within, critical, measured, loose = null_reading(
+    read, within, critical, measured, refused = null_reading(
         entry,
         report["levels"],
         calibrated=bool(simulation.get("calibrated")),
@@ -587,9 +592,10 @@ def spread_reading(
         "within_nominal": within,
         "critical_p": critical,
         "null_false_positive_calibrated": measured,
-        # The levels where the calibration is refused: read at any of them, the cell is
-        # exploratory (`decomposition._mark_exploratory`).
-        "refused_at": loose,
+        # The levels where the calibration is refused, with why: read at any of them, the cell
+        # is exploratory (`decomposition._mark_exploratory`).
+        "refused_at": sorted(refused),
+        "refused_why": {str(c): why for c, why in refused.items()},
     }
 
 

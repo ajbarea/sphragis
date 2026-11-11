@@ -3368,7 +3368,9 @@ def test_a_replication_member_has_no_h2_read(frozen) -> None:
         registered_read("apache", hypothesis="H2")
 
 
-def test_a_cell_refused_at_a_zero_critical_p_reads_across_without_it(admitted) -> None:
+def test_an_exploratory_cell_leaves_the_readings_across(admitted) -> None:
+    """A refused calibration has no critical p to scale by, so the cell leaves the readings across
+    as it leaves its hypothesis, whichever refusal it was."""
     admitted("openstack", "wikimedia")
     reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
     reports["openstack"]["per_run"] = [0.0, 0.03, 0.06]
@@ -3386,4 +3388,7 @@ def test_a_cell_refused_at_a_zero_critical_p_reads_across_without_it(admitted) -
         spreads={"openstack": _spread_sim_for(reports["openstack"], null)},
     )
     assert out["exploratory"] == ["H1:openstack"]
-    assert out["across"]["partial_conjunction"]["at_least"] == 2
+    assert "its critical p is zero" in out["cells"]["openstack"]["exploratory"]
+    assert "Bradley" not in out["cells"]["openstack"]["exploratory"]
+    assert out["across"]["partial_conjunction"]["at_least"] == 1
+    assert out["across"]["random_effects"]["organizations"] == ["wikimedia"]
