@@ -9,14 +9,16 @@ These are pre-specified checks on the apparatus, run before the confirmatory com
 are neutral to the outcome: none of them can be passed by the hypothesis being true, and none
 of them can be failed by it being false. **A failure withdraws the organization it fails on.**
 It is reported as a deviation, an apparatus failure rather than a result, and the hypotheses are
-read over the remaining organizations. Without Qt, `H2` has no confirmatory cell and `H1` alone
-is read, at 95%.
+read over the remaining organizations. Without Qt, or with Chromium's pool over check 4's
+threshold, `H2` has no confirmatory cell and `H1` alone is read, at 95%. Check 1, the
+contamination battery, is a reported measurement and withdraws nothing.
 
 The withdrawal rule is one function,
 [`apparatus_holds`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py),
 and it is true only when every check on an organization passed. There is no partial credit and
 no override: if it is false, none of that organization's cells is read. The gate takes each
-withdrawn organization with the check it failed and reads the rest.
+withdrawn organization with its recorded battery, refuses one whose battery failed no check from
+2 to 6, and reads the rest.
 
 Each check returns its evidence beside its pass flag, so a run's JSON carries why it passed
 and not only that it did. The pilot figures below are what each check returned on real model

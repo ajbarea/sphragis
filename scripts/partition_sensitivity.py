@@ -603,6 +603,11 @@ def supported(t: dict, level: float, critical: dict[float, float] | None) -> boo
     return t["supported"][level] and (critical is None or t["p"] < critical[level])
 
 
+class PowerNotReached(ValueError):
+    """No lift under the bracket's top reaches the target power: the cell detects nothing below
+    it. Separate from every other error a trial can raise, which must not read as this."""
+
+
 def lift_ceiling(continuous: bool) -> float:
     """The top of the lift bracket a detectable effect is searched under, in the metric's units."""
     return CONTINUOUS_CEILING if continuous else LIFT_CEILING
@@ -629,7 +634,7 @@ def detectable_lift(
         else:
             low = mid
     if high == ceiling:
-        raise ValueError(f"power {target_power} not reached")
+        raise PowerNotReached(f"power {target_power} not reached")
     return high
 
 

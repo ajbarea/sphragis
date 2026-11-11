@@ -399,3 +399,31 @@ def test_main_records_the_detectable_effect_and_the_sesoi(
     for at in out["by_level"].values():
         # A continuous lift is its own effect.
         assert at["detectable"] == at["detectable_lift"] and at["cell_power"] == 0.9
+
+
+def test_only_an_unreached_power_reads_as_detecting_nothing(
+    small_pool: list, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Round-1 finding F6: any other error in the trials is raised, never read as exploratory."""
+
+    real = power_at_size.trials_at
+
+    def broken(*args: Any, **kwargs: Any) -> list:
+        # The registered lift's power is read; a bisection step fails.
+        if kwargs["lift"] != 0.05:
+            raise ValueError("a trial failed")
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(power_at_size, "trials_at", broken)
+    with pytest.raises(ValueError, match="a trial failed"), ThreadPoolExecutor(2) as executor:
+        power_at_size.power_at(
+            executor,
+            small_pool,
+            changes=80,
+            sigma_run=0.0,
+            lifts={0.975: {"lift": 0.05, "bound": 0.025}},
+            simulation=_simulation(),
+            cells=2,
+            pilot_halves=_halves(small_pool),
+        )
+    assert issubclass(partition_sensitivity.PowerNotReached, ValueError)

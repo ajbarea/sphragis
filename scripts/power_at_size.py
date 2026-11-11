@@ -43,6 +43,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import partition_sensitivity  # noqa: E402
 from partition_sensitivity import (  # noqa: E402
     Pool,
+    PowerNotReached,
     _init,
     detectable_lift,
     lift_ceiling,
@@ -196,7 +197,7 @@ def power_at(
                 continuous=continuous,
                 steps=simulation_steps(simulation),
             )
-        except ValueError:
+        except PowerNotReached:
             # Not reached under the bracket's top: the cell detects nothing as small as it.
             lift = None
 

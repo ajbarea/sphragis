@@ -243,6 +243,33 @@ def planted_convention(
     return Check("planted_convention", run["verdict"]["verdict"] == "pass", evidence)
 
 
+#: The checks whose failure withdraws an organization, by the name each `Check` carries before its
+#: label: 2 to 6. Check 1, the contamination battery, is a reported measurement and withdraws
+#: nothing (Stage 1 report, "Outcome-Neutral Tests").
+WITHDRAWING_CHECKS = (
+    "positive_control",
+    "manipulation",
+    "leakage",
+    "planted_convention",
+    "non_degeneracy",
+)
+
+
+def withdrawing_failures(battery: Any) -> list[str]:
+    """The failed checks of a recorded battery (`{"checks": [{"name", "passed"}, ...]}`) that
+    withdraw its organization, sorted; refused when `battery` records no checks."""
+    checks = battery.get("checks") if isinstance(battery, Mapping) else None
+    if not isinstance(checks, list) or not checks:
+        raise ValueError(f"not a recorded battery: {battery!r}")
+    return sorted(
+        str(c.get("name"))
+        for c in checks
+        if isinstance(c, Mapping)
+        and c.get("passed") is not True
+        and str(c.get("name")).split(":", 1)[0] in WITHDRAWING_CHECKS
+    )
+
+
 def apparatus_holds(checks: Sequence[Check]) -> bool:
     """True only if every outcome-neutral check on one organization passed. False withdraws that
     organization: none of its cells is read, and the hypotheses are read over the rest."""

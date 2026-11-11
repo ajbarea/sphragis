@@ -529,12 +529,15 @@ def _power_at_realised(
     return out
 
 
-def small_window(size: Mapping[str, Any], sesoi: float) -> str | None:
-    """Why a cell read below its projected size is exploratory, or None: at some level it reads,
-    the smallest effect it detects at the realised size exceeds δ ("Sample size", Stage 1 report:
-    a cell that then cannot detect δ is exploratory)."""
+def small_window(size: Mapping[str, Any], sesoi: float, level: float) -> str | None:
+    """Why a cell read below its projected size is exploratory, or None: at `level`, the family's
+    first, the smallest effect it detects at the realised size exceeds δ ("Sample size", Stage 1
+    report: a cell that then cannot detect δ is exploratory). The first level is where every cell
+    is first read and the one its detectable effect is registered on (Table II); a level the
+    family does not read decides nothing."""
     above = []
-    for c, at in sorted((size.get("power") or {}).items()):
+    at_level = {c: at for c, at in (size.get("power") or {}).items() if c == level_key(level)}
+    for c, at in at_level.items():
         if at["detectable"] is None:
             above.append(f"nothing up to {at['detectable_above']:+.4f} at {c}")
         elif at["detectable"] > sesoi:
@@ -632,8 +635,10 @@ def _h1_cells(
     powers: Mapping[str, Mapping[str, Any]] | None,
     expected: Mapping[str, Any],
     sesoi: float,
+    first_level: float,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[float, float]]]:
-    """Each organization's H1 cell on one score, and its registered bounds."""
+    """Each organization's H1 cell on one score, and its registered bounds; `first_level`, the
+    family's, is where the small-window rule reads it (`small_window`)."""
     levels = expected["levels"]
     intervals = {
         c: require_readable(reports, confidence=c, fields=_CELL_FIELDS + ("bootstrap_se",))
@@ -665,7 +670,7 @@ def _h1_cells(
             "p_bounded": p_bounded,
             "size": size,
             # Why the cell left the confirmatory family, or None while it stands in it.
-            "exploratory": small_window(size, sesoi),
+            "exploratory": small_window(size, sesoi, first_level),
             # The registered sensitivities the report read (partition_pilot.py --without).
             "without": readings,
         }
@@ -727,17 +732,18 @@ def h1_test_gate(
     coprimary_simulations: Mapping[str, Mapping[str, Any]],
     powers: Mapping[str, Mapping[str, Any]] | None = None,
     coprimary_powers: Mapping[str, Mapping[str, Any]] | None = None,
-    withdrawn: Mapping[str, str] | None = None,
+    withdrawn: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """H1's registered verdict over the admitted organizations' test-window reads.
 
     The organizations are `ADMITTED_ORGANIZATIONS`, never an argument; the gate refuses to run
     before they are frozen, and while H2 is confirmatory, since H2's test read over partitions is
     not built and Holm cannot be read without it. `withdrawn` maps each admitted organization that
-    failed an outcome-neutral check to the check it failed: it is reported as a deviation and the
-    hypotheses are read over the rest ("Outcome-Neutral Tests", Stage 1 report), so a withdrawn
-    Qt leaves H1 alone confirmatory. `reports` holds each remaining organization's
-    `partition_pilot.py` test-window report on the registered score and `coprimary` its report
+    failed an outcome-neutral check to its recorded battery, whose failed checks are reported as
+    the deviation (`_withdrawals`), and the hypotheses are read over the rest ("Outcome-Neutral
+    Tests", Stage 1 report), so a withdrawn Qt leaves H1 alone confirmatory. `reports` holds each
+    remaining organization's `partition_pilot.py` test-window report on the registered score and
+    `coprimary` its report
     on `COPRIMARY_METRIC`, the same runs and changes, each with its simulation, all for exactly
     the remaining set; each report is checked by `require_readable` and by `require_test_read`
     against the registered read, which withdrawal does not change, and its bounds read from its
@@ -745,9 +751,9 @@ def h1_test_gate(
     Holm levels of the hypotheses that remain (`holm_steps`): it passes only when all of them do
     (research log, 2026-10-30).
 
-    A cell read below its projected size whose detectable effect there exceeds δ at a level it
-    reads is exploratory (`small_window`): reported beside the verdict and left out of it. With
-    every cell exploratory, H1 is not tested.
+    A cell read below its projected size whose detectable effect there exceeds δ at the family's
+    first level is exploratory (`small_window`): reported beside the verdict and left out of it.
+    With every cell exploratory, H1 is not tested; a score with none left is named in the reading.
 
     Beside the verdict, binding none: each score's own reading, each cell's `FOUR_WAY` outcome,
     the readings across organizations, and each cell's realised test size against its
@@ -778,10 +784,15 @@ def h1_test_gate(
     expected = _gerrit_read(registered)
     levels = holm_levels(len(confirmatory(spec)))
     sesoi = _sesoi_of(expected["metric"])
-    cells, detectable = _h1_cells(reports, simulations, powers, expected, sesoi)
+    cells, detectable = _h1_cells(reports, simulations, powers, expected, sesoi, levels[0])
     other = coprimary_read(expected)
     other_cells, other_detectable = _h1_cells(
-        coprimary, coprimary_simulations, coprimary_powers, other, _sesoi_of(COPRIMARY_METRIC)
+        coprimary,
+        coprimary_simulations,
+        coprimary_powers,
+        other,
+        _sesoi_of(COPRIMARY_METRIC),
+        levels[0],
     )
     every = {**cells, **{f"{org}:{COPRIMARY_METRIC}": c for org, c in other_cells.items()}}
     tested = {"H1": {name: c for name, c in every.items() if c["exploratory"] is None}}
@@ -814,6 +825,11 @@ def h1_test_gate(
         said = "within-half, below the SESOI in every cell"
     else:
         said = reading(verdicts["H1"], None)
+    # H1 is registered on both scores and s' qualifies s (Table III legend): a score with no
+    # confirmatory cell left is said, never dropped silently.
+    untested = [m for m, read in scores.items() if read == "not tested"]
+    if verdicts["H1"] != "not tested" and untested:
+        said += f"; {', '.join(untested)} not tested (every cell exploratory)"
     return {
         "design": spec,
         "withdrawn": dict(lost),
@@ -843,20 +859,30 @@ def h1_test_gate(
     }
 
 
-def _withdrawals(withdrawn: Mapping[str, str] | None) -> dict[str, str]:
-    """Each withdrawn organization with the outcome-neutral check it failed, refused unless every
-    one is an admitted organization and names its reason."""
+def _withdrawals(withdrawn: Mapping[str, Any] | None) -> dict[str, list[str]]:
+    """Each withdrawn organization with the outcome-neutral checks it failed, read from the
+    battery recorded for it (`neutral.withdrawing_failures`): refused unless every one is an
+    admitted organization whose battery failed a check that withdraws, 2 to 6. Chromium's pool is
+    withdrawn from H2 by `H2_WITHDRAWN`, not here."""
+    from sphragis.experiment.neutral import withdrawing_failures
+
     if withdrawn is None:
         return {}
     if not isinstance(withdrawn, Mapping):
-        raise ValueError(f"withdrawn must map organizations to reasons, got {type(withdrawn)}")
-    unnamed = sorted(o for o, why in withdrawn.items() if not (isinstance(why, str) and why))
-    if unnamed:
-        raise ValueError(f"withdrawn organization(s) {unnamed} name no failed check")
+        raise ValueError(f"withdrawn must map organizations to batteries, got {type(withdrawn)}")
     outside = sorted(set(withdrawn) - set(ADMITTED_ORGANIZATIONS or ()))
     if outside:
-        raise ValueError(f"withdrawn organization(s) {outside} are not among the admitted")
-    return {o: withdrawn[o] for o in ORGANIZATIONS if o in withdrawn}
+        raise ValueError(
+            f"withdrawn organization(s) {outside} are not among the admitted; a foreign pool over "
+            "check 4 is recorded in H2_WITHDRAWN"
+        )
+    failed = {o: withdrawing_failures(battery) for o, battery in withdrawn.items()}
+    unfailed = sorted(o for o, checks in failed.items() if not checks)
+    if unfailed:
+        raise ValueError(
+            f"withdrawn organization(s) {unfailed} failed no check that withdraws (2 to 6)"
+        )
+    return {o: failed[o] for o in ORGANIZATIONS if o in failed}
 
 
 def replication_gate(
@@ -907,19 +933,23 @@ def replication_gate(
             "four_way": four_way(interval["low"], interval["high"], margin=margin),
             "meaningful": meaningful(interval["low"], _sesoi_of(expected["metric"])),
             "p_one_sided": cell["p_one_sided"],
-            "size": _test_size(org, cell, simulation, powers, bounds, expected["cells"]),
+            "size": (size := _test_size(org, cell, simulation, powers, bounds, expected["cells"])),
+            # The Gerrit cells' small-window rule (the family is read "with the Gerrit cells'
+            # windows, rules and estimand", Stage 1 report): exploratory, out of the conjunction.
+            "exploratory": small_window(size, _sesoi_of(expected["metric"]), level),
             # The registered sensitivities the report read (partition_pilot.py --without).
             "without": readings,
         }
+    counted = {o: c["p_one_sided"] for o, c in read.items() if c["exploratory"] is None}
     return {
         **family,
         "cells": read,
+        "exploratory": sorted(o for o, c in read.items() if c["exploratory"] is not None),
         "below_projection": _below_projection(read, powers),
         "partial_conjunction": partial_conjunction(
-            {o: c["p_one_sided"] for o, c in read.items()},
-            alpha=one_sided_alpha(REPLICATION_CONFIDENCE),
+            counted, alpha=one_sided_alpha(REPLICATION_CONFIDENCE)
         )
-        if read
+        if counted
         else None,
     }
 
