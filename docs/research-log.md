@@ -11235,7 +11235,7 @@ calibration is the one the 2026-10-30 rules fix, and every cell can detect less 
 ### Second raters for the label audit: a page that reveals nothing, and the read-back (2026-11-10)
 
 The Stage 1 report reads one human against the model raters on OpenStack's 77 checked items
-(2026-10-15). Lab members will label the same items so that the audit also has a human-to-human
+(2026-10-15). If lab members agree to label the same items, the audit also gets a human-to-human
 figure. `label_audit_page.py --second-rater` builds their page from the agreement report: the
 items the human checked from one organization (`label_audit_agreement.checked_items`, item-003
 to item-153), in the same order and blinding. The builder reads no rater's labels, so the page
