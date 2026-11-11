@@ -11158,6 +11158,10 @@ This closes the determination the 2026-10-08 entry called due. No amendment for 
 needed, since the study sits outside HSRO's oversight. The Stage 1 report does not mention it (AJ,
 2026-10-31: no lines on what the study does not need); a venue form that asks gets this answer.
 
+**Amendment (2026-11-05).** The Stage 1 report now names this determination in its Ethics
+paragraph (papers#133: "RIT's Human Subjects Research Office determined it is not human-subjects
+research (IRB0000393)"), so the line above no longer holds.
+
 ### Fuchsia's exploratory arm read beside Chromium's (2026-11-01)
 
 `# research(2026-11)`. Decision 5's second foreign arm (entry 2026-10-30, "Fuchsia's exploratory
@@ -11267,3 +11271,31 @@ a short prefix, the reading writes null for it and for any interval undefined on
 A kappa or AC1 interval whose resamples all give one value (one or two shared items, or full
 agreement) states no uncertainty and is also written null; the Wilson interval on raw agreement
 is the reading there.
+
+### The development pilots re-read with their registered sensitivities (2026-11-11)
+
+`# research(2026-11)`. The four development pilots by relation chain
+(`partition-pilot-{openstack,wikimedia,qt,qt-foreignchromium}-likelihood-chains.json`) were read
+before their cells' simulations were registered, so they carried no bound and the reader, which
+reads no cell bounded without one, gave Wikimedia's 97.5% cell "inconclusive" where the Stage 1
+report applies its registered rule and reads it bounded (sphragis#253, 11-05 comment). Each is
+read again on the same 22 runs, chains, levels, resamples and seed, with its cell's registered
+simulation as `--sensitivity` at the registered spread target (H1 at six cells:
+`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`; H2 at one cell, its
+K = 40 calibrated simulation), Qt's generation runs beside its rescorings as before so its 22
+batteries are read. Every estimate, interval and battery is unchanged; the reads now carry their
+bounds, the bounded-test p (the share of draws at or above δ) and the four outcomes. Development
+readings, binding nothing:
+
+| cell | estimate | 97.5% interval, verdict, bound | 95% interval, verdict, bound | bounded-test p |
+|---|---|---|---|---|
+| OpenStack, H1 on s | +0.0231 | [+0.0082, +0.0400] supported, bound +0.0124 | [+0.0097, +0.0380] supported, bound +0.0115 | 0.8266 |
+| Wikimedia, H1 on s | +0.0058 | [-0.0006, +0.0124] bounded, bound +0.0080 | [+0.0001, +0.0116] supported, bound +0.0074 | 0.0002 |
+| Qt, H1 on s | +0.0101 | [+0.0031, +0.0181] supported, bound +0.0085 | [+0.0041, +0.0169] supported, bound +0.0079 | 0.0395 |
+| Qt, H2 against Chromium | +0.0107 | [-0.0041, +0.0248] inconclusive, bound +0.0109 | [-0.0023, +0.0229] inconclusive, bound +0.0103 | 0.1957 |
+
+Wikimedia's 97.5% cell now reads bounded, as the Stage 1 report reads it: its upper bound lies
+below δ (0.0161) and its bounded-test p below 0.0125. No other verdict moves. The H2 cell is
+calibrated only on a test read, whose K source carries its critical p; this read takes its bounds
+alone. The reads were made with the code of sphragis#261 and #262 (`p_bounded`, H2's bounds
+through `sensitivity_bounds(cell=)`).
