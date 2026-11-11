@@ -253,9 +253,12 @@ async function lockCurrent(){
     const ref=db.doc("answers/"+uid+"/items/"+ex.item);
     const prior=await ref.get();
     if(prior.exists){
-      const v=prior.data(); if(v&&v.rubric===RUBRIC&&LABELS.includes(v.label)) answers[ex.item]=v;
+      const v=prior.data(), ok=v&&v.rubric===RUBRIC&&LABELS.includes(v.label);
+      if(ok) answers[ex.item]=v;
       busy=false; render();
-      const err=document.getElementById("err"); if(err) err.textContent="This item was already locked, in another tab or device; that answer is kept.";
+      const err=document.getElementById("err");
+      if(err) err.textContent=ok?"This item was already locked, in another tab or device; that answer is kept."
+        :"A saved entry for this item cannot be read, so it cannot be locked here. Please tell AJ.";
       return;
     }
     await ensureMarker();

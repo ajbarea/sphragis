@@ -292,6 +292,9 @@ def test_the_second_rater_reading_pairs_every_reader_on_shared_items(tmp_path: P
     assert pairs["human~L1"]["items"] == len(items)
     assert pairs["human~L1"]["raw_agreement_95"][1] == 1.0
     assert pairs["L1~L2"]["items"] == 2
+    l1, l2 = reading["labels"]["L1"], reading["labels"]["L2"]
+    same = sum(l1[e]["label"] == l2[e]["label"] for e in l2)
+    assert pairs["L1~L2"]["raw_agreement_95"] == list(agreement_tool.wilson_interval(same, 2))
     assert pairs["L1~L2 outside_names without slips"]["items"] == 1
     assert "L1~L2 without slips" not in pairs  # no label slip touches their shared items
     # The human's own slip is read without, as in the report.
@@ -397,6 +400,7 @@ def test_the_store_rules_keep_each_raters_answers_to_them_and_the_owner() -> Non
     by_path = {r["path"]: r for r in rules}
     assert by_path["answers"] == {"path": "answers", "read": "owner", "write": "self"}
     assert by_path["answers/{self}"]["write"] == "interact"
+    assert by_path["answers/{self}"]["read"] == "view"  # so a rater can resume
     assert by_path[""]["write"] == "owner"
 
 
@@ -547,3 +551,36 @@ def test_a_report_with_nothing_to_compare_is_refused(tmp_path: Path) -> None:
     }
     with pytest.raises(SystemExit, match="nothing to compare"):
         agreement_tool.report_readers(bare, {"org": "openstack", "pairs": {}})
+
+
+def test_a_one_item_disagreement_writes_no_interval(tmp_path: Path) -> None:
+    """One disagreeing item gives every resample the same kappa: no interval, Wilson remains."""
+    report = _report()
+    first = agreement_tool.checked_items(report, "openstack")[0]
+    by_neutral = dict(
+        zip(agreement_tool.neutral_ids(report), report["labels"].values(), strict=True)
+    )
+    other = next(x for x in sample_tool.LABELS if x != by_neutral[first]["human"]["label"])
+    export = _export(tmp_path, {"u_1": {first: _answer(other, "2026-11-11T09:00:00Z")}})
+    pair = agreement_tool.second_rater_report(report, _org_reading(report), export)["pairs"][
+        "human~L1"
+    ]
+    assert pair["raw_agreement"] == 0.0
+    assert all(math.isnan(x) for x in [*pair["kappa_95"], *pair["ac1_95"]])
+    assert pair["raw_agreement_95"][1] > 0
+
+
+def test_the_org_reproduction_refuses_a_pair_only_one_side_has() -> None:
+    recorded = {
+        "p": {
+            "items": 1,
+            "raw_agreement": 1.0,
+            "kappa": 1.0,
+            "kappa_95": [1.0, 1.0],
+            "ac1": 1.0,
+            "ac1_95": [1.0, 1.0],
+        }
+    }
+    assert by_org_tool.reproduces(recorded, {**recorded, "q": recorded["p"]}) == [
+        "q: only one side has it"
+    ]

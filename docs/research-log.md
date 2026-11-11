@@ -11257,9 +11257,13 @@ within one, and keep their names in later exports; viewer ids are not
 written. Every pair of readers is read on the items both answered: the five labels, valid
 against the rest, and outside names. Each reading gives raw agreement with a Wilson interval,
 and kappa and AC1 with bootstrap intervals. Each is read again without the items a slip
-touches. No second rater saw a label, so no pair of theirs is read by halves. Every pair is
-read on the 77 items, so the model raters' pairs are named "on checked items", as in
+touches. No second rater saw a label, so no pair of theirs is read by halves. The human and the
+model raters answered all 77 items, so their pairs are read on all of them and the model raters'
+pairs are named "on checked items", as in
 `label-audit-v2-openstack.json`, whose plain model pairs are on all 191. The read-back refuses
 to write unless every human pair in that file but the halves of the check, and the model
 raters' label pair, reproduce it. Where a statistic is undefined, as with one label throughout
 a short prefix, the reading writes null for it and for any interval undefined on every resample.
+A kappa or AC1 interval whose resamples all give one value (one or two shared items, or full
+agreement) states no uncertainty and is also written null; the Wilson interval on raw agreement
+is the reading there.

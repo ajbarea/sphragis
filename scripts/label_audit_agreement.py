@@ -150,11 +150,17 @@ def _pair(
     first: dict, second: dict, items: list[str], categories: list, *, undefined_ok: bool = False
 ) -> dict:
     """One pair's figures. An interval undefined on every resample raises, unless
-    `undefined_ok`, where it reads NaN (the second-rater reading, whose prefixes can be short)."""
+    `undefined_ok`, where it reads NaN (the second-rater reading, whose prefixes can be short),
+    as does an interval of zero width."""
     a, b = [first[i] for i in items], [second[i] for i in items]
     guard = _undefined_as_nan if undefined_ok else (lambda interval: interval())
     low, high = guard(lambda: kappa_interval(a, b, seed=20260924))
     ac1_low, ac1_high = guard(lambda: ac1_interval(a, b, categories, seed=20260924))
+    if undefined_ok:
+        # Resamples that all give one value (one or two shared items, or full agreement) state
+        # no uncertainty; the interval is left undefined and the Wilson interval is the reading.
+        low, high = (math.nan, math.nan) if low == high else (low, high)
+        ac1_low, ac1_high = (math.nan, math.nan) if ac1_low == ac1_high else (ac1_low, ac1_high)
     return {
         "items": len(items),
         "raw_agreement": sum(x == y for x, y in zip(a, b, strict=True)) / len(items),
@@ -372,12 +378,14 @@ def reader_pairs(
     order: list[str],
     *,
     already: frozenset[str] = frozenset(),
+    second_rater: bool = True,
 ) -> dict[str, dict]:
     """Every pair of readers on the items both answered, each question with and without slips.
 
     A reader is (labels, outside-names flags, slipped items by field). Raw agreement carries a
     Wilson interval beside the bootstrap intervals of kappa and AC1. Pairs of two readers in
-    `already` are left out, as read before.
+    `already` are left out, as read before. `second_rater` pairs take `_pair`'s undefined_ok
+    reading; the report's own readers are read strictly, exactly as the report was.
     """
     pairs: dict[str, dict] = {}
     for x, first in enumerate(order):
@@ -401,7 +409,7 @@ def reader_pairs(
                 for suffix, subset in subsets:
                     if not subset:
                         continue
-                    stats = _pair(a, b, subset, categories, undefined_ok=True)
+                    stats = _pair(a, b, subset, categories, undefined_ok=second_rater)
                     same = sum(a[i] == b[i] for i in subset)
                     stats["raw_agreement_95"] = list(wilson_interval(same, len(subset)))
                     pairs[f"{first}~{second}{question}{suffix}"] = stats
@@ -441,7 +449,7 @@ def report_readers(report: dict, org_reading: dict) -> tuple[list[str], dict[str
     # reading gives that reading, since its plain model pairs are on all of its items.
     pairs = {
         (f"{n} on checked items" if not n.startswith("human~") else n): stats
-        for n, stats in reader_pairs(readers, list(readers)).items()
+        for n, stats in reader_pairs(readers, list(readers), second_rater=False).items()
     }
     recorded = org_reading["pairs"]
     halves = (" first half", " second half")
