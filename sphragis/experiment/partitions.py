@@ -22,6 +22,7 @@ from typing import Any
 from sphragis.experiment.across import bounded_p, one_sided_p
 from sphragis.experiment.cells import (
     K_COVERAGE,
+    POSITIVE_CONTROL_CONFIDENCE,
     REGISTERED_SPREAD_TARGET,
     SPREAD_TARGETS,
     Cell,
@@ -34,20 +35,26 @@ from sphragis.experiment.cells import (
     same_calibration,
 )
 from sphragis.experiment.decomposition import (
+    H2_POPULATION,
     SESOI,
     Restricted,
+    base_clusters,
     is_cpp,
+    joint_reading,
     matched_clusters,
     project_clusters,
     read_intervals,
 )
-from sphragis.experiment.neutral import source_root, source_windows
+from sphragis.experiment.neutral import Check, source_root, source_windows
 from sphragis.measure.stats import (
     MIN_CLUSTERS,
+    change_totals,
     equal_halves,
     one_sided_alpha,
     partitioned_crossed_draws,
     percentile_interval,
+    pooled_totals,
+    shared_partitioned_draws,
 )
 
 # Two independent aggregations agree within XI with probability about 1 - BETA (Ritzwoller and
@@ -97,6 +104,14 @@ def h2_contrast(source: str) -> Contrast:
         )
 
     return contrast
+
+
+def h1_cpp_contrast(
+    results: Results, *, org: str, seed: int | None, metric: str
+) -> list[list[Any]]:
+    """H1's contrast in one run on the C++ examples alone (`H2_POPULATION`): each half's own
+    adapter against its sibling, where H2's matched contrast is read."""
+    return project_clusters(Restricted(results, is_cpp), org=org, seed=seed, metric=metric)
 
 
 def reproducibility(estimates: Sequence[float], *, xi: float = XI, beta: float = BETA) -> dict:
@@ -710,6 +725,7 @@ def h1_over_partitions(
     sesoi: float = SESOI,
     contrast: Contrast = project_clusters,
     critical: Mapping[float, float] | None = None,
+    change_averaged: bool = True,
 ) -> dict[str, Any]:
     """One organization's H1 cell over its first `runs_fixed` partition runs, in admissible order;
     with `contrast`, another cell read the same way (`h2_contrast`).
@@ -719,6 +735,10 @@ def h1_over_partitions(
 
     Runs computed past K are reported, each on its own examples, and never enter the cell: not
     its estimate, not its interval, not the set of examples it is read on.
+
+    With `change_averaged`, the change-averaged estimate is reported outside the verdict, each
+    change counted once inside its resampled cluster, on the cell's own draws (Stage 1 report,
+    "Estimand").
     """
     if runs_fixed < 2:
         raise ValueError(f"a cell needs at least two runs, got runs_fixed={runs_fixed}")
@@ -734,7 +754,13 @@ def h1_over_partitions(
     if any(len(half) < MIN_CLUSTERS for run in past for half in run):
         raise ValueError(f"a run past K has a half with fewer than {MIN_CLUSTERS} changes")
     left_out = [equal_halves(run) for run in past]
-    estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
+    statistics = {"pooled": (clusters, pooled_totals)}
+    if change_averaged:
+        statistics["change_averaged"] = (clusters, change_totals)
+    estimates, every = shared_partitioned_draws(
+        statistics, seed=bootstrap_seed, resamples=resamples
+    )
+    estimate, draws = estimates["pooled"], every["pooled"]
     intervals = {c: percentile_interval(draws, c) for c in levels}
     registered = by_level(bounds) if bounds else {}
     p_above, p_below = one_sided_p(draws), bounded_p(draws, sesoi)
@@ -768,4 +794,93 @@ def h1_over_partitions(
         # The examples the cell's contrast reads in its first run: all of them for H1, the C++
         # ones for H2 (`h2_contrast`).
         "cell_examples": sum(len(c.treatment) for half in clusters[0] for c in half),
+        # Reported outside the gate, binding nothing.
+        "change_averaged": (
+            {
+                "estimate": estimates["change_averaged"],
+                "intervals": {
+                    c: dict(
+                        zip(
+                            ("low", "high"),
+                            percentile_interval(every["change_averaged"], c),
+                            strict=True,
+                        )
+                    )
+                    for c in levels
+                },
+                "p_one_sided": one_sided_p(every["change_averaged"]),
+            }
+            if change_averaged
+            else None
+        ),
+    }
+
+
+def positive_control_crossed(
+    runs: Sequence[tuple[Results, int]],
+    *,
+    org: str,
+    runs_fixed: int,
+    bootstrap_seed: int,
+    resamples: int,
+    metric: str,
+) -> Check:
+    """Outcome-neutral check 2 as registered: each half's own adapter against the base model on
+    that half, over the cell's first `runs_fixed` runs, read on the crossed interval (runs by
+    clusters, as the cell is) at `POSITIVE_CONTROL_CONFIDENCE`; it passes when the lower bound
+    is above zero. Read before every test read's cell (a development read's where its runs carry
+    the score), over that read's runs, on the registered score,
+    it withdraws the organization when it fails (`neutral.WITHDRAWING_CHECKS`), so Qt's H2 read
+    over its K runs can withdraw Qt on its own; each run's own check 2 is reported beside it."""
+    if runs_fixed < 2 or len(runs) < runs_fixed:
+        raise ValueError(f"check 2 reads {runs_fixed} runs of the {len(runs)} computed")
+    clusters, examples = common_runs(
+        runs[:runs_fixed], org=org, metric=metric, contrast=base_clusters
+    )
+    estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
+    low, high = percentile_interval(draws, POSITIVE_CONTROL_CONFIDENCE)
+    return Check(
+        f"positive_control_crossed:{org}",
+        low > 0.0,
+        {
+            "estimate": estimate,
+            "low": low,
+            "high": high,
+            "confidence": POSITIVE_CONTROL_CONFIDENCE,
+            "runs": runs_fixed,
+            "metric": metric,
+            "examples": examples["examples"],
+        },
+    )
+
+
+def joint_over_partitions(
+    runs: Sequence[tuple[Results, int]],
+    *,
+    org: str,
+    source: str,
+    runs_fixed: int,
+    bootstrap_seed: int,
+    resamples: int,
+    metric: str,
+) -> dict[str, Any]:
+    """H1 and H2 read jointly over H2's first `runs_fixed` runs, on its C++ examples and the same
+    draws: the share of draws above zero for each, the share in each sign quadrant, and their
+    sum, own adapter against the matched foreign arm, with its 95% interval
+    (`decomposition.joint_reading`; Stage 1 report, "Verdicts and Readings"). Binds no verdict."""
+    if runs_fixed < 2 or len(runs) < runs_fixed:
+        raise ValueError(f"the joint reading reads {runs_fixed} runs of the {len(runs)} computed")
+    h1, examples = common_runs(runs[:runs_fixed], org=org, metric=metric, contrast=h1_cpp_contrast)
+    h2, _ = common_runs(runs[:runs_fixed], org=org, metric=metric, contrast=h2_contrast(source))
+    drawn = shared_partitioned_draws(
+        {"H1": (h1, pooled_totals), "H2": (h2, pooled_totals)},
+        seed=bootstrap_seed,
+        resamples=resamples,
+    )
+    return {
+        **joint_reading(drawn, foreign=source, role="confirmatory", population=H2_POPULATION),
+        "runs": runs_fixed,
+        "metric": metric,
+        "examples": sum(len(c.treatment) for half in h1[0] for c in half),
+        "dropped": examples["dropped"],
     }

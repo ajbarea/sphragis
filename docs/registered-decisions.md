@@ -27,7 +27,9 @@ better-calibrated interval: under a true null its two-sided false-positive rate 
 changes and 0.0480 at 91, against the change-averaged interval's 0.0638 and 0.0555 (nominal
 0.05), and change-averaged runs above pooled at every size measured.
 
-Both are computed and reported. Fixed before any reading it could decide.
+Both are computed and reported: a cell's change-averaged estimate and interval, each change
+counted once inside its resampled relation chain, on the cell's own draws (`change_averaged` in
+`partitions.h1_over_partitions`), outside the gate. Fixed before any reading it could decide.
 
 ### Pass rule: every admitted organization's cell supported, Holm across H1 and H2
 
@@ -237,7 +239,8 @@ organization with a confirmatory H2 cell, the joint reading and the sum are take
 examples, where both contrasts share one example set, with H1 restricted there reported beside
 them; H1's verdict stays on every example (research log, 2026-10-14). For Qt the sum is read on
 C++ over H2's K runs, H2's 40, so both contrasts share one set of runs as well as of examples
-(Stage 1 report, "Verdicts and Readings").
+(Stage 1 report, "Verdicts and Readings"): its H2 read carries it as `joint`
+(`partitions.joint_over_partitions`), and the gate refuses an H2 test read without it.
 
 ### Readings beside the pass rule, each binding no verdict (registered 2026-10-02)
 
@@ -302,7 +305,10 @@ hypothesis the gate reads, on the same draws, at the same levels:
 - **Reads as names.** Per H1 cell and level, an s cell supported where its s′ reading at the
   same level is not reads as names: within-half on s alone (Stage 1 report, "Verdicts and
   Readings"; `confirmatory_gate`'s `names`). For H2 the same reading, Qt's vocabulary, takes H2's
-  s′ read at its s level, a secondary analysis.
+  s′ read at its s level, a secondary analysis on the same runs and levels, with no bound or
+  calibrated p (the H2 read's `on_s_prime`; `confirmatory_gate`'s `vocabulary`). Read on its
+  interval alone, s′ reads supported at least as often as a calibrated read would, so the
+  vocabulary reading can only be rarer for it.
 - **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
   and GitHub, each weighted by its bootstrap standard error: REML for the between-organization
   variance, the modified Hartung-Knapp-Sidik-Jonkman interval (scale held at one or above; Röver,

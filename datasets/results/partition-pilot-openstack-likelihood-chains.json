@@ -263,6 +263,20 @@
   "examples": 501,
   "dropped": 0,
   "cell_examples": 501,
+  "change_averaged": {
+    "estimate": 0.014382558188506412,
+    "intervals": {
+      "0.975": {
+        "low": 0.0025764877431748243,
+        "high": 0.027160860314940728
+      },
+      "0.95": {
+        "low": 0.004080199540830089,
+        "high": 0.025678725436424795
+      }
+    },
+    "p_one_sided": 0.0032
+  },
   "sizing": {
     "pilot_runs": 22,
     "sd": 0.005394810315569553,
@@ -281,11 +295,26 @@
     "changes": 206,
     "chains": 203
   },
+  "positive_control": {
+    "name": "positive_control_crossed:openstack",
+    "passed": true,
+    "evidence": {
+      "estimate": 0.4080465264796382,
+      "low": 0.361914742598193,
+      "high": 0.4536936312271693,
+      "confidence": 0.95,
+      "runs": 22,
+      "metric": "logprob_per_token",
+      "examples": 501
+    }
+  },
+  "joint": null,
+  "on_s_prime": null,
   "provenance": {
-    "generated_at": "2026-11-11T11:34:29.257383+00:00",
+    "generated_at": "2026-11-11T14:30:50.768445+00:00",
     "git": {
-      "commit": "6f4d193ce1fa41de485b78af2aa2079638eb8b5e",
-      "branch": "fix/253-pilot-reread"
+      "commit": "ab4d48a376314eaf92d11b6cef0d1de888403845",
+      "branch": "feat/253-test-reads"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

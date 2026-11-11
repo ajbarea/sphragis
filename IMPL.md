@@ -18,10 +18,18 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   their registered sensitivities (research log, 2026-11-11; Wikimedia's 97.5% cell reads bounded, as
   the paper says), registered-decisions.md and the protocol page mirror the paper's readings, the
   HSRO amendment (research log, 2026-10-28). The papers harvest at 1b6e349 passes against these
-  artifacts. Open: #264 (provenance asks the working directory's git). Registered in the paper
-  outside the gate, not yet built (#253's 11-11 comment): check 2 on the crossed interval, the H1 +
-  H2 sum over H2's K, H2's s′ test read and its "Qt's vocabulary" reading, the change-averaged
-  estimate, rank 256.
+  artifacts. ✅ #264's fix (PR #267): provenance asks the code's checkout, recording the
+  script's, the working directory's and a job's beside it. ✅ This branch (`feat/253-test-reads`):
+  the readings the paper registers beside the gate, each in `partition_pilot.py`'s reads and the
+  gate: check 2 on the crossed 95% interval over the cell's runs (a failure withdraws, the battery
+  written; `replication_gate` takes `withdrawn` too), the H1 + H2 sum over H2's K on C++
+  (`joint`), H2 on s′ and Qt's vocabulary (`on_s_prime`, `vocabulary`), the change-averaged
+  estimate (`change_averaged`); `require_registered_analyses` refuses a test read without them.
+  The four development pilots carry them (research log, 2026-11-11, second entry). 📋 Next: rank
+  256 (90-conditional.tex:52-56): the rerun's job wiring (`LORA_RANK` through the partition chain),
+  a test read that records and checks its rank, and the capacity reading against rank 32. Verify:
+  `uv run pytest tests/unit/experiment/test_decomposition.py tests/unit/test_partition_pilot.py`;
+  papers `make harvest` at 1b6e349.
 - **Issue #258, second raters for the label audit (AJ 2026-11-10): PR #260, review clean.**
   `label_audit_page.py --second-rater` builds the page with no reveal for the human's 77 checked
   OpenStack items; `label_audit_agreement.py --second-raters` reads the store export back

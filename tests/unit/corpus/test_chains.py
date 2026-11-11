@@ -6,6 +6,8 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from sphragis.corpus.chains import Merged, chains, links, merged, parents
 
 
@@ -122,3 +124,17 @@ def test_parents_are_read_from_the_clone_and_a_missing_commit_left_out(tmp_path:
     b = git("rev-parse", "HEAD")
     missing = "0" * 40
     assert parents(tmp_path, [b, a, missing]) == {b: [a], a: []}
+
+
+def test_relabel_keeps_each_rows_own_change_and_refuses_a_second_pass() -> None:
+    from sphragis.corpus.chains import relabel
+
+    rows = [{"change_id": "I1"}, {"change_id": "I2"}]
+    assert relabel(rows, {"I1": "chain-a", "I2": "chain-a"}) == {"I1", "I2"}
+    assert rows == [
+        {"change_id": "chain-a", "source_change_id": "I1"},
+        {"change_id": "chain-a", "source_change_id": "I2"},
+    ]
+    # Read again, the chain would be looked up as a change.
+    with pytest.raises(SystemExit, match="relabelled already"):
+        relabel(rows, {"chain-a": "chain-a"})

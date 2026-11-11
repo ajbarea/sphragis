@@ -29,6 +29,8 @@ REGISTERED_SPREAD_TARGET = "sizing_bound_90"
 # The score H1 and H2 are read on: the reference's mean log-probability per token, a strictly
 # proper score that sees a convention learned at a minority rate (research log 2026-10-09).
 REGISTERED_METRIC = "logprob_per_token"
+#: Outcome-neutral check 2's interval (Stage 1 report): its lower bound must be above zero.
+POSITIVE_CONTROL_CONFIDENCE = 0.95
 # The kind a K coverage artifact records (`k_coverage.py`): the only K source a test read takes,
 # since the coverage rule, not the pilot's reproducibility K alone, fixes K (research log
 # 2026-10-09).
