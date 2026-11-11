@@ -68,7 +68,7 @@ token-class tables from their artifacts (a test asserts the log quotes each as p
 |---|---|
 | `label_audit_sample.py` | Draws a stratified sample of training examples for auditing whether each label is real. |
 | `label_audit_blind.py` | Blinds an audit sheet for its raters: neutral ids, a fixed random order, no organization. |
-| `label_audit_page.py` | Builds the page a human uses to check one rater's labels blind. |
+| `label_audit_page.py` | Builds the page a human uses to check one rater's labels blind, and the second-rater page, which reveals no label. |
 | `label_audit_decision.py` | Runs a decision model as a third blind rater, through Ollama. |
 | `label_audit_open_rater.sbatch` | Runs the open-weight rater at pinned weights. |
 

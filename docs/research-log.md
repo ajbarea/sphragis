@@ -11243,7 +11243,8 @@ cannot show one; its practice item is the rubric's invented worked example. A ra
 an answer until locking it; a locked answer is final, and a mis-click is marked as a slip beside
 it, as in the human check. Each viewer's answers are stored under their own id
 (`answers/<viewer id>/items/<item>`). The store's rules let only the artifact's owner read
-`answers`, and each viewer read and write only their own.
+`answers`, and each viewer read only their own and, when shared at Contributor or above, write
+it.
 
 The blinded batches were no longer on disk. They were rebuilt from the September check page's
 embedded items, with the rater fields dropped. Rendering the check page again from the rebuilt

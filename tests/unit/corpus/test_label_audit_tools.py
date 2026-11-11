@@ -474,3 +474,76 @@ def test_differences_refuse_a_missing_interval_by_name() -> None:
     assert agreement_tool.differences(ours, theirs, {"p": "p"}) == [
         "p.kappa_95: [0.1, 0.3] against None"
     ]
+    short = {"p": {**ours["p"], "kappa_95": [0.1]}}
+    assert agreement_tool.differences(ours, short, {"p": "p"}) == [
+        "p.kappa_95: [0.1, 0.3] against [0.1]"
+    ]
+
+
+def _readback_inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
+    report = _report()
+    (tmp_path / "report.json").write_text(json.dumps(report))
+    (tmp_path / "org.json").write_text(json.dumps(_org_reading(report)))
+    first = agreement_tool.checked_items(report, "openstack")[0]
+    export = _export(tmp_path / "export", {"u_1": {first: _answer("valid", "2026-11-11T09:00Z")}})
+    return tmp_path / "report.json", tmp_path / "org.json", export
+
+
+def test_the_read_back_cli_writes_strict_json_and_refuses_bad_arguments(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Through main(): null for an undefined value, sources recorded, inputs never overwritten."""
+    report, org, export = _readback_inputs(tmp_path)
+    out = tmp_path / "out.json"
+    base = ["x", "--from-report", str(report), "--second-raters", str(export)]
+
+    def run(*extra: str) -> None:
+        monkeypatch.setattr("sys.argv", [*base, *extra])
+        agreement_tool.main()
+
+    run("--org-reading", str(org), "--out", str(out))
+
+    def no_nan(token: str) -> float:
+        raise AssertionError(f"bare {token} in the output")
+
+    written = json.loads(out.read_text(), parse_constant=no_nan)
+    assert written["pairs"]["human~L1"]["kappa_95"] == [None, None]
+    assert written["from"] == str(report) and written["org_reading"] == str(org)
+    for extra in (["--out", str(out)], ["--org-reading", str(org), "--out", str(org)]):
+        before = org.read_text()
+        with pytest.raises(SystemExit):
+            run(*extra)
+        assert org.read_text() == before
+
+
+def test_a_committed_path_is_recorded_from_the_repository_root() -> None:
+    inside = agreement_tool.ROOT / "datasets" / "results" / "label-audit-v2.json"
+    assert agreement_tool.relative(inside) == "datasets/results/label-audit-v2.json"
+
+
+def test_the_read_back_output_passes_the_published_text_guard(tmp_path: Path) -> None:
+    """Its pair names (second raters, questions on checked items) are keys the guard knows."""
+    from sphragis.measure import withhold
+
+    report, org, export = _readback_inputs(tmp_path)
+    _export(export, {"u_2": {"item-002": _answer("partial", "2026-11-12T09:00Z", slips=["label"])}})
+    reading = agreement_tool.second_rater_report(
+        json.loads(report.read_text()), json.loads(org.read_text()), export
+    )
+    body = json.dumps(agreement_tool._nan_as_null(reading), allow_nan=False).encode()
+    rel = "datasets/results/label-audit-v2-rater2.json"
+    assert withhold.refusals(rel, body, [json.loads(body)]) == []
+    assert any(" on checked items" in n and "valid_vs_rest" in n for n in reading["pairs"])
+    assert any(n.startswith("L1~L2") for n in reading["pairs"])
+
+
+def test_a_report_with_nothing_to_compare_is_refused(tmp_path: Path) -> None:
+    report = _report()
+    bare = {
+        **report,
+        "labels": {
+            e: {"human": by["human"]} for e, by in report["labels"].items() if "human" in by
+        },
+    }
+    with pytest.raises(SystemExit, match="nothing to compare"):
+        agreement_tool.report_readers(bare, {"org": "openstack", "pairs": {}})

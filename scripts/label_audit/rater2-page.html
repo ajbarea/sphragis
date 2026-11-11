@@ -251,7 +251,13 @@ async function lockCurrent(){
   try{
     // Another tab may have locked this item first; a locked answer is never overwritten.
     const ref=db.doc("answers/"+uid+"/items/"+ex.item);
-    if((await ref.get()).exists){ busy=false; render(); return; }
+    const prior=await ref.get();
+    if(prior.exists){
+      const v=prior.data(); if(v&&v.rubric===RUBRIC&&LABELS.includes(v.label)) answers[ex.item]=v;
+      busy=false; render();
+      const err=document.getElementById("err"); if(err) err.textContent="This item was already locked, in another tab or device; that answer is kept.";
+      return;
+    }
     await ensureMarker();
     await ref.set(body);
     answers[ex.item]=body; busy=false; afterLock();
@@ -265,7 +271,7 @@ function isRefusal(code){ return REFUSALS.includes(code); }
 function saveFailed(e){
   const code=e&&e.code;
   if(isRefusal(code)){ mode="readonly"; notice(refusedText()); render(); return; }
-  const err=document.getElementById("err"); if(!err) return;
+  const err=document.getElementById("err")||{set textContent(t){ notice(t); }};
   err.textContent=code==="quota_exceeded"?"Not saved: this page's storage is full. Please tell AJ."
     :code==="resource_exhausted"?"Not saved: too many saves at once. Wait a moment and try again."
     :"Not saved. Check your connection and try again.";

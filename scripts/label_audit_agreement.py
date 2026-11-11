@@ -454,6 +454,8 @@ def report_readers(report: dict, org_reading: dict) -> tuple[list[str], dict[str
     unrecorded = sorted(n for n in wanted if n not in recorded)
     wrong = [f"{n}: not rebuilt" for n in unbuilt] + [f"{n}: not recorded" for n in unrecorded]
     wrong += differences(pairs, recorded, {n: n for n in wanted - set(unbuilt) - set(unrecorded)})
+    if not wanted:
+        wrong.append("nothing to compare")
     if wrong:
         raise SystemExit(f"the {org} reading does not reproduce: " + "; ".join(wrong))
     return items, readers, pairs
