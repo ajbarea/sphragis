@@ -1698,8 +1698,8 @@ def decomposition_gate(
     `detectable` holds each cell's registered bound by Holm level (`detectable_effects`); a
     confirmatory cell without one at every level the design reads is refused, so no bound is
     chosen after the data. It reads single-partition development pilots
-    (`scripts/decomposition_pilot.py`). The H2 test-window read over partitions is not built
-    yet; when it is, it goes through `require_test_read` as the H1 read does.
+    (`scripts/decomposition_pilot.py`). Test-window reads over partitions, H2's included, are
+    `confirmatory_gate`'s.
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")

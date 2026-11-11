@@ -167,7 +167,8 @@ training seed each, resampling relation chains, the test read's unit, in nats pe
 
 OpenStack's and Qt's contrasts are positive at both levels. Wikimedia's intervals lie inside the
 band of plus or minus the smallest effect of interest (SESOI, 0.0161 nats per token) at both, and
-at 97.5%, the level a bounded reading is made at, its upper bound is below it: bounded. The development window holds a fraction
+at 97.5%, the level a bounded reading is made at, its upper bound is below it: bounded. The
+development window holds a fraction
 of the test window's projected changes, so these readings size the design rather than preview
 its verdicts.
 

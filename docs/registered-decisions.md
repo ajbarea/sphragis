@@ -56,7 +56,8 @@ interval alone, bounded against δ.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the SESOI δ (a one-sided equivalence test; research log, 2026-10-14), and **inconclusive**
-otherwise, reported as "not detected above" its upper bound. A cell is read bounded only once its sensitivity simulation, its power, is registered.
+otherwise, reported as "not detected above" its upper bound. A cell is read bounded only once its
+sensitivity simulation, its power, is registered.
 The margin moved to δ after the development pilots were read (research log, 2026-10-14).
 A cell whose critical p is calibrated (H2's, H2's K; a co-primary cell whose null missed at its
 K, Number of runs; any cell calibrated at its test spread, The test window's per-run spread)
@@ -189,7 +190,8 @@ holds more changes than that rate predicts (Wikimedia), the projection is a lowe
 enlarges the simulated bounds, provided arrivals do not fall below the training rate. So at fetch
 the realised change count is compared with the projection, and a window below it is reported
 beside the verdict with the simulation's power at the realised size, read with the cell's
-calibrated critical p where its K has one, as the read applies it at any size. Beside power, `power_at_size.py`
+calibrated critical p where its K has one, as the read applies it at any size. Beside power,
+`power_at_size.py`
 reports the smallest effect the cell detects at that size, by the simulation's own bisection at
 its registered per-cell power. A cell that then cannot detect δ, its detectable effect above
 δ at the family's first level, is exploratory: reported and left out of its hypothesis (Stage 1
@@ -256,7 +258,10 @@ hypothesis the gate reads, on the same draws, at the same levels:
   critical p (its critical p capped at α), so at the r = k step, which reads α, it counts exactly
   where its own reading does; each r < k reads α / (k - r + 1), where the scaling is an
   approximation, since the critical p was calibrated at α alone; and r = k is claimed only when
-  every smaller r is too. The organizations are disjoint corpora, so the cells are independent. A failed every-organization rule then still says how many show it. A cell whose spread calibration is refused at the level read has no critical p to scale by, so it is left out of this reading and the summary below; a cell exploratory by a small window stays in them.
+  every smaller r is too. The organizations are disjoint corpora, so the cells are independent. A
+  failed every-organization rule then still says how many show it. A cell whose spread calibration
+  is refused at the level read has no critical p to scale by, so it is left out of this reading and
+  the summary below; a cell exploratory by a small window stays in them.
 - **Without AI-assisted targets.** The primary estimate recomputed without examples whose change's
   merged commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s rule, read
   at fetch time for the test window). Trailers are voluntary, so this bounds nothing; it shows
@@ -375,7 +380,8 @@ Qt, against 0.0125, and at the 95% level 0.019, 0.02475 and 0.025, against 0.025
 rest of this section are the by-change simulations'. A run is one admissible partition at its
 own training seed; runs and clusters are crossed rather than nested, so they are resampled
 independently (Owen's pigeonhole bootstrap). The gate reads no half of fewer than 10 clusters
-(`stats.MIN_CLUSTERS`; Stage 1 report, "Measured calibration of the interval"). On one partition at three seeds and a seed effect of
+(`stats.MIN_CLUSTERS`; Stage 1 report, "Measured calibration of the interval"). On one partition at
+three seeds and a seed effect of
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122. Over
 the registered runs, simulated on the registered metric, its one-sided false-positive rate at the
 stricter level is 0.00725 to 0.01125 for OpenStack and 0.0035 to 0.01325 for Wikimedia, against a
@@ -445,9 +451,9 @@ built. Its detectable effects are those of
 that calibrated simulation, +0.0109 and +0.0103 nats per token at the two levels (research log,
 2026-11-02), below δ.
 
-### The test window's per-run spread: simulated where it exceeds the sizing bound (Stage 1 report, papers#145, 2026-11-10)
+### The test window's per-run spread: simulated above the sizing bound
 
-Every bound and K is read at the 90% upper bound of its development pilot's per-run spread
+Registered by the Stage 1 report (papers#145, 2026-11-10). Every bound and K is read at the 90% upper bound of its development pilot's per-run spread
 (Stated power), and the interval's measured error rate is within nominal at that bound but not
 at every spread above it. So the Stage 1 report's Execution step 1 fixes each confirmatory cell's
 critical-value rule, not only the development critical values: a cell whose per-run spread on

@@ -11284,7 +11284,8 @@ simulation as `--sensitivity` at the registered spread target (H1 at six cells:
 `partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`; H2 at one cell, its
 K = 40 calibrated simulation). Qt's generation runs stay off the repository; they were linked
 from the private data folder (`sphragis-data-local/full-text/qt-generation-runs/`) beside its
-rescorings for the read, as for the first one, so its 22 batteries are read, and removed after. Every estimate, interval and battery is unchanged; the reads now carry their
+rescorings for the read, as for the first one, so its 22 batteries are read, and removed after.
+Every estimate, interval and battery is unchanged; the reads now carry their
 bounds, the bounded-test p (the share of draws at or above δ) and the four outcomes. Development
 readings, binding nothing:
 
