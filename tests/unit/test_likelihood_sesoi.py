@@ -55,7 +55,7 @@ def _results(tmp_path: Path, planted: dict, dose: dict) -> Path:
             {"id": f"{half}{i}", "logprob_per_token": -0.48, "exact_match": float(i == 0)}
             for i in range(100)
         ]
-    for name in ("openstack-p1", "qt-p4", "openstack-p2-foreignaosp"):
+    for name in ("openstack-p1", "qt-p4", "openstack-p2-foreignaosp", "openstack-p3-r256"):
         (results / f"likelihood-partition-{name}-n1850-rp1.0.json").write_text(
             json.dumps({"results": rows})
         )
@@ -113,7 +113,8 @@ def test_a_planted_interval_excluding_the_control_carries_the_planted_rate(
 
 
 def test_the_control_reads_only_the_runs_that_fixed_it(tmp_path, monkeypatch) -> None:
-    """Qt's runs and H2's runs are never read: they would move a rate already used."""
+    """Qt's runs, H2's runs and the rank-256 rerun's are never read: they would move a rate
+    already used."""
     _results(tmp_path, {"fraction": 1.0, "rate": None, "rate_95": None},
              {"fraction": 0.5, "rate": None, "rate_95": None})  # fmt: skip
     assert _sesoi(tmp_path, monkeypatch)["files"] == [
@@ -128,7 +129,7 @@ def test_the_committed_sesoi_reads_the_committed_control_runs() -> None:
         p
         for org in module.CONTROL_ORGS
         for p in (root / "datasets" / "results").glob(f"likelihood-partition-{org}-p*-rp1.0.json")
-        if "-plant" not in p.name and "-foreign" not in p.name
+        if module.registered_run(p)
     ]
     committed = json.loads((root / "datasets" / "results" / "likelihood-sesoi.json").read_text())
     assert sorted(p.name for p in picked) == sorted(Path(f).name for f in committed["files"])

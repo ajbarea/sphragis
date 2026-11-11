@@ -3702,7 +3702,10 @@ def test_a_test_read_is_held_to_its_rank(admitted) -> None:
     rerun = {o: r | {"lora_rank": 256} for o, r in reports.items()}
     with pytest.raises(ValueError, match="at rank 256, read at 32"):
         gate(rerun, h2_report | {"lora_rank": 256})
-    assert gate(rerun, h2_report | {"lora_rank": 256}, lora_rank=256)["lora_rank"] == 256
+    supplementary = gate(rerun, h2_report | {"lora_rank": 256}, lora_rank=256)
+    # Nothing it read can be quoted as the registered gate's: all of it is under `rerun`.
+    assert set(supplementary) == {"lora_rank", "supplementary", "rerun"}
+    assert supplementary["rerun"]["verdicts"] == gate(reports, h2_report)["verdicts"]
     with pytest.raises(ValueError, match="qt: its runs are at rank 32, read at 256"):
         gate(rerun, h2_report, lora_rank=256)
     with pytest.raises(ValueError, match="at rank None"):
@@ -3722,7 +3725,7 @@ def _ranked(rank: int, h1: dict, h2: dict | None = None) -> dict:
     }
     if h2 is not None:
         out["h2_cells"] = {o: {"verdicts": v} for o, v in h2.items()}
-    return out
+    return decomposition._marked_by_rank(out)
 
 
 def test_the_rank_256_rerun_reads_capacity_and_bounded_cells_beside_the_verdicts() -> None:
@@ -3746,7 +3749,7 @@ def test_the_rank_256_rerun_reads_capacity_and_bounded_cells_beside_the_verdicts
         },
         {"qt": {"0.95": "supported", "0.975": "supported"}},
     )
-    at_256["verdicts"] = {"H1": "pass"}
+    at_256["rerun"]["verdicts"] = {"H1": "pass"}
     out = rank_reading(at_32, at_256)
     cells = out["readings"]["cells"]
     assert cells["openstack"] == {0.95: "capacity-limited", 0.975: None}
@@ -3760,9 +3763,27 @@ def test_the_rank_256_rerun_reads_capacity_and_bounded_cells_beside_the_verdicts
     assert out["verdicts"] == {"H1": "inconclusive"}
     with pytest.raises(ValueError, match="ranks 256 and 32"):
         rank_reading(at_256, at_32)
-    fewer = _ranked(256, {"openstack": {0.95: "supported", 0.975: "supported"}}, {"qt": {}})
-    with pytest.raises(ValueError, match="cells: the rerun reads"):
-        rank_reading(at_32, fewer)
+    # A rerun output not nested as a gate writes it is refused.
+    with pytest.raises(ValueError, match="ranks 32 and 256"):
+        rank_reading(at_32, {**at_256["rerun"], "lora_rank": 256})
+    assert out["one_rank"] == {} and out["exploratory"] == {}
+    # A cell set aside at either rank carries its reason beside its reading.
+    at_256["rerun"]["cells"]["wikimedia"]["exploratory"] = "small window at 0.95"
+    marked = rank_reading(at_32, at_256)
+    assert marked["exploratory"] == {"cells": {"wikimedia": {256: "small window at 0.95"}}}
+    assert marked["readings"]["cells"]["wikimedia"][0.95] == "bounded at both ranks"
+    del at_256["rerun"]["cells"]["wikimedia"]["exploratory"]
+    # An organization withdrawn at one rank leaves the others read, and is listed.
+    fewer = _ranked(
+        256,
+        {"openstack": {0.95: "supported", 0.975: "supported"}},
+        {"qt": {"0.95": "supported", "0.975": "supported"}},
+    )
+    partial = rank_reading(at_32, fewer)
+    assert partial["readings"]["cells"] == {
+        "openstack": {0.95: "capacity-limited", 0.975: "capacity-limited"}
+    }
+    assert partial["one_rank"]["cells"] == ["qt", "wikimedia"]
     other_levels = _ranked(
         256,
         {o: {0.95: "supported"} for o in ("openstack", "wikimedia", "qt")},
@@ -3776,7 +3797,14 @@ def test_a_replication_members_rerun_is_read_on_its_one_verdict() -> None:
     from sphragis.experiment.decomposition import rank_reading
 
     def family(rank: int, verdict: str) -> dict:
-        return {"lora_rank": rank, "cells": {"apache": {"verdict": verdict}}}
+        out = {"lora_rank": rank, "members": ("apache",), "cells": {"apache": {"verdict": verdict}}}
+        return decomposition._marked_by_rank(out)
 
     out = rank_reading(family(32, "inconclusive"), family(256, "supported"))
     assert out["readings"]["cells"] == {"apache": {REPLICATION_CONFIDENCE: "capacity-limited"}}
+    # Its r at 256 is nested too, never beside the registered family's.
+    assert "partial_conjunction" not in decomposition._marked_by_rank(
+        {"lora_rank": 256, "members": ("apache",), "partial_conjunction": {"at_least": 1}}
+    )
+    with pytest.raises(ValueError, match="replication gate's output"):
+        rank_reading(family(32, "inconclusive"), _ranked(256, {}, None))

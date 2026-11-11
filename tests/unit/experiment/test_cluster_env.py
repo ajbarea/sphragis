@@ -674,6 +674,8 @@ def test_the_rank_256_rerun_runs_through_the_partition_chain() -> None:
         # Tagged after the corpus root is named, so the rerun reads the registered corpus.
         assert text.index("tag_result_suffix LORA_RANK") > text.index('ROOT="'), name
     assert "tag_result_suffix LORA_RANK" in (scripts / "likelihood_score.sbatch").read_text()
+    # The rerun's spread-rule read claims its own name beside the registered one's.
+    assert "tag_result_suffix LORA_RANK" in (scripts / "partition_sensitivity.sbatch").read_text()
 
 
 def test_an_explicitly_empty_run_tag_is_a_deliberate_overwrite(tmp_path: Path) -> None:

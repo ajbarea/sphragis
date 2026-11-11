@@ -1684,4 +1684,4 @@ def test_a_test_read_is_of_the_registered_rank_or_the_rerun(
     gate = decomposition.replication_gate(
         {"apache": report}, simulations=simulations, lora_rank=256
     )
-    assert gate["lora_rank"] == 256
+    assert gate["lora_rank"] == 256 and gate["supplementary"]
