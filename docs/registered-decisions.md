@@ -449,7 +449,8 @@ exceeds that bound is simulated at that spread, at its K and realised size, with
 nominal there changes nothing. One that misses is calibrated as H2's is, and the cell reads at the
 smaller of that critical p and its K's own at each level, so calibration only tightens. A
 calibration whose rate on the second null half exceeds Bradley's 1.5α at a level the family
-reads leaves the cell exploratory (`partitions.spread_reading`, `null_reading`). The rule applies
+reads, or whose critical p is zero there (no p falls below it), leaves the cell exploratory
+(`partitions.spread_reading`, `null_reading`). The rule applies
 to every cell, H2's and the GitHub family's too, since the family is read with the Gerrit cells'
 rules.
 
