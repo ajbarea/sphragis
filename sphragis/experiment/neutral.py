@@ -1,9 +1,12 @@
 """Outcome-neutral tests: checks on the apparatus, independent of which way RQ1 falls.
 
-Pre-registered in design section 3. They run before the confirmatory comparison, and a
-failure halts the study and is reported as an apparatus failure rather than a result. Each
-check returns its evidence beside its pass flag, and `apparatus_holds` is the one place the
-halt rule lives.
+Pre-registered in design section 3. They run before the confirmatory comparison. A failure
+withdraws the organization it fails on: it is reported as a deviation, an apparatus failure
+rather than a result, and the hypotheses are read over the remaining organizations (Stage 1
+report, "Outcome-Neutral Tests"; `decomposition.h1_test_gate`'s `withdrawn`). Each check returns
+its evidence beside its pass flag. The withdrawal rule lives in two places: `apparatus_holds` says
+whether a run's checks held, and `withdrawing_failures` reads which of an organization's failed
+checks withdraw it.
 
 The contamination battery is test 1 and is deliberately absent: its report returns no
 verdict, because with no published content cutoff a flat gap is ambiguous and the reading is
@@ -241,8 +244,64 @@ def planted_convention(
     return Check("planted_convention", run["verdict"]["verdict"] == "pass", evidence)
 
 
+#: The checks whose failure withdraws an organization, by the name each `Check` carries before its
+#: label: 2 to 6. Check 1, the contamination battery, is a reported measurement and withdraws
+#: nothing (Stage 1 report, "Outcome-Neutral Tests").
+WITHDRAWING_CHECKS = (
+    "positive_control",
+    "manipulation",
+    "leakage",
+    "planted_convention",
+    "non_degeneracy",
+)
+
+
+def foreign_check(name: str) -> bool:
+    """Whether a check is a foreign arm's (`foreign-<source>-for-<half>`): its failure leaves H2
+    exploratory and the organization in H1, as `rq1_pilot.py` reads it. The Stage 1 report says so
+    of its pool over check 4; a foreign adapter failing check 3 is the foreign source's failure
+    too, so it is read the same way ("Without Qt or Chromium, H2 is exploratory")."""
+    return "foreign-" in name
+
+
+def labelled_halves(label: str) -> set[str]:
+    """The organizations whose halves (`<org>-a`, `<org>-b`) a check's label names."""
+    return set(re.findall(r"([a-z0-9]+)-[ab](?![a-z0-9])", label))
+
+
+def withdrawing_failures(battery: Any, *, org: str) -> list[str]:
+    """The failed checks of `org`'s recorded battery (`{"apparatus_holds", "checks": [{"name",
+    "passed"}, ...]}`) that withdraw it, sorted: checks 2 to 6 (`WITHDRAWING_CHECKS`), not a
+    foreign arm's (`foreign_check`), each labelled with `org`'s halves, or `org` itself, where it
+    is labelled (`labelled_halves`).
+
+    Refused when `battery` records no checks, a check's `passed` is not a bool, a labelled check
+    names another organization's halves, or the battery says it held while a check failed.
+    """
+    checks = battery.get("checks") if isinstance(battery, Mapping) else None
+    if not isinstance(checks, list) or not checks:
+        raise ValueError(f"not a recorded battery: {battery!r}")
+    failed = []
+    for c in checks:
+        if not (isinstance(c, Mapping) and isinstance(c.get("passed"), bool)):
+            raise ValueError(f"{org}: a check records no pass flag: {c!r}")
+        name = str(c.get("name"))
+        kind, _, label = name.partition(":")
+        named = labelled_halves(label.split("|", 1)[0])
+        if label and not (named == {org} or (not named and label.split("|", 1)[0] == org)):
+            raise ValueError(f"{org}: the battery's check {name!r} is another organization's")
+        if not c["passed"]:
+            failed.append((kind, name))
+    if failed and battery.get("apparatus_holds") is True:
+        raise ValueError(f"{org}: the battery says it held, and {[n for _, n in failed]} failed")
+    return sorted(
+        name for kind, name in failed if kind in WITHDRAWING_CHECKS and not foreign_check(name)
+    )
+
+
 def apparatus_holds(checks: Sequence[Check]) -> bool:
-    """True only if every outcome-neutral check passed. False halts the study: H1 is not read."""
+    """True only if every outcome-neutral check on one organization passed. False withdraws that
+    organization: none of its cells is read, and the hypotheses are read over the rest."""
     return bool(checks) and all(check.passed for check in checks)
 
 

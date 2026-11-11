@@ -1015,7 +1015,9 @@ def test_a_test_read_refuses_a_run_whose_battery_did_not_hold(
 ) -> None:
     argv = _gerrit_test_argv(tmp_path)
     _rewrite_run(tmp_path, 2, change)
-    with pytest.raises(SystemExit, match="outcome-neutral battery missing or failed"):
+    with pytest.raises(
+        SystemExit, match="outcome-neutral battery missing or failed.*organization is withdrawn"
+    ):
         _main(monkeypatch, argv)
     assert not (tmp_path / "o.json").exists()
 

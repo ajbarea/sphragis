@@ -89,8 +89,9 @@ Each of those was chosen before the run that would have been decided by it, and 
 recorded with the evidence that chose it on [Registered decisions](registered-decisions.md).
 
 Before the gate is read at all, the [outcome-neutral tests](outcome-neutral.md) have to pass.
-They are checks on the apparatus rather than on the hypothesis, and a failure halts the study
-and is reported as an apparatus failure rather than as a result.
+They are checks on the apparatus rather than on the hypothesis. A failure withdraws the
+organization it fails on, reported as a deviation and an apparatus failure rather than as a
+result, and the hypotheses are read over the remaining organizations.
 
 ## The corpus, and the seal
 

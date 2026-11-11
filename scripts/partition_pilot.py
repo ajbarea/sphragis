@@ -384,12 +384,15 @@ def main() -> None:
             )
     if window == "test":
         check_resamples(args, levels)
-        # Every outcome-neutral test failing halts the study, so no run whose battery did not
-        # hold, or that recorded none, enters a test read.
+        # A failed outcome-neutral test withdraws the organization, so no run whose battery did
+        # not hold, or that recorded none, enters a test read.
         failed = [b["file"] for b in batteries if not b["holds"]]
         if failed:
-            raise SystemExit(f"not read: outcome-neutral battery missing or failed in {failed}")
-    # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
+            raise SystemExit(
+                f"not read: outcome-neutral battery missing or failed in {failed}; the "
+                "organization is withdrawn"
+            )
+    # Check 5 is part of the withdrawal rule, so a read of the sealed window cannot go without it.
     # A K, a bound or a test read rests on the SESOI, so none is taken on an unregistered metric.
     if sesoi is None and (args.sizing or args.sensitivity or window == "test"):
         raise SystemExit(
@@ -406,7 +409,10 @@ def main() -> None:
     # takes its cell's (`decomposition.coprimary_read`).
     cell_metric = REGISTERED_METRIC if args.metric == COPRIMARY_METRIC else args.metric
     if window == "test" and not args.planted:
-        raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
+        raise SystemExit(
+            "a test-window read needs --planted: outcome-neutral check 5 withdraws an "
+            "organization that fails it"
+        )
     # Bounds are registered before the test window, so it is never read without them.
     if window == "test" and not args.sensitivity:
         raise SystemExit("a test-window read needs --sensitivity: its registered bounds")
@@ -421,7 +427,10 @@ def main() -> None:
         check = planted_convention(planted_run, org=args.org, train_size=train_size)
         planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
         if not apparatus_holds([check]):
-            raise SystemExit(f"{args.planted}: check 5 failed ({check.evidence}); H1 is not read")
+            raise SystemExit(
+                f"{args.planted}: check 5 failed ({check.evidence}); the organization is "
+                "withdrawn and its cells are not read"
+            )
     runs_fixed, k_source, k_from = len(runs), "all runs", None
     if args.sizing:
         sizing_artifact = json.loads(args.sizing.read_text())
@@ -551,7 +560,14 @@ def main() -> None:
         # The SESOI is 0.01 in exact match and means nothing on this metric, so the verdicts,
         # margins and K that compare against it are dropped or set to None. Intervals and
         # estimates stand.
-        for key in ("verdicts", "within_sesoi", "meaningful", "reproducibility"):
+        for key in (
+            "verdicts",
+            "below",
+            "within_sesoi",
+            "meaningful",
+            "reproducibility",
+            "p_bounded",
+        ):
             cell[key] = None
         kept = ("pilot_runs", "sd", "sd_upper", "confidence")
         sizing = {key: value for key, value in sizing.items() if key in kept}
@@ -588,7 +604,14 @@ def main() -> None:
                 "unreadable": str(error),
             }
             continue
-        fields = ("intervals", "within_sesoi", "meaningful", "p_one_sided", "bootstrap_se")
+        fields = (
+            "intervals",
+            "within_sesoi",
+            "meaningful",
+            "p_one_sided",
+            "p_bounded",
+            "bootstrap_se",
+        )
         if sesoi is None:
             fields = ("intervals", "p_one_sided", "bootstrap_se")
         without[name] = {
