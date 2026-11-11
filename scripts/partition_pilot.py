@@ -575,15 +575,12 @@ def main() -> None:
             raise SystemExit(f"{artifact} was made by {made_by}, this read is by {unit}")
         if made_from != cluster_unit.get("sha256"):
             raise SystemExit(f"{artifact} was made from other chains than {args.chains}")
-    # Outcome-neutral check 2 is read before the cell, once per organization: on its H1 read of
-    # the registered score, over the cell's runs on the crossed interval. On the test window a
-    # failure withdraws the organization; on the development window it is reported.
+    # Outcome-neutral check 2 is read before the cell, as every check is before a confirmatory
+    # comparison: each half's own adapter against the base model on the registered score, over
+    # the read's runs on the crossed interval, whatever cell or score the read is of. On the test
+    # window a failure withdraws the organization; on the development window it is reported.
     positive_control = None
-    if (
-        not h2
-        and args.metric == REGISTERED_METRIC
-        and (window == "test" or carries(runs[:runs_fixed], REGISTERED_METRIC))
-    ):
+    if window == "test" or carries(runs[:runs_fixed], REGISTERED_METRIC):
         try:
             check = positive_control_crossed(
                 runs,

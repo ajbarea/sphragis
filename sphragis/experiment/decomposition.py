@@ -593,32 +593,31 @@ def _below_projection(
 def require_registered_analyses(
     report: Mapping[str, Any], *, org: str, expected: Mapping[str, Any]
 ) -> None:
-    """Refuse a test read on the registered score without the analyses the Stage 1 report
-    registers beside its cell: an H1 read's outcome-neutral check 2, passed on the crossed 95%
-    interval over the read's own runs ("Outcome-Neutral Tests"); an H2 read's joint reading with
-    H1 on the same C++ examples and draws over its K runs, and its s' reading at its s levels
-    ("Verdicts and Readings"; Analysis, "Secondary and exploratory analyses")."""
-    if expected["metric"] != REGISTERED_METRIC:
-        return
+    """Refuse a test read without the analyses the Stage 1 report registers beside its cell:
+    on every read, outcome-neutral check 2 on the registered score, passed on the crossed 95%
+    interval over the read's own runs, since every check runs before a confirmatory comparison
+    is read ("Outcome-Neutral Tests"); on H2's read of the registered score, its joint reading
+    with H1 on the same C++ examples and draws over its K runs, and its s' reading at its s
+    levels ("Verdicts and Readings"; Analysis, "Secondary and exploratory analyses")."""
     runs = report.get("runs")
-    if tuple(expected.get("cell", ("H1", None)))[0] == "H1":
-        check = report.get("positive_control")
-        if not isinstance(check, Mapping):
-            raise ValueError(f"{org}: the read carries no crossed check 2")
-        evidence = check.get("evidence")
-        if not (
-            isinstance(evidence, Mapping)
-            and check.get("name") == f"positive_control_crossed:{org}"
-            and evidence.get("runs") == runs
-            and evidence.get("metric") == REGISTERED_METRIC
-            and evidence.get("confidence") == POSITIVE_CONTROL_CONFIDENCE
-        ):
-            raise ValueError(f"{org}: its check 2 is not the crossed read over its own runs")
-        low = evidence.get("low")
-        if not is_real(low) or check.get("passed") is not (low > 0.0):
-            raise ValueError(f"{org}: its check 2 says passed {check.get('passed')!r}, low {low!r}")
-        if check.get("passed") is not True:
-            raise ValueError(f"{org}: check 2 failed; the organization is withdrawn")
+    check = report.get("positive_control")
+    if not isinstance(check, Mapping):
+        raise ValueError(f"{org}: the read carries no crossed check 2")
+    evidence = check.get("evidence")
+    if not (
+        isinstance(evidence, Mapping)
+        and check.get("name") == f"positive_control_crossed:{org}"
+        and evidence.get("runs") == runs
+        and evidence.get("metric") == REGISTERED_METRIC
+        and evidence.get("confidence") == POSITIVE_CONTROL_CONFIDENCE
+    ):
+        raise ValueError(f"{org}: its check 2 is not the crossed read over its own runs")
+    low = evidence.get("low")
+    if not is_real(low) or check.get("passed") is not (low > 0.0):
+        raise ValueError(f"{org}: its check 2 says passed {check.get('passed')!r}, low {low!r}")
+    if check.get("passed") is not True:
+        raise ValueError(f"{org}: check 2 failed; the organization is withdrawn")
+    if expected["metric"] != REGISTERED_METRIC or tuple(expected.get("cell", ("H1",)))[0] != "H2":
         return
     joint = report.get("joint")
     summed = joint.get("summed") if isinstance(joint, Mapping) else None
@@ -627,7 +626,8 @@ def require_registered_analyses(
         and joint.get("runs") == runs
         and joint.get("metric") == REGISTERED_METRIC
         and joint.get("population") == H2_POPULATION
-        and (joint.get("h2") or {}).get("foreign") == tuple(expected["cell"])[1]
+        and isinstance(joint.get("h2"), Mapping)
+        and joint["h2"].get("foreign") == tuple(expected["cell"])[1]
         and isinstance(summed, Mapping)
         and summed.get("confidence") == SUMMED_CONFIDENCE
         and all(is_real(summed.get(k)) for k in ("estimate", "low", "high"))
@@ -1171,7 +1171,7 @@ def replication_gate(
     family is read over the rest, as `confirmatory_gate` reads the admitted organizations.
 
     The members are `REPLICATION_MEMBERS`, never an argument, so none joins after Stage 1; the
-    gate refuses to run before they are frozen. `cells` holds each member's
+    gate refuses to run before they are frozen. `cells` holds each remaining member's
     `partition_pilot.py --replication` test-window report and no other organization (read back
     from JSON is accepted); each is checked by `require_readable` and by `require_test_read`
     against `registered_read`. `simulations` holds each member's partition-simulation artifact:
@@ -1244,6 +1244,9 @@ def replication_gate(
             "spread": spread,
             # The registered sensitivities the report read (partition_pilot.py --without).
             "without": readings,
+            # Beside the verdict, binding none, as `confirmatory_gate` carries them.
+            "change_averaged": cell.get("change_averaged"),
+            "positive_control": cell.get("positive_control"),
         }
         _mark_exploratory(read[org], sesoi, [level])
     counted = {

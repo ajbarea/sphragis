@@ -375,9 +375,11 @@ def _with_likelihood(argv: list[str]) -> None:
         if not path.endswith(".json") or "run-" not in path:
             continue
         run = json.loads(Path(path).read_text())
-        for rows in run["results"].values():
+        for arm, rows in run["results"].items():
+            # The base model a nat per token below every adapter (outcome-neutral check 2).
+            below = 2.0 if arm.startswith("base|") else 1.0
             for row in rows:
-                row["logprob_per_token"] = row["exact_match"] - 1.0
+                row["logprob_per_token"] = row["exact_match"] - below
                 row["logprob"] = 10 * (row["exact_match"] - 1.0)
                 row["logprob_per_token:other"] = (row["exact_match"] - 1.0) / 2
         Path(path).write_text(json.dumps(run))
@@ -1134,6 +1136,14 @@ def _h2_inputs(
                     }
                     for i in range(first, first + N)
                 ]
+            results[run_id(EvalRun("base", window, None))] = [
+                {
+                    "id": f"qt:c{i}:f{i}.{'cpp' if i % 2 == 0 else 'py'}:1:1",
+                    "change_id": f"c{i}",
+                    "exact_match": 0.0,
+                }
+                for i in range(first, first + N)
+            ]
         pool = {"source": "aosp", "pool_sha256": pool_sha if k > 1 else first_pool}
         record = {**run, "results": results, "foreign": foreign, "foreign_pool": pool}
         Path(path).write_text(json.dumps(record))
@@ -1565,7 +1575,18 @@ def test_an_h1_read_on_the_registered_score_reads_check_2_crossed(
     _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
     report = json.loads(out.read_text())
     assert report["positive_control"]["passed"] is False and report["verdicts"]
-    # Another score's read leaves check 2 to the registered score's.
+    # Another score's read runs check 2 too, on the registered score.
+    _main(monkeypatch, [*argv, "--out", str(out)])
+    check = json.loads(out.read_text())["positive_control"]
+    assert check["evidence"]["metric"] == REGISTERED_METRIC
+    # Runs without the registered score read none on the development window.
+    for path in argv:
+        if path.endswith(".json") and "run-" in path:
+            run = json.loads(Path(path).read_text())
+            for rows in run["results"].values():
+                for row in rows:
+                    del row[REGISTERED_METRIC]
+            Path(path).write_text(json.dumps(run))
     _main(monkeypatch, [*argv, "--out", str(out)])
     assert json.loads(out.read_text())["positive_control"] is None
 
@@ -1603,7 +1624,8 @@ def test_an_h2_read_on_the_registered_score_carries_its_joint_and_s_prime_readin
     assert joint["summed"]["estimate"] == pytest.approx(0.0)
     assert secondary["metric"] == COPRIMARY_METRIC and secondary["runs"] == report["runs"]
     assert set(secondary["verdicts"]) == set(report["verdicts"])
-    assert report["positive_control"] is None
+    # Check 2 runs on H2's read too, each half's own adapter against the base model.
+    assert report["positive_control"]["name"] == "positive_control_crossed:qt"
     # Without the s' score in its runs, a development read leaves it out.
     for path in argv:
         if path.endswith(".json") and "run-" in path:

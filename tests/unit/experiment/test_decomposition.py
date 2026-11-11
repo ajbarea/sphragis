@@ -3008,7 +3008,6 @@ def _h2_pair(low: float, high: float, p: float, **kwargs: Any) -> tuple[dict, di
     report, sim = _two_levels("qt", low, high, p, **kwargs)
     cell = {"hypothesis": "H2", "foreign_source": "chromium"}
     report |= cell
-    del report["positive_control"]
     # Beside the cell, binding nothing: the joint reading over its K runs and H2 on s'.
     report["joint"] = {
         "runs": report["runs"],
@@ -3518,7 +3517,21 @@ def _without(record: dict, key: str) -> dict:
             None,
             "says passed True, low -0.01",
         ),
+        (
+            lambda r: (
+                r
+                | {
+                    "positive_control": r["positive_control"]
+                    | {"evidence": r["positive_control"]["evidence"] | {"metric": "exact_match"}}
+                }
+            ),
+            None,
+            "not the crossed read over its own runs",
+        ),
+        # Every test read runs check 2 before its comparison, H2's too.
+        (None, lambda r: _without(r, "positive_control"), "carries no crossed check 2"),
         (None, lambda r: _without(r, "joint"), "no joint reading with H1"),
+        (None, lambda r: r | {"joint": r["joint"] | {"h2": "chromium"}}, "no joint reading"),
         (
             None,
             lambda r: r | {"joint": r["joint"] | {"h2": {"foreign": "aosp"}}},
@@ -3594,8 +3607,7 @@ def test_a_test_read_without_its_registered_analyses_is_refused(
     pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
     reports = {o: r for o, (r, _) in pairs.items()}
     sims = {o: s for o, (_, s) in pairs.items()}
-    # The co-primary twins carry no check 2, as the co-primary reads do not.
-    coprimary = {o: _on_other(_without(r, "positive_control")) for o, r in reports.items()}
+    coprimary = {o: _on_other(r) for o, r in reports.items()}
     h2_report, h2_sim = _h2_pair(*_PASS)
     if h1_change is not None:
         reports["wikimedia"] = h1_change(reports["wikimedia"])
@@ -3640,4 +3652,23 @@ def test_a_withdrawn_replication_member_is_read_over_the_rest(frozen) -> None:
             {"apache": _GOOD},
             simulations=_SIM,
             withdrawn={"dotnet": _failed_battery("positive_control:dotnet-a|s1")},
+        )
+
+
+def test_a_coprimary_test_read_without_its_crossed_check_2_is_refused(admitted) -> None:
+    admitted(*_THREE)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    coprimary = {o: _on_other(r) for o, r in reports.items()}
+    coprimary["qt"] = _without(coprimary["qt"], "positive_control")
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    with pytest.raises(ValueError, match="qt: the read carries no crossed check 2"):
+        confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary=coprimary,
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            h2={"qt": h2_report},
+            h2_simulations={"qt": h2_sim},
         )
