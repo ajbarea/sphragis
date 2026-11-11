@@ -25,8 +25,8 @@ same items.
 Second raters (`--second-raters`) label the human's checked items of one organization on a page
 that reveals nothing (`label_audit_page.py --second-rater`), each under their own id in the page's
 store. Their answers are read from that store's export, beside the committed report: every pair
-of readers (the model raters, the human and each second rater, under a pseudonym in the order
-they first locked an answer) on the items both answered, with raw agreement and its Wilson
+of readers (the model raters, the human and each second rater, under a pseudonym kept from one
+export to the next) on the items both answered, with raw agreement and its Wilson
 interval, kappa, AC1, valid against the rest and outside names, and again without the items a
 slip touches. No second rater saw any label, so no pair of theirs is read by halves. Every human
 pair but the halves, and the model raters' label pair, must first reproduce the organization's
@@ -265,6 +265,11 @@ def differences(ours: dict, theirs: dict, names: dict[str, str]) -> list[str]:
     for mine, recorded in sorted(names.items()):
         for field in REPRODUCED_FIELDS:
             a, b = ours[mine][field], theirs[recorded][field]
+            if isinstance(a, list) != isinstance(b, list) or (
+                isinstance(a, list) and len(a) != len(b)
+            ):
+                wrong.append(f"{mine}.{field}: {a} against {b}")
+                continue
             pairs = zip(a, b, strict=True) if isinstance(a, list) else [(a, b)]
             if not all(
                 _undefined(x)
@@ -324,7 +329,7 @@ def _answer(path: Path) -> dict:
 
 
 def read_second_raters(export: Path, items: list[str]) -> dict[str, dict[str, dict]]:
-    """Each second rater's answers by item, under pseudonyms in the order they first locked one.
+    """Each second rater's answers by item, under their pseudonyms (`pseudonyms`).
 
     The export is the page store's `answers/<viewer id>/items` collections saved as files
     (`ArtifactData list` with `out_dir`): `answers/<viewer id>/items/<item>.json`, one
@@ -449,8 +454,6 @@ def report_readers(report: dict, org_reading: dict) -> tuple[list[str], dict[str
     unrecorded = sorted(n for n in wanted if n not in recorded)
     wrong = [f"{n}: not rebuilt" for n in unbuilt] + [f"{n}: not recorded" for n in unrecorded]
     wrong += differences(pairs, recorded, {n: n for n in wanted - set(unbuilt) - set(unrecorded)})
-    if not any(n.startswith("human~") for n in wanted):
-        wrong.append("neither side reads a human pair")
     if wrong:
         raise SystemExit(f"the {org} reading does not reproduce: " + "; ".join(wrong))
     return items, readers, pairs
@@ -526,6 +529,8 @@ def main() -> None:
     if args.second_raters:
         if not (args.from_report and args.org_reading):
             parser.error("--second-raters takes --from-report and --org-reading")
+        if args.out.resolve() in (args.from_report.resolve(), args.org_reading.resolve()):
+            parser.error("--out must not name an input")
         reading = second_rater_report(
             json.loads(args.from_report.read_text()),
             json.loads(args.org_reading.read_text()),

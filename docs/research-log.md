@@ -11251,7 +11251,8 @@ batches reproduces that page's items exactly, and its rater A labels match `labe
 on all 383 scored items.
 
 `label_audit_agreement.py --second-raters` reads the store's export beside the committed report.
-Second raters are named L1, L2, ... in the order they first locked an answer; viewer ids are not
+Second raters are named L1, L2, ... in the order they first appear in an export, by first lock
+within one, and keep their names in later exports; viewer ids are not
 written. Every pair of readers is read on the items both answered: the five labels, valid
 against the rest, and outside names. Each reading gives raw agreement with a Wilson interval,
 and kappa and AC1 with bootstrap intervals. Each is read again without the items a slip

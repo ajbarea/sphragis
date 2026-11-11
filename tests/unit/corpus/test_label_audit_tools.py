@@ -301,6 +301,8 @@ def test_the_second_rater_reading_pairs_every_reader_on_shared_items(tmp_path: P
         "slips": {"label": [], "outside_names": [items[0]]},
     }
     assert set(reading["labels"]["L2"]) <= set(report["labels"])  # keyed by example id
+    # Model pairs are read once, on the checked items, under that name only.
+    assert not [n for n in pairs if n.startswith("A~B") and "on checked items" not in n]
     assert "u_a" not in json.dumps(reading) and "u_b" not in json.dumps(reading)
 
 
@@ -444,3 +446,31 @@ def test_a_pseudonym_file_with_a_gap_names_nobody_twice(tmp_path: Path) -> None:
     (tmp_path / "pseudonyms.json").write_text('{"u_a": "L1", "u_b": "L1"}')
     with pytest.raises(SystemExit, match="share a pseudonym"):
         agreement_tool.read_second_raters(tmp_path, ["item-002"])
+
+
+def test_a_pair_raises_on_an_undefined_interval_unless_asked_not_to() -> None:
+    """The pooled and per-organization readings keep main's refusal; the read-back tolerates it."""
+    same = {"i1": "valid", "i2": "valid"}
+    with pytest.raises(ValueError, match="undefined on every resample"):
+        agreement_tool._pair(same, same, ["i1", "i2"], list(sample_tool.LABELS))
+    pair = agreement_tool._pair(
+        same, same, ["i1", "i2"], list(sample_tool.LABELS), undefined_ok=True
+    )
+    assert all(math.isnan(x) for x in pair["kappa_95"])
+
+
+def test_differences_refuse_a_missing_interval_by_name() -> None:
+    ours = {
+        "p": {
+            "items": 3,
+            "raw_agreement": 1.0,
+            "kappa": 0.2,
+            "kappa_95": [0.1, 0.3],
+            "ac1": 1.0,
+            "ac1_95": [1.0, 1.0],
+        }
+    }
+    theirs = {"p": {**ours["p"], "kappa_95": None}}
+    assert agreement_tool.differences(ours, theirs, {"p": "p"}) == [
+        "p.kappa_95: [0.1, 0.3] against None"
+    ]
