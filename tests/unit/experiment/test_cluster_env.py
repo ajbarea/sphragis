@@ -658,6 +658,22 @@ def test_every_script_names_its_result_by_the_seeds_and_size_it_passes(script: P
     for variable, flag in (("SEEDS", "--seeds"), ("TRAIN_SIZE", "--train-size")):
         passes = f"${{{variable}" in text and flag in text
         assert (variable in names) == passes, f"{script.name}: {variable}"
+    # A rank-256 rerun writes beside the registered run, never over it.
+    every = {name for line in tagged for name in line.split()}
+    if "--lora-rank" in text:
+        assert "LORA_RANK" in every, f"{script.name}: passes --lora-rank untagged"
+
+
+def test_the_rank_256_rerun_runs_through_the_partition_chain() -> None:
+    """Stage 1 report, "Rank 256": the grid rerun at 256 trains, decodes, adds its foreign arms
+    and is rescored under one tag, on the registered run's corpus."""
+    scripts = _ROOT / "scripts"
+    for name in ("partition_run", "decoder_check", "foreign_arms"):
+        text = (scripts / f"{name}.sbatch").read_text()
+        assert '${LORA_RANK:+--lora-rank "$LORA_RANK"}' in text, name
+        # Tagged after the corpus root is named, so the rerun reads the registered corpus.
+        assert text.index("tag_result_suffix LORA_RANK") > text.index('ROOT="'), name
+    assert "tag_result_suffix LORA_RANK" in (scripts / "likelihood_score.sbatch").read_text()
 
 
 def test_an_explicitly_empty_run_tag_is_a_deliberate_overwrite(tmp_path: Path) -> None:

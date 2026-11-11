@@ -30,6 +30,7 @@ from transformers import (
 )
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
+from sphragis.experiment.cells import REGISTERED_RANK
 from sphragis.experiment.likelihood import SCORING_MAX_LENGTH, target_span
 from sphragis.experiment.training import (
     MAX_SEQ_LENGTH,
@@ -93,9 +94,9 @@ def pinned_id(model_id: str) -> str:
 # adapters at the same rank, and because the positive controls show this rank adapts: the
 # capacity objection bites on a null, and the conditional branch answers it by rerunning at
 # 256 rather than by assuming 32 was enough.
-#: The registered rank. `lora_config` and `attach_adapter` take another because the report
-#: pre-commits to a rerun at 256, and a branch the apparatus cannot run is not registered.
-REGISTERED_RANK = 32
+# The registered rank (`cells.REGISTERED_RANK`). `lora_config` and `attach_adapter` take another
+# because the report pre-commits to a rerun at 256 (`cells.RERUN_RANK`), and a branch the
+# apparatus cannot run is not registered.
 LORA_TARGETS = (
     "q_proj",
     "k_proj",

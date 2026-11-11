@@ -29,6 +29,12 @@ REGISTERED_SPREAD_TARGET = "sizing_bound_90"
 # The score H1 and H2 are read on: the reference's mean log-probability per token, a strictly
 # proper score that sees a convention learned at a minority rate (research log 2026-10-09).
 REGISTERED_METRIC = "logprob_per_token"
+#: The registered adapter rank, and the rank the grid is rerun at as a supplementary reading that
+#: cannot change a verdict (Stage 1 report, "Rank 256"): a cell inconclusive at 32 and supported
+#: at 256 is capacity-limited; one bounded at 32 counts against a learnable house style only if
+#: bounded at 256 too (`decomposition.rank_reading`).
+REGISTERED_RANK = 32
+RERUN_RANK = 256
 #: Outcome-neutral check 2's interval (Stage 1 report): its lower bound must be above zero.
 POSITIVE_CONTROL_CONFIDENCE = 0.95
 # The kind a K coverage artifact records (`k_coverage.py`): the only K source a test read takes,
@@ -330,6 +336,11 @@ def require_test_read(
         raise ValueError(f"{org}: not every run read carries an outcome-neutral battery that held")
     if report["window"] != "test":
         raise ValueError(f"{org}: read on the {report['window']} window, not the test window")
+    # The rank its runs were trained at: the registered one, or the rerun's where `expected` is
+    # the rerun's read (Stage 1 report, "Rank 256").
+    rank = expected.get("lora_rank", REGISTERED_RANK)
+    if report.get("lora_rank") != rank:
+        raise ValueError(f"{org}: its runs are at rank {report.get('lora_rank')!r}, read at {rank}")
     # The score, its K and its bounds in one metric's units, the registered one (reports that
     # predate the field were read on exact match), and resampled by the registered cluster unit,
     # by chain from one chains file.

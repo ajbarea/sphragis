@@ -337,6 +337,7 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
     report = {
         **cell,
         "window": "test",
+        "lora_rank": 32,
         "planted_convention": {"passed": True},
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],

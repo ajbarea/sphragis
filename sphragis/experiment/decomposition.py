@@ -31,7 +31,9 @@ from sphragis.experiment.cells import (
     MIN_RESAMPLES,
     POSITIVE_CONTROL_CONFIDENCE,
     REGISTERED_METRIC,
+    REGISTERED_RANK,
     REGISTERED_SPREAD_TARGET,
+    RERUN_RANK,
     below_level,
     by_level,
     cluster_of,
@@ -417,6 +419,7 @@ def registered_design(admitted: Iterable[str], *, withdrawn: Iterable[str] = ())
 
 def _read_at(levels: list[float], *, cells: int, cluster_unit: str) -> dict[str, Any]:
     return {
+        "lora_rank": REGISTERED_RANK,
         "levels": levels,
         "cells": cells,
         "spread_target": REGISTERED_SPREAD_TARGET,
@@ -915,6 +918,7 @@ def confirmatory_gate(
     coprimary_spreads: Mapping[str, Mapping[str, Any]] | None = None,
     h2_spreads: Mapping[str, Mapping[str, Any]] | None = None,
     withdrawn: Mapping[str, Any] | None = None,
+    lora_rank: int = REGISTERED_RANK,
 ) -> dict[str, Any]:
     """The registered verdicts over the admitted organizations' test-window reads: H1 and, where
     the design has one, H2, under Holm's step-down (Stage 1 report, Execution, "Gate").
@@ -945,7 +949,11 @@ def confirmatory_gate(
     outcome, the readings across organizations (`_across`: without a cell whose spread
     calibration is refused at the level read, and None with none left), and each cell's realised
     test size against its simulation's projection ("Fetch horizon", registered-decisions.md).
+
+    `lora_rank` `RERUN_RANK` reads the grid's rerun at 256 the same way, every report of it at
+    that rank; its verdicts are supplementary and change no registered one (`rank_reading`).
     """
+    _require_rank(lora_rank)
     if ADMITTED_ORGANIZATIONS is None:
         raise ValueError("the admitted organizations are not frozen yet")
     lost = _withdrawals(withdrawn)
@@ -970,6 +978,7 @@ def confirmatory_gate(
     # Every report was read at the registration's levels and cell count; the verdicts at the Holm
     # levels of what remains tested, a subset of them.
     expected = _gerrit_read(registered)
+    expected["lora_rank"] = lora_rank
     sesoi = _sesoi_of(expected["metric"])
     cells, detectable = _read_cells(reports, simulations, powers, expected, sesoi, spreads)
     other = coprimary_read(expected)
@@ -991,7 +1000,7 @@ def confirmatory_gate(
             {org: (h2 or {})[org]},
             {org: (h2_simulations or {})[org]},
             h2_powers,
-            _h2_read(registered, org),
+            _h2_read(registered, org) | {"lora_rank": lora_rank},
             sesoi,
             {o: sim for o, sim in (h2_spreads or {}).items() if o == org},
         )
@@ -1074,6 +1083,7 @@ def confirmatory_gate(
     if verdicts["H1"] != "not tested" and untested:
         said += f"; {', '.join(untested)} not tested (every cell exploratory)"
     return {
+        "lora_rank": lora_rank,
         "design": spec,
         "withdrawn": dict(lost),
         "verdicts": verdicts,
@@ -1156,6 +1166,71 @@ def _withdrawals(
     return {o: failed[o] for o in order if o in failed}
 
 
+def _require_rank(lora_rank: Any) -> None:
+    if lora_rank not in (REGISTERED_RANK, RERUN_RANK) or isinstance(lora_rank, bool):
+        raise ValueError(f"rank {lora_rank!r}: registered {REGISTERED_RANK}, rerun {RERUN_RANK}")
+
+
+#: The rank-256 rerun's readings (Stage 1 report, "Rank 256"), per cell and level.
+CAPACITY_LIMITED = "capacity-limited"
+BOUNDED_AT_BOTH = "bounded at both ranks"
+BOUNDED_AT_32_ONLY = "bounded at 32 only"
+
+
+def rank_reading(registered: Mapping[str, Any], rerun: Mapping[str, Any]) -> dict[str, Any]:
+    """The rank-256 rerun read beside the registered gate, binding no verdict: "a cell
+    inconclusive at 32 and supported at 256 is capacity-limited, and one bounded at 32 counts
+    against a learnable house style only if bounded at 256" (Stage 1 report, "Rank 256").
+
+    `registered` and `rerun` are `confirmatory_gate` (or `replication_gate`) outputs at
+    `REGISTERED_RANK` and `RERUN_RANK`. Each cell present in both, at each level read in both, is
+    `CAPACITY_LIMITED`, `BOUNDED_AT_BOTH` (counts against), `BOUNDED_AT_32_ONLY` (does not), or
+    None. The verdicts returned are the registered gate's, unchanged.
+    """
+    if registered.get("lora_rank") != REGISTERED_RANK or rerun.get("lora_rank") != RERUN_RANK:
+        raise ValueError(
+            f"read at ranks {registered.get('lora_rank')!r} and {rerun.get('lora_rank')!r}, not "
+            f"{REGISTERED_RANK} and {RERUN_RANK}"
+        )
+    groups = [g for g in ("cells", "coprimary_cells", "h2_cells") if g in registered]
+    readings: dict[str, dict[str, dict[float, str | None]]] = {}
+    for group in groups:
+        at_32 = registered[group]
+        at_256 = rerun.get(group) or {}
+        if set(at_32) != set(at_256):
+            raise ValueError(
+                f"{group}: the rerun reads {sorted(at_256)}, the registered gate {sorted(at_32)}"
+            )
+        for cell, read in at_32.items():
+            if "verdicts" not in read:
+                continue  # a replication member's single verdict is read below
+            verdicts_32 = by_level(read["verdicts"])
+            verdicts_256 = by_level(at_256[cell]["verdicts"])
+            if set(verdicts_32) != set(verdicts_256):
+                raise ValueError(f"{group}:{cell}: read at other levels in the rerun")
+            readings.setdefault(group, {})[cell] = {
+                c: _rank_cell(v, verdicts_256[c]) for c, v in verdicts_32.items()
+            }
+    if "cells" in registered and all("verdict" in r for r in registered["cells"].values()):
+        readings["cells"] = {
+            org: {
+                level_key(REPLICATION_CONFIDENCE): _rank_cell(
+                    read["verdict"], rerun["cells"][org]["verdict"]
+                )
+            }
+            for org, read in registered["cells"].items()
+        }
+    return {"verdicts": registered.get("verdicts"), "readings": readings}
+
+
+def _rank_cell(at_32: str, at_256: str) -> str | None:
+    if at_32 == "inconclusive" and at_256 == "supported":
+        return CAPACITY_LIMITED
+    if at_32 == "bounded":
+        return BOUNDED_AT_BOTH if at_256 == "bounded" else BOUNDED_AT_32_ONLY
+    return None
+
+
 def replication_gate(
     cells: Mapping[str, Mapping[str, Any]],
     *,
@@ -1163,8 +1238,11 @@ def replication_gate(
     powers: Mapping[str, Mapping[str, Any]] | None = None,
     spreads: Mapping[str, Mapping[str, Any]] | None = None,
     withdrawn: Mapping[str, Any] | None = None,
+    lora_rank: int = REGISTERED_RANK,
 ) -> dict[str, Any]:
     """Each frozen member's H1 verdict and the family's partial conjunction r.
+
+    `lora_rank` `RERUN_RANK` reads the rerun at 256, supplementary (`rank_reading`).
 
     `withdrawn` maps each member that failed an outcome-neutral check to its recorded battery (a
     failed crossed check 2 is written by `partition_pilot.py`), reported as the deviation; the
@@ -1189,6 +1267,7 @@ def replication_gate(
     """
     from sphragis.experiment.partitions import spread_reading
 
+    _require_rank(lora_rank)
     if REPLICATION_MEMBERS is None:
         raise ValueError("the replication family's members are not frozen yet (Stage 1)")
     family = replication(REPLICATION_MEMBERS)
@@ -1207,6 +1286,7 @@ def replication_gate(
     for org in members:
         cell, simulation = cells[org], simulations[org]
         expected = registered_read(org)
+        expected["lora_rank"] = lora_rank
         readings = require_test_read(cell, org=org, expected=expected)
         require_registered_analyses(cell, org=org, expected=expected)
         # Only H2's K and a co-primary score's are registered as calibrated.
@@ -1258,6 +1338,7 @@ def replication_gate(
     }
     return {
         **family,
+        "lora_rank": lora_rank,
         "withdrawn": lost,
         "cells": read,
         "exploratory": sorted(o for o, c in read.items() if c["exploratory"] is not None),

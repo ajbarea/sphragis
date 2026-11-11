@@ -638,6 +638,7 @@ def _replication_cell(
         "resamples": resamples,
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
+        "lora_rank": 32,
         "planted_convention": {"passed": True},
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
@@ -1040,6 +1041,7 @@ def test_a_read_waits_for_its_organizations_to_be_frozen(
     with pytest.raises(ValueError, match="frozen replication member"):
         registered_read("llvm")
     assert registered_read("apache") == {
+        "lora_rank": 32,
         "levels": [REPLICATION_CONFIDENCE],
         "cells": 1,
         "spread_target": "sizing_bound_90",
@@ -3100,7 +3102,7 @@ def test_the_gate_needs_h2s_read_exactly_when_the_design_has_its_cell(admitted) 
     pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
     reports = {o: r for o, (r, _) in pairs.items()}
     sims = {o: s for o, (_, s) in pairs.items()}
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "simulations": sims,
         "coprimary": {o: _on_other(r) for o, r in reports.items()},
         "coprimary_simulations": {o: _on_other(s) for o, s in sims.items()},
@@ -3110,7 +3112,9 @@ def test_the_gate_needs_h2s_read_exactly_when_the_design_has_its_cell(admitted) 
     # Qt withdrawn: no H2 cell, so an H2 read given is refused.
     h2_report, h2_sim = _h2_pair(*_PASS)
     rest = {o: r for o, r in reports.items() if o != "qt"}
-    rest_kwargs = {k: {o: x for o, x in v.items() if o != "qt"} for k, v in kwargs.items()}
+    rest_kwargs: dict[str, Any] = {
+        k: {o: x for o, x in v.items() if o != "qt"} for k, v in kwargs.items()
+    }
     with pytest.raises(ValueError, match="the design has no confirmatory H2 cell"):
         confirmatory_gate(
             rest,
@@ -3672,3 +3676,107 @@ def test_a_coprimary_test_read_without_its_crossed_check_2_is_refused(admitted) 
             h2={"qt": h2_report},
             h2_simulations={"qt": h2_sim},
         )
+
+
+def test_a_test_read_is_held_to_its_rank(admitted) -> None:
+    """The registered gate reads rank 32 alone; the rerun's gate reads rank 256 alone (Stage 1
+    report, "Rank 256")."""
+    admitted(*_THREE)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    h2_report, h2_sim = _h2_pair(*_PASS)
+
+    def gate(reports: dict, h2: dict, **kwargs: Any) -> dict:
+        return confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary={o: _on_other(r) for o, r in reports.items()},
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            h2={"qt": h2},
+            h2_simulations={"qt": h2_sim},
+            **kwargs,
+        )
+
+    assert gate(reports, h2_report)["lora_rank"] == 32
+    rerun = {o: r | {"lora_rank": 256} for o, r in reports.items()}
+    with pytest.raises(ValueError, match="at rank 256, read at 32"):
+        gate(rerun, h2_report | {"lora_rank": 256})
+    assert gate(rerun, h2_report | {"lora_rank": 256}, lora_rank=256)["lora_rank"] == 256
+    with pytest.raises(ValueError, match="qt: its runs are at rank 32, read at 256"):
+        gate(rerun, h2_report, lora_rank=256)
+    with pytest.raises(ValueError, match="at rank None"):
+        gate({**reports, "openstack": _without(reports["openstack"], "lora_rank")}, h2_report)
+    for rank in (64, True):
+        with pytest.raises(ValueError, match="registered 32, rerun 256"):
+            gate(reports, h2_report, lora_rank=rank)
+
+
+def _ranked(rank: int, h1: dict, h2: dict | None = None) -> dict:
+    """A gate output at `rank` with the given cells' verdicts by level."""
+    out = {
+        "lora_rank": rank,
+        "verdicts": {"H1": "inconclusive"},
+        "cells": {o: {"verdicts": v} for o, v in h1.items()},
+        "coprimary_cells": {o: {"verdicts": v} for o, v in h1.items()},
+    }
+    if h2 is not None:
+        out["h2_cells"] = {o: {"verdicts": v} for o, v in h2.items()}
+    return out
+
+
+def test_the_rank_256_rerun_reads_capacity_and_bounded_cells_beside_the_verdicts() -> None:
+    from sphragis.experiment.decomposition import rank_reading
+
+    at_32 = _ranked(
+        32,
+        {
+            "openstack": {0.95: "inconclusive", 0.975: "inconclusive"},
+            "wikimedia": {0.95: "bounded", 0.975: "bounded"},
+            "qt": {0.95: "supported", 0.975: "inconclusive"},
+        },
+        {"qt": {"0.95": "bounded", "0.975": "inconclusive"}},
+    )
+    at_256 = _ranked(
+        256,
+        {
+            "openstack": {0.95: "supported", 0.975: "inconclusive"},
+            "wikimedia": {0.95: "bounded", 0.975: "inconclusive"},
+            "qt": {0.95: "supported", 0.975: "supported"},
+        },
+        {"qt": {"0.95": "supported", "0.975": "supported"}},
+    )
+    at_256["verdicts"] = {"H1": "pass"}
+    out = rank_reading(at_32, at_256)
+    cells = out["readings"]["cells"]
+    assert cells["openstack"] == {0.95: "capacity-limited", 0.975: None}
+    assert cells["wikimedia"] == {0.95: "bounded at both ranks", 0.975: "bounded at 32 only"}
+    assert cells["qt"] == {0.95: None, 0.975: "capacity-limited"}
+    assert out["readings"]["h2_cells"]["qt"] == {
+        0.95: "bounded at 32 only",
+        0.975: "capacity-limited",
+    }
+    # Supplementary: the verdicts are the registered gate's, whatever the rerun read.
+    assert out["verdicts"] == {"H1": "inconclusive"}
+    with pytest.raises(ValueError, match="ranks 256 and 32"):
+        rank_reading(at_256, at_32)
+    fewer = _ranked(256, {"openstack": {0.95: "supported", 0.975: "supported"}}, {"qt": {}})
+    with pytest.raises(ValueError, match="cells: the rerun reads"):
+        rank_reading(at_32, fewer)
+    other_levels = _ranked(
+        256,
+        {o: {0.95: "supported"} for o in ("openstack", "wikimedia", "qt")},
+        {"qt": {"0.95": "supported", "0.975": "supported"}},
+    )
+    with pytest.raises(ValueError, match="at other levels"):
+        rank_reading(at_32, other_levels)
+
+
+def test_a_replication_members_rerun_is_read_on_its_one_verdict() -> None:
+    from sphragis.experiment.decomposition import rank_reading
+
+    def family(rank: int, verdict: str) -> dict:
+        return {"lora_rank": rank, "cells": {"apache": {"verdict": verdict}}}
+
+    out = rank_reading(family(32, "inconclusive"), family(256, "supported"))
+    assert out["readings"]["cells"] == {"apache": {REPLICATION_CONFIDENCE: "capacity-limited"}}

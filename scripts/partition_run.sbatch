@@ -33,6 +33,9 @@ PLANT="${PLANT:-}"
 # -plantquotes<fraction> (placebo_corpus.py --plant-convention).
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
 ROOT="$SPHRAGIS_DATA/corpus-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX"
+# LORA_RANK=256 is the rerun the Stage 1 report registers ("Rank 256"): tagged -r256 after the
+# corpus root, so it reads the registered run's corpus and writes its own results and adapters.
+tag_result_suffix LORA_RANK
 
 claim_result OUT "$SPHRAGIS_RESULTS/rq1-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX.json"
 
@@ -43,5 +46,6 @@ uv run --no-sync python scripts/rq1_pilot.py \
   --root "$ROOT" --org "$ORG-a" --org "$ORG-b" \
   --seeds "$SEEDS" \
   --equalize-train --train-size "$TRAIN_SIZE" \
+  ${LORA_RANK:+--lora-rank "$LORA_RANK"} \
   --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX" \
   --out "$OUT"
