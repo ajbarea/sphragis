@@ -11,7 +11,12 @@ import pytest
 
 from sphragis.corpus.chains import chains_sha256
 from sphragis.experiment import cells, decomposition, partitions
-from sphragis.experiment.cells import K_COVERAGE, REGISTERED_METRIC, REGISTERED_SENSITIVITIES
+from sphragis.experiment.cells import (
+    K_COVERAGE,
+    REGISTERED_METRIC,
+    REGISTERED_SENSITIVITIES,
+    require_test_read,
+)
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
 from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, spread_targets
@@ -211,7 +216,7 @@ def test_an_h1_read_takes_no_bounds_simulated_for_h2(
     sensitivity.write_text(json.dumps({**simulated, "hypothesis": "H2", "foreign_source": "aosp"}))
     argv = [*_inputs(tmp_path, "openstack"), "--sensitivity", str(sensitivity)]
     argv += ["--spread-target", "pilot_estimate", "--h1-cells", "1"]
-    with pytest.raises(SystemExit, match=r"of the cell \('H2', 'aosp'\), not H1's"):
+    with pytest.raises(SystemExit, match=r"of the cell \('H2', 'aosp'\), not \('H1', None\)"):
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "pilot.json")])
     assert not (tmp_path / "pilot.json").exists()
 
@@ -389,6 +394,8 @@ def _registered_metric(argv: list[str]) -> list[str]:
                 "metric": REGISTERED_METRIC,
                 "runs": pilot["sizing"]["runs"],
                 "spread_targets": spread_targets(pilot),
+                # A coverage artifact is made for its pilot's cell, H1's or H2's.
+                **{k: pilot[k] for k in ("hypothesis", "foreign_source") if k in pilot},
                 # A coverage artifact is made in the unit of the pilot it covers.
                 **({"cluster_unit": pilot["cluster_unit"]} if "cluster_unit" in pilot else {}),
             }
@@ -1095,11 +1102,15 @@ ARMS = {"foreign-aosp-for-qt-b": "qt-a", "foreign-aosp-for-qt-a": "qt-b"}
 
 
 def _h2_inputs(
-    tmp_path: Path, foreign: dict | None = ARMS, pool_sha: str = "p1", first_pool: str = "p1"
+    tmp_path: Path,
+    foreign: dict | None = ARMS,
+    pool_sha: str = "p1",
+    first_pool: str = "p1",
+    window: str = "dev",
 ) -> list[str]:
     """Qt's runs with their matched foreign arms: the sibling wins every C++ example, the foreign
     arm every Python one, so H2 on C++ reads +1 and the whole hunk would read 0."""
-    argv = _inputs(tmp_path, "qt")
+    argv = _inputs(tmp_path, "qt", window)
     for k, path in enumerate(argv[: len(ADMISSIBLE)], start=1):
         run = json.loads(Path(path).read_text())
         results = {}
@@ -1200,7 +1211,7 @@ def test_an_h2_read_under_chains_draws_the_cells_cpp_changes_by_chain(
     [
         (None, [], "carries foreign arms None"),
         ({"foreign-aosp-for-qt-b": "qt-a"}, [], "carries foreign arms"),
-        (ARMS, ["--planted", "x.json"], "takes no --replication"),
+        (ARMS, ["--replication"], "H2 is a Gerrit cell"),
     ],
 )
 def test_an_h2_read_refuses_runs_without_both_arms_or_h1_only_inputs(
@@ -1424,3 +1435,96 @@ def test_an_h2_read_on_arms_from_an_unregistered_pool_is_refused(tmp_path, monke
     argv = [*_h2_inputs(tmp_path, pool_sha="p2", first_pool="p2"), "--hypothesis", "H2"]
     with pytest.raises(SystemExit, match="drew from p2, not the registered pool p1"):
         _main(monkeypatch, [*argv, "--foreign-source", "aosp", "--out", str(tmp_path / "o.json")])
+
+
+def _h2_test_argv(tmp_path: Path) -> list[str]:
+    """H2's test-window read as registered: Qt's runs with matched AOSP arms on the test window,
+    Qt's check 5, a K coverage artifact and a simulation both made for H2's cell, the registered
+    sensitivities listed over the runs' examples, and relation chains."""
+    cell = {"hypothesis": "H2", "foreign_source": "aosp"}
+    sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, "qt")
+    sensitivity.write_text(json.dumps(json.loads(sensitivity.read_text()) | cell))
+    chains = _chains(tmp_path, "qt")
+    sizing = _sizing(tmp_path, "qt", **cell)
+    for made in (sensitivity, Path(sizing[1])):
+        _by_chain(made, chains[1])
+    runs = _h2_inputs(tmp_path, window="test")
+    ids = sorted(
+        {
+            row["id"]
+            for path in runs[: len(ADMISSIBLE)]
+            for rows in json.loads(Path(path).read_text())["results"].values()
+            for row in rows
+        }
+    )
+    listing = tmp_path / "sensitivity-ids-qt-test.json"
+    names = {name: [] for name in REGISTERED_SENSITIVITIES}
+    listing.write_text(json.dumps({"org": "qt", "window": "test", "ids": names, "universe": ids}))
+    argv = [
+        *runs,
+        *_planted(tmp_path, "qt"),
+        *sizing,
+        *[arg for name in names for arg in ("--without", f"{name}={listing}")],
+        "--sensitivity",
+        str(sensitivity),
+        *chains,
+        "--hypothesis",
+        "H2",
+        "--foreign-source",
+        "aosp",
+    ]
+    return [*_registered_metric(argv), "--out", str(tmp_path / "o.json")]
+
+
+def test_h2_reads_its_test_window_at_the_registration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Item 6 of #253: H2's test read over partitions, checked by `require_test_read` against
+    H2's registered read before the script writes it."""
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    _main(monkeypatch, _h2_test_argv(tmp_path))
+    report = json.loads((tmp_path / "o.json").read_text())
+    registered = decomposition.registered_read("qt", hypothesis="H2")
+    assert report["window"] == "test" and report["levels"] == registered["levels"]
+    assert registered["levels"] == [0.975, 0.95] and registered["cell"] == ["H2", "aosp"]
+    assert (report["hypothesis"], report["foreign_source"]) == ("H2", "aosp")
+    assert report["k_from"]["cell"] == ["H2", "aosp"]
+    assert report["sensitivity"]["cell"] == ["H2", "aosp"] and report["sensitivity"]["cells"] == 1
+    assert report["per_run"] == pytest.approx([1.0] * len(ADMISSIBLE))
+    assert set(report["without"]) == set(REGISTERED_SENSITIVITIES)
+    # Read on H2's contrast: dropping nothing leaves the cell's own estimate.
+    for name in REGISTERED_SENSITIVITIES:
+        assert report["without"][name]["estimate"] == pytest.approx(report["estimate"])
+    assert report["p_bounded"] == 1.0 and report["verdicts"] == {
+        "0.975": "supported",
+        "0.95": "supported",
+    }
+    # The H2 read is not an H1 one: checked as H1's, its cell is refused.
+    with pytest.raises(ValueError, match=r"the read is of the cell \('H2', 'aosp'\)"):
+        require_test_read(report, org="qt", expected=decomposition.registered_read("qt"))
+
+
+def test_an_h2_test_read_refuses_bounds_or_a_k_made_for_h1(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    argv = _h2_test_argv(tmp_path)
+    sensitivity = tmp_path / "sensitivity.json"
+    record = json.loads(sensitivity.read_text())
+    sensitivity.write_text(json.dumps({k: v for k, v in record.items() if k != "hypothesis"}))
+    with pytest.raises(SystemExit, match=r"not \('H2', 'aosp'\)"):
+        _main(monkeypatch, argv)
+
+
+def test_h2_is_read_on_the_whole_score_on_the_test_window(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """H2's s' reading at its s level is a registered secondary analysis: read on development
+    runs, never as a test read."""
+    from sphragis.experiment.decomposition import COPRIMARY_METRIC
+
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    argv = _on_coprimary(_h2_test_argv(tmp_path))
+    assert argv[argv.index("--metric") + 1] == COPRIMARY_METRIC
+    with pytest.raises(SystemExit, match="its s' reading at its s level is secondary"):
+        _main(monkeypatch, argv)

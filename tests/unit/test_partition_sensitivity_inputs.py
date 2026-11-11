@@ -424,3 +424,125 @@ def test_an_h2_simulation_against_an_unregistered_source_is_refused(tmp_path: Pa
     assert result.returncode != 0
     assert "registered foreign source is chromium, not aosp" in result.stderr
     assert not (tmp_path / "o.json").exists()
+
+
+def _spread_pilot() -> dict:
+    """An H1 development pilot of Qt, by chain, its four spread points from these runs."""
+    return {
+        "org": "qt",
+        "metric": "logprob_per_token",
+        "per_run": [0.01, 0.012, 0.009, 0.011, 0.0105],
+        "runs_left_out": [],
+        "sizing": {"sd_upper": 0.002},
+        "cluster_unit": {"unit": "chain", "file": "chains-qt.json", "sha256": "a" * 64},
+    }
+
+
+def _spread_read(pilot: dict, per_run: list[float], **fields: object) -> dict:
+    from sphragis.experiment.partitions import spread_targets
+
+    return {
+        "org": "qt",
+        "window": "test",
+        "metric": "logprob_per_token",
+        "runs": len(per_run),
+        "changes": 812,
+        "per_run": per_run,
+        "cluster_unit": pilot["cluster_unit"],
+        "k_from": {"spread_targets": spread_targets(pilot)},
+        **fields,
+    }
+
+
+def _spread_args(tmp_path: Path) -> object:
+    import argparse
+
+    return argparse.Namespace(
+        org="qt", metric="logprob_per_token", test_read=tmp_path / "read.json"
+    )
+
+
+def test_a_test_read_above_its_bound_gives_its_spread_k_and_size(tmp_path: Path) -> None:
+    """The spread rule's simulation is of the read's own cell, at its K and realised size."""
+    from statistics import stdev
+
+    partition_sensitivity = _module()
+    pilot = _spread_pilot()
+    wide = [0.0, 0.01, 0.02, 0.005]
+    out = partition_sensitivity.read_for_spread(
+        _spread_read(pilot, wide), pilot, _spread_args(tmp_path)
+    )
+    assert out["spread"] == pytest.approx(stdev(wide)) and out["bound"] == 0.002
+    assert (out["runs"], out["changes"]) == (4, 812)
+
+
+@pytest.mark.parametrize(
+    ("fields", "per_run", "match"),
+    [
+        ({}, [0.01, 0.0105, 0.011, 0.0102], "within its sizing bound"),
+        ({"window": "development"}, None, "not the test window"),
+        ({"org": "openstack"}, None, "openstack's read, not qt's"),
+        ({"hypothesis": "H2", "foreign_source": "chromium"}, None, "reads"),
+        ({"metric": "logprob_per_token:other"}, None, "is on"),
+        ({"cluster_unit": {"unit": "change"}}, None, "not drawn as the pilot was"),
+        ({"k_from": {"spread_targets": {"sizing_bound_90": 0.002}}}, None, "another pilot"),
+    ],
+)
+def test_a_spread_simulation_refuses_a_read_that_is_not_this_pilots_cell(
+    tmp_path: Path, fields: dict, per_run: list[float] | None, match: str
+) -> None:
+    partition_sensitivity = _module()
+    pilot = _spread_pilot()
+    read = _spread_read(pilot, per_run or [0.0, 0.01, 0.02, 0.005], **fields)
+    with pytest.raises(ValueError, match=match):
+        partition_sensitivity.read_for_spread(read, pilot, _spread_args(tmp_path))
+
+
+def test_a_test_read_spread_is_calibrated_only_on_a_miss() -> None:
+    partition_sensitivity = _module()
+    critical = {0.975: 0.01, 0.95: 0.02}
+    # 2 of 200 supported at 97.5% (0.01, within 0.0125), 4 at 95% (0.02, within 0.025): holds.
+    null = [{"supported": {0.975: i < 2, 0.95: i < 4}} for i in range(200)]
+    assert partition_sensitivity.only_a_miss(null, [0.975, 0.95], critical) is None
+    # 3 at 97.5% (0.015): a miss, so the critical p is kept.
+    null = [{"supported": {0.975: i < 3, 0.95: i < 4}} for i in range(200)]
+    assert partition_sensitivity.only_a_miss(null, [0.975, 0.95], critical) == critical
+
+
+def test_a_test_read_takes_no_other_k(tmp_path: Path) -> None:
+    partition_sensitivity = _module()
+    pilot = _spread_pilot()
+    read = _spread_read(pilot, [0.0, 0.01, 0.02, 0.005])
+    with pytest.raises(ValueError, match="give no --runs"):
+        partition_sensitivity.read_for_spread(read, pilot, _spread_args(tmp_path), runs_given=True)
+
+
+@pytest.mark.parametrize(
+    ("env", "args", "status"),
+    [
+        ({"TEST_READ": "read.json"}, "--test-read read.json", 0),
+        ({"TEST_READ": "read.json", "RUNS": "40"}, "", 1),
+        ({"TEST_READ": "read.json", "CALIBRATE": "1"}, "", 1),
+        ({"TEST_READ": "read.json", "NULL_ONLY": "1"}, "", 1),
+        ({}, "", 0),
+    ],
+)
+def test_the_sbatch_passes_a_test_read_and_takes_nothing_beside_it(
+    env: dict, args: str, status: int
+) -> None:
+    """The TEST_READ block of `partition_sensitivity.sbatch`, run by bash on its own."""
+    sbatch = (ROOT / "scripts" / "partition_sensitivity.sbatch").read_text()
+    start = sbatch.index("# TEST_READ=")
+    end = sbatch.index("# CELLS=")
+    script = (
+        "COVERAGE_ARGS=(); RESULT_SUFFIX=''\n"
+        + sbatch[start:end]
+        + 'echo "${COVERAGE_ARGS[*]}|$RESULT_SUFFIX"\n'
+    )
+    run = subprocess.run(
+        ["bash", "-c", script], env={"PATH": "/usr/bin:/bin", **env}, capture_output=True, text=True
+    )
+    assert run.returncode == status
+    if status == 0:
+        suffix = "-test-spread" if args else ""
+        assert run.stdout.strip() == f"{args}|{suffix}"

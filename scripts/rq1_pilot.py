@@ -444,8 +444,8 @@ for org, interval in verdict["binding"].items():
 print(f"GATE (pilot scale, not confirmatory): {verdict['verdict']}", flush=True)
 
 # Outcome-neutral tests. At confirmatory scale a failed check withdraws the organization it fails
-# on before the gate is read (`decomposition.h1_test_gate`'s `withdrawn`); at pilot scale this run
-# pools its organizations' checks into one flag, reported beside the verdict.
+# on before the gate is read (`decomposition.confirmatory_gate`'s `withdrawn`); at pilot scale
+# this run pools its organizations' checks into one flag, reported beside the verdict.
 checks = []
 for org in orgs:
     for seed in seeds:

@@ -251,10 +251,8 @@ def main() -> None:
             )
         except ValueError as error:
             raise SystemExit(str(error)) from error
-    if h2 and (args.replication or args.without or args.planted or args.sensitivity):
-        raise SystemExit(
-            "an H2 development read takes no --replication, --without, --planted or --sensitivity"
-        )
+    if h2 and args.replication:
+        raise SystemExit("H2 is a Gerrit cell; --replication reads the GitHub family's H1")
     # Every check on the arguments alone, before any run is read.
     if args.replication != (args.org in REPLICATION_FAMILY):
         raise SystemExit(
@@ -342,8 +340,15 @@ def main() -> None:
         window = "development"
     else:
         raise SystemExit(f"runs read on {sorted(windows)}, not one of the two windows")
-    if h2 and window != "development":
-        raise SystemExit("H2 is read here on the development window only")
+    if h2 and args.exploratory and window != "development":
+        raise SystemExit("H2's exploratory arm is read on the development window only")
+    # H2's confirmatory read is on the whole score; its s' reading at its s level is a secondary
+    # analysis (Stage 1 report, Analysis), which no registered test read here takes.
+    if h2 and args.metric == COPRIMARY_METRIC and window == "test":
+        raise SystemExit(
+            "H2's test read is on the whole score; its s' reading at its s level is secondary "
+            "and takes no registered test read"
+        )
     lexer_dropped = None
     if args.lexer_sure:
         if window != "development":
@@ -359,7 +364,7 @@ def main() -> None:
             raise SystemExit("a test-window read needs --sizing: K from the development pilot")
         # Levels, cell count and spread target come from the registration, never the command.
         try:
-            expected = registered_read(args.org)
+            expected = registered_read(args.org, hypothesis=args.hypothesis)
         except ValueError as error:
             raise SystemExit(f"not read: {error}") from error
         # A Gerrit H1 cell is read on each co-primary score, its registration otherwise the same.
@@ -461,6 +466,8 @@ def main() -> None:
             # A critical p calibrated at a registered K (`partitions.registered_coverage`).
             "calibrated": bool(sizing_artifact.get("calibrated")),
             "critical_p": sizing_artifact.get("critical_p"),
+            # The cell the K was found for, which a test read checks (`require_test_read`).
+            "cell": list(cell_of(sizing_artifact)),
         }
         # Only a test read is checked against its simulation's calibration.
         if window == "test":
@@ -488,7 +495,11 @@ def main() -> None:
             )
         try:
             bounds = sensitivity_bounds(
-                sensitivity, args.spread_target, levels, cells=args.h1_cells
+                sensitivity,
+                args.spread_target,
+                levels,
+                cells=args.h1_cells,
+                cell=(args.hypothesis, args.foreign_source),
             )
         except (KeyError, TypeError, ValueError) as error:
             raise SystemExit(f"not read: {args.sensitivity}: {error}") from error
@@ -595,6 +606,7 @@ def main() -> None:
                 metric=args.metric,
                 sesoi=sesoi or SESOI,
                 critical=calibrated,
+                **contrast,
             )
         except ValueError as error:
             without[name] = {

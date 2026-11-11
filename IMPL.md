@@ -9,15 +9,18 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **Issue #253, the code mirrors the Stage 1 report's registered rules (papers 1b6e349).**
-  Three PRs, each traced to the paper's lines. PR A (branch `fix/253-verdict-rules`): the
-  calibrated bounded side (`p_bounded`, `read_intervals`), a failed check withdraws its
-  organization (`design(withdrawn=)`, `h1_test_gate(withdrawn=)`), the small-window rule
-  (`power_at_size.py` detectable effect, `small_window`), the mixed row (`is_mixed`). Next, PR B:
-  the spread rule (simulate at the test spread, calibrate on a miss, exploratory when Bradley
-  refuses) and H2's test read over partitions with the Holm gate. Then PR C: re-read the four
-  development pilots with their registered sensitivities, registered-decisions.md, and the
-  research-log HSRO amendment. Verify: `make verify`; the new tests are at the end of
-  `tests/unit/experiment/test_decomposition.py` and `tests/unit/test_power_at_size.py`.
+  Three PRs, each traced to the paper's lines. PR A (#261, branch `fix/253-verdict-rules`): the
+  calibrated bounded side (`p_bounded`), a failed check withdraws its organization on its
+  recorded battery (`neutral.withdrawing_failures`), the small-window rule (`power_at_size.py`
+  detectable effect, `small_window`), the mixed row; four Opus rounds and a verify pass. PR B
+  (#262, branch `fix/253-spread-h2`): the spread rule (`partitions.spread_reading`,
+  `partition_sensitivity.py --test-read`), H2's test read (`partition_pilot.py --hypothesis H2`
+  on the test window, `registered_read(org, hypothesis="H2")`) and `confirmatory_gate` (was
+  `h1_test_gate`) under Holm over both; the per-cell names reading. Next, PR C: re-read the
+  four development pilots with their registered sensitivities, registered-decisions.md, and the
+  research-log HSRO amendment. Follow-ups the paper registers outside the gate, not yet built:
+  check 2 on the crossed interval, the H1 + H2 sum over H2's K, H2's s′ test read and its
+  "Qt's vocabulary" reading, the change-averaged estimate, rank 256. Verify: `make verify`.
 - **Issue #258, second raters for the label audit (AJ 2026-11-10): PR #260, review clean.**
   `label_audit_page.py --second-rater` builds the page with no reveal for the human's 77 checked
   OpenStack items; `label_audit_agreement.py --second-raters` reads the store export back
@@ -106,7 +109,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    set is frozen, `decomposition_gate` refuses every read: no decomposition-sensitivity artifact
    bounds Wikimedia's H1 cell or Qt's H2 cell (`detectable_effects` returns only H1 bounds, and
    the fullest artifact, `decomposition-sensitivity.json`, has them for OpenStack and Qt).
-   `h1_test_gate` refuses until H2's test read over partitions is built. Qt can be admitted until
+   `confirmatory_gate` reads H2's test read beside H1 under Holm (#262). Qt can be admitted until
    2026-11-20 with its cells' bounds simulated and committed by then (PR #246 did). Chromium is
    not admitted (no split qualified by 2026-10-23) and supplies H2's foreign pool.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:

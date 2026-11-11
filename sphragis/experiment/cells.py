@@ -61,6 +61,13 @@ def cell_of(record: Mapping[str, Any]) -> Cell:
     return record.get("hypothesis", "H1"), record.get("foreign_source")
 
 
+def recorded_cell(record: Mapping[str, Any]) -> Cell:
+    """The cell a report's summary of an artifact names (`partition_pilot.py` records it as
+    `cell`), or the artifact's own (`cell_of`)."""
+    cell = record.get("cell")
+    return cell_of(record) if cell is None else (cell[0], cell[1])
+
+
 def cluster_unit_of(artifact: Mapping[str, Any]) -> str:
     """The unit an artifact resampled by; one made before chains existed names none: by change."""
     return (artifact.get("cluster_unit") or {}).get("unit", "change")
@@ -288,7 +295,7 @@ def require_test_read(
     source was made from (`sensitivity`); at `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`;
     and at the levels, cell count and spread target `expected` registers for the organization
     (`decomposition.registered_read`), so none is chosen when the window is read. The pilot
-    runs this on its report before writing it, and `replication_gate` and `h1_test_gate` on
+    runs this on its report before writing it, and `replication_gate` and `confirmatory_gate` on
     reading it, so both sides hold one rule. Returns the report's registered sensitivities
     (`require_sensitivities`), which the gates carry.
     """
@@ -350,6 +357,15 @@ def require_test_read(
     k_from = report["k_from"]
     if isinstance(k_from, Mapping) and k_from.get("kind") != K_COVERAGE:
         raise ValueError(f"{org}: K is from {k_from.get('file')!r}, not its K coverage artifact")
+    # The read, its K and its bounds all of the registered cell: H1's, or H2's against its source.
+    cell = tuple(expected.get("cell", ("H1", None)))
+    for name, source in (
+        ("the read", report),
+        ("k_from", report["k_from"]),
+        ("sensitivity", report["sensitivity"]),
+    ):
+        if isinstance(source, Mapping) and recorded_cell(source) != cell:
+            raise ValueError(f"{org}: {name} is of the cell {recorded_cell(source)}, not {cell}")
     planted = report["planted_convention"]
     if not (isinstance(planted, Mapping) and planted.get("passed") is True):
         raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")
@@ -407,17 +423,23 @@ def require_test_read(
 
 
 def sensitivity_bounds(
-    sensitivity: Mapping[str, Any], target: str, levels: Sequence[float], *, cells: int
+    sensitivity: Mapping[str, Any],
+    target: str,
+    levels: Sequence[float],
+    *,
+    cells: int,
+    cell: Cell = ("H1", None),
 ) -> dict[float, float]:
     """Each Holm level's registered bound: the detectable effect the simulation found at `target`
-    for an H1 intersecting `cells` organizations' cells.
+    for `cell`, an H1 cell sized for a hypothesis intersecting `cells` cells or H2's one cell.
 
     `target` names a point on the pilot's run spread (`partition_sensitivity.py`'s
     `spread_targets`), so the bound says which spread it assumes; `cells` sets the per-cell power
-    that gives H1 its registered power. A simulation of H2's cell bounds no H1 read.
+    that gives the hypothesis its registered power. A simulation of one cell bounds no other's
+    read.
     """
-    if cell_of(sensitivity) != ("H1", None):
-        raise ValueError(f"the simulation is of the cell {cell_of(sensitivity)}, not H1's")
+    if cell_of(sensitivity) != tuple(cell):
+        raise ValueError(f"the simulation is of the cell {cell_of(sensitivity)}, not {tuple(cell)}")
     by_target = sensitivity["by_target"]
     if target not in by_target:
         raise ValueError(f"no spread target {target!r}; the artifact has {sorted(by_target)}")
