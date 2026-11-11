@@ -46,6 +46,8 @@ def _simulation(**fields: Any) -> dict:
         "trials": 40,
         "resamples": 200,
         "redraw": 0.055,
+        "cell_power": {"2": 0.9},
+        "steps": 3,
         "spread_targets": _CALIBRATION,
         "by_target": {
             "sizing_bound_90": {"calibration": {"sigma_run": 0.003}, "by_level": by_level}
@@ -101,6 +103,12 @@ def test_a_report_read_under_another_simulation_is_refused(
         power_at_size.registered_lifts(report, simulation)
 
 
+def _halves(pool: list) -> list:
+    """The first pooled partition's halves, as `main` builds them."""
+    first = partition_sensitivity._PARTITIONS[0]
+    return [[c for c, p in pool if first[p] == side] for side in (0, 1)]
+
+
 @pytest.fixture
 def small_pool() -> list:
     """Four projects of binary-outcome changes, and admissible-looking partitions of them."""
@@ -130,6 +138,8 @@ def test_power_rises_with_the_lift_and_carries_its_monte_carlo_error(small_pool:
             sigma_run=0.0,
             lifts=lifts,
             simulation=simulation,
+            cells=2,
+            pilot_halves=_halves(small_pool),
         )
     null, lifted = out[0.95]["power"], out[0.975]["power"]
     assert null < 0.3 < 0.9 < lifted
@@ -142,7 +152,14 @@ def test_power_rises_with_the_lift_and_carries_its_monte_carlo_error(small_pool:
 def test_a_size_that_is_not_a_whole_count_is_refused(small_pool: list) -> None:
     with pytest.raises(ValueError, match="whole number"):
         power_at_size.power_at(
-            None, small_pool, changes=0, sigma_run=0.0, lifts={}, simulation=_simulation()
+            None,
+            small_pool,
+            changes=0,
+            sigma_run=0.0,
+            lifts={},
+            simulation=_simulation(),
+            cells=2,
+            pilot_halves=[],
         )
 
 
@@ -283,7 +300,130 @@ def test_a_calibrated_critical_p_only_lowers_power(small_pool: list) -> None:
     """The read applies its critical p at any size, so power at size reads it too."""
     lifts = {0.975: {"lift": 0.3, "bound": 0.15}}
     with ThreadPoolExecutor(2) as executor:
-        args = {"changes": 80, "sigma_run": 0.0, "lifts": lifts, "simulation": _simulation()}
+        args = {
+            "changes": 80,
+            "sigma_run": 0.0,
+            "lifts": lifts,
+            "simulation": _simulation(),
+            "cells": 2,
+            "pilot_halves": _halves(small_pool),
+        }
         plain = power_at_size.power_at(executor, small_pool, **args)
         tight = power_at_size.power_at(executor, small_pool, **args, critical={0.975: 0.0})
     assert plain[0.975]["power"] > 0.0 == tight[0.975]["power"]
+
+
+def test_the_detectable_effect_at_size_is_the_simulations_own_bisection(small_pool: list) -> None:
+    """Stage 1 report, "Sample size": a cell read at a smaller size is exploratory when it cannot
+    detect δ there, so the effect it detects at the realised size is recorded beside power."""
+    lifts = {0.975: {"lift": 0.05, "bound": 0.025}}
+    simulation = _simulation(cell_power={"2": 0.5})
+    with ThreadPoolExecutor(2) as executor:
+        out = power_at_size.power_at(
+            executor,
+            small_pool,
+            changes=80,
+            sigma_run=0.0,
+            lifts=lifts,
+            simulation=simulation,
+            cells=2,
+            pilot_halves=_halves(small_pool),
+        )[0.975]
+        # The same bisection run by hand, on the same trials, finds the same lift.
+        expected = partition_sensitivity.detectable_lift(
+            lambda lift: partition_sensitivity.trials_at(
+                executor,
+                small_pool,
+                size=80,
+                lift=lift,
+                sigma_run=0.0,
+                redraw=simulation["redraw"],
+                resamples=simulation["resamples"],
+                seed=power_at_size.simulation_seed(simulation),
+                levels=[0.975],
+                runs=simulation["runs"],
+                count=simulation["trials"],
+            ),
+            level=0.975,
+            target_power=0.5,
+            critical=None,
+            continuous=False,
+            steps=3,
+        )
+    assert out["cell_power"] == 0.5 and out["detectable_lift"] == expected
+    assert out["detectable"] == partition_sensitivity.realised_effect(
+        expected, continuous=False, pilot_halves=_halves(small_pool), seed=43
+    )
+    assert out["detectable"] > 0 and out["detectable_above"] is None
+
+
+def test_a_cell_that_detects_nothing_under_the_bracket_records_its_top(small_pool: list) -> None:
+    """A critical p of zero passes no trial: no lift reaches the cell's power, which is recorded,
+    so the gate reads the cell exploratory rather than the script refusing it."""
+    with ThreadPoolExecutor(2) as executor:
+        out = power_at_size.power_at(
+            executor,
+            small_pool,
+            changes=80,
+            sigma_run=0.0,
+            lifts={0.975: {"lift": 0.05, "bound": 0.025}},
+            simulation=_simulation(),
+            cells=2,
+            pilot_halves=_halves(small_pool),
+            critical={0.975: 0.0},
+        )[0.975]
+    assert out["detectable"] is None and out["detectable_lift"] is None
+    assert out["detectable_above"] == partition_sensitivity.realised_effect(
+        partition_sensitivity.LIFT_CEILING,
+        continuous=False,
+        pilot_halves=_halves(small_pool),
+        seed=43,
+    )
+
+
+def test_the_steps_default_to_the_simulations_own() -> None:
+    assert power_at_size.simulation_steps(_simulation(steps=7)) == 7
+    without = {k: v for k, v in _simulation().items() if k != "steps"}
+    assert power_at_size.simulation_steps(without) == partition_sensitivity.parser.get_default(
+        "steps"
+    )
+
+
+def test_main_records_the_detectable_effect_and_the_sesoi(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.experiment.decomposition import metric_sesoi
+
+    out, _ = _main(tmp_path, monkeypatch)
+    assert out["sesoi"] == metric_sesoi("logprob_per_token") and out["steps"] == 3
+    for at in out["by_level"].values():
+        # A continuous lift is its own effect.
+        assert at["detectable"] == at["detectable_lift"] and at["cell_power"] == 0.9
+
+
+def test_only_an_unreached_power_reads_as_detecting_nothing(
+    small_pool: list, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Any other error in the trials is raised, never read as exploratory."""
+
+    real = power_at_size.trials_at
+
+    def broken(*args: Any, **kwargs: Any) -> list:
+        # The registered lift's power is read; a bisection step fails.
+        if kwargs["lift"] != 0.05:
+            raise ValueError("a trial failed")
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(power_at_size, "trials_at", broken)
+    with pytest.raises(ValueError, match="a trial failed"), ThreadPoolExecutor(2) as executor:
+        power_at_size.power_at(
+            executor,
+            small_pool,
+            changes=80,
+            sigma_run=0.0,
+            lifts={0.975: {"lift": 0.05, "bound": 0.025}},
+            simulation=_simulation(),
+            cells=2,
+            pilot_halves=_halves(small_pool),
+        )
+    assert issubclass(partition_sensitivity.PowerNotReached, ValueError)

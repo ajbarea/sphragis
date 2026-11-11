@@ -17,6 +17,7 @@ import torch
 
 from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
+from sphragis.experiment.cells import RERUN_RANK
 from sphragis.experiment.decomposition import (
     FOREIGN_SOURCES,
     FOREIGN_SPANS,
@@ -47,8 +48,10 @@ from sphragis.experiment.model import (
 from sphragis.experiment.neutral import (
     LEAKAGE_MAX_RATE,
     LEAKAGE_THRESHOLD,
+    REPORTED_PER_RUN,
     Check,
     apparatus_holds,
+    check_kind,
     leakage_check,
     manipulation_check,
     non_degeneracy,
@@ -111,8 +114,9 @@ parser.add_argument(
 parser.add_argument(
     "--lora-rank",
     type=int,
+    choices=(REGISTERED_RANK, RERUN_RANK),
     default=REGISTERED_RANK,
-    help="the registered rank by default; the conditional branch reruns an arm at 256",
+    help="the registered rank by default; the registered rerun is at 256 (cells.RERUN_RANK)",
 )
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 parser.add_argument(
@@ -443,8 +447,9 @@ for org, interval in verdict["binding"].items():
     )
 print(f"GATE (pilot scale, not confirmatory): {verdict['verdict']}", flush=True)
 
-# Outcome-neutral tests. At confirmatory scale a failure here halts the study before the gate
-# is read; at pilot scale they are reported beside it.
+# Outcome-neutral tests. At confirmatory scale a failed check withdraws the organization it fails
+# on before the gate is read (`decomposition.confirmatory_gate`'s `withdrawn`); at pilot scale
+# this run pools its organizations' checks into one flag, reported beside the verdict.
 checks = []
 for org in orgs:
     for seed in seeds:
@@ -487,9 +492,17 @@ checks.append(non_degeneracy(results))
 for check in checks:
     print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
 holds = apparatus_holds(checks)
-failed = [c for c in checks if not c.passed]
+# A run's own check 2 withdraws nothing: check 2 is read crossed over the cell's runs.
+failed = [
+    c for c in checks if not c.passed and check_kind({"name": c.name}) not in REPORTED_PER_RUN
+]
 unread = "H2" if failed and all("foreign-" in c.name for c in failed) else "H1"
-print(f"APPARATUS {'holds' if holds else f'FAILS: {unread} would not be read'}", flush=True)
+if holds:
+    print("APPARATUS holds", flush=True)
+elif not failed:
+    print("APPARATUS holds; a run's own check 2 failed, reported (check 2 is read crossed)")
+else:
+    print(f"APPARATUS FAILS: {unread} would not be read", flush=True)
 
 args.out.write_text(
     json.dumps(

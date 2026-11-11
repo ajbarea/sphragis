@@ -11158,6 +11158,10 @@ This closes the determination the 2026-10-08 entry called due. No amendment for 
 needed, since the study sits outside HSRO's oversight. The Stage 1 report does not mention it (AJ,
 2026-10-31: no lines on what the study does not need); a venue form that asks gets this answer.
 
+**Amendment (2026-11-05).** The Stage 1 report now names this determination in its Ethics
+paragraph (papers#133: "RIT's Human Subjects Research Office determined it is not human-subjects
+research (IRB0000393)"), so the line above no longer holds.
+
 ### Fuchsia's exploratory arm read beside Chromium's (2026-11-01)
 
 `# research(2026-11)`. Decision 5's second foreign arm (entry 2026-10-30, "Fuchsia's exploratory
@@ -11231,3 +11235,96 @@ does not loosen the test: the gate applies the smaller of α and the critical p
 stays the one fixed on 2026-10-22. Wikimedia's uncalibrated s′ run is committed beside the
 calibrated one as the record of the miss; the cell reads the calibrated one. These sizings move no registered decision: each K and
 calibration is the one the 2026-10-30 rules fix, and every cell can detect less than δ.
+
+### Second raters for the label audit: a page that reveals nothing, and the read-back (2026-11-10)
+
+The Stage 1 report reads one human against the model raters on OpenStack's 77 checked items
+(2026-10-15). If lab members agree to label the same items, the audit also gets a human-to-human
+figure. `label_audit_page.py --second-rater` builds their page from the agreement report: the
+items the human checked from one organization (`label_audit_agreement.checked_items`, item-003
+to item-153), in the same order and blinding. The builder reads no rater's labels, so the page
+cannot show one; its practice item is the rubric's invented worked example. A rater may change
+an answer until locking it; a locked answer is final, and a mis-click is marked as a slip beside
+it, as in the human check. Each viewer's answers are stored under their own id
+(`answers/<viewer id>/items/<item>`). The store's rules let only the artifact's owner read
+`answers`, and each viewer read only their own and, when shared at Contributor or above, write
+it.
+
+The blinded batches were no longer on disk. They were rebuilt from the September check page's
+embedded items, with the rater fields dropped. Rendering the check page again from the rebuilt
+batches reproduces that page's items exactly, and its rater A labels match `label-audit-v2.json`
+on all 383 scored items.
+
+`label_audit_agreement.py --second-raters` reads the store's export beside the committed report.
+Second raters are named L1, L2, ... in the order they first appear in an export, by first lock
+within one, and keep their names in later exports; viewer ids are not
+written. Every pair of readers is read on the items both answered: the five labels, valid
+against the rest, and outside names. Each reading gives raw agreement with a Wilson interval,
+and kappa and AC1 with bootstrap intervals. Each is read again without the items a slip
+touches. No second rater saw a label, so no pair of theirs is read by halves. The human and the
+model raters answered all 77 items, so their pairs are read on all of them and the model raters'
+pairs are named "on checked items", as in
+`label-audit-v2-openstack.json`, whose plain model pairs are on all 191. The read-back refuses
+to write unless every human pair in that file but the halves of the check, and the model
+raters' label pair, reproduce it. Where a statistic is undefined, as with one label throughout
+a short prefix, the reading writes null for it and for any interval undefined on every resample.
+A kappa or AC1 interval whose resamples all give one value (one or two shared items, or full
+agreement) states no uncertainty and is also written null; the Wilson interval on raw agreement
+is the reading there.
+
+### The development pilots re-read with their registered sensitivities (2026-11-11)
+
+`# research(2026-11)`. The four development pilots by relation chain
+(`partition-pilot-{openstack,wikimedia,qt,qt-foreignchromium}-likelihood-chains.json`) were read
+before their cells' simulations were registered, so they carried no bound and the reader, which
+reads no cell bounded without one, gave Wikimedia's 97.5% cell "inconclusive" where the Stage 1
+report applies its registered rule and reads it bounded (sphragis#253, 11-05 comment). Each is
+read again on the same 22 runs, chains, levels, resamples and seed, with its cell's registered
+simulation as `--sensitivity` at the registered spread target (H1 at six cells:
+`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`; H2 at one cell, its
+K = 40 calibrated simulation). Qt's generation runs stay off the repository; they were linked
+from the private data folder (`sphragis-data-local/full-text/qt-generation-runs/`) beside its
+rescorings for the read, as for the first one, so its 22 batteries are read, and removed after.
+Every estimate, interval and battery is unchanged; the reads now carry their
+bounds, the bounded-test p (the share of draws at or above δ) and the four outcomes. Development
+readings, binding nothing:
+
+| cell | estimate | 97.5% interval, verdict, bound | 95% interval, verdict, bound | bounded-test p |
+|---|---|---|---|---|
+| OpenStack, H1 on s | +0.0231 | [+0.0082, +0.0400] supported, bound +0.0124 | [+0.0097, +0.0380] supported, bound +0.0115 | 0.8266 |
+| Wikimedia, H1 on s | +0.0058 | [-0.0006, +0.0124] bounded, bound +0.0080 | [+0.0001, +0.0116] supported, bound +0.0074 | 0.0002 |
+| Qt, H1 on s | +0.0101 | [+0.0031, +0.0181] supported, bound +0.0085 | [+0.0041, +0.0169] supported, bound +0.0079 | 0.0395 |
+| Qt, H2 against Chromium | +0.0107 | [-0.0041, +0.0248] inconclusive, bound +0.0109 | [-0.0023, +0.0229] inconclusive, bound +0.0103 | 0.1957 |
+
+Wikimedia's 97.5% cell now reads bounded, as the Stage 1 report reads it: its upper bound lies
+below δ (0.0161) and its bounded-test p below 0.0125. No other verdict moves. The H2 cell is
+calibrated only on a test read, whose K source carries its critical p; this read takes its bounds
+alone. The reads were made with the code of sphragis#261 and #262 (`p_bounded`, H2's bounds
+through `sensitivity_bounds(cell=)`).
+
+
+### The development pilots carry the readings registered beside the cells (2026-11-11)
+
+`# research(2026-11)`. The Stage 1 report registers four readings beside the verdicts that the
+code did not yet compute (sphragis#253): check 2 on the crossed 95% interval (Outcome-Neutral
+Tests), the change-averaged estimate (Estimand), H1 and H2 summed on the same resamples over H2's
+K runs on C++, and H2 on s′ at its s level (Verdicts and Readings; Analysis). The four
+development pilots by chain were read again with that code on the same 22 runs, chains, levels,
+resamples and seed, Qt's generation runs linked from the private data folder for its batteries
+and removed after, as on the same day's earlier re-read. Every field the pilots carried is
+unchanged, the pooled draws bit for bit; the readings, development only and binding nothing:
+
+| cell | pooled | change-averaged, 95% interval | check 2: own against base, 95% interval |
+|---|---|---|---|
+| OpenStack, H1 on s | +0.0231 | +0.0144 [+0.0041, +0.0257] | +0.4080 [+0.3619, +0.4537] passes |
+| Wikimedia, H1 on s | +0.0058 | +0.0042 [-0.0012, +0.0098] | +0.4688 [+0.4315, +0.5087] passes |
+| Qt, H1 on s | +0.0101 | +0.0097 [+0.0035, +0.0159] | +0.3904 [+0.3574, +0.4246] passes |
+| Qt, H2 against Chromium | +0.0107 | +0.0084 [-0.0069, +0.0230] | +0.3904 [+0.3574, +0.4246] passes |
+
+Qt's joint reading over H2's 22 development runs on its C++ examples: H1 on C++ +0.0087 [-0.0006,
++0.0212]; sum +0.0193 [+0.0072, +0.0322]; above zero H1 0.9642, H2 0.9471; runs 22, examples 425. H2
+on s′ at its s levels: +0.0058; 0.975: [-0.0045, +0.0147] inconclusive; 0.95: [-0.0031, +0.0136]
+inconclusive. Check 2 passes in every read, H2's included (its first 22 runs are Qt's H1 runs, so
+the two read the same contrast); on the test window a failure would withdraw the organization. The
+change-averaged estimate lies below the pooled one in every cell: changes with more examples carry
+more of the pooled gain.

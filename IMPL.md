@@ -8,6 +8,43 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **Issue #253, the code mirrors the Stage 1 report's registered rules (papers 1b6e349): done.** ✅
+  #261 (b7e5dd1): the calibrated bounded side (`p_bounded`), a failed check withdraws its
+  organization on its recorded battery (`neutral.withdrawing_failures`), the small-window rule
+  (`power_at_size.py` detectable effect, `small_window`), the mixed row. ✅ #262 (8cf872a): the
+  spread rule (`partitions.spread_reading`, `partition_sensitivity.py --test-read`), H2's test read
+  (`partition_pilot.py --hypothesis H2`) and `confirmatory_gate` (was `h1_test_gate`) under Holm
+  over both; the per-cell names reading. ✅ #263 (3fce3da): the four development pilots re-read with
+  their registered sensitivities (research log, 2026-11-11; Wikimedia's 97.5% cell reads bounded, as
+  the paper says), registered-decisions.md and the protocol page mirror the paper's readings, the
+  HSRO amendment (research log, 2026-10-28). The papers harvest at 1b6e349 passes against these
+  artifacts. ✅ #264's fix (PR #267): provenance asks the code's checkout, recording the
+  script's, the working directory's and a job's beside it. ✅ This branch (`feat/253-test-reads`):
+  the readings the paper registers beside the gate, each in `partition_pilot.py`'s reads and the
+  gate: check 2 on the crossed 95% interval over the cell's runs (a failure withdraws, the battery
+  written; `replication_gate` takes `withdrawn` too), the H1 + H2 sum over H2's K on C++
+  (`joint`), H2 on s′ and Qt's vocabulary (`on_s_prime`, `vocabulary`), the change-averaged
+  estimate (`change_averaged`); `require_registered_analyses` refuses a test read without them.
+  The four development pilots carry them (research log, 2026-11-11, second entry). PR #268.
+  ✅ Rank 256 (90-conditional.tex:52-56, branch `feat/253-rank256`): `LORA_RANK=256` through the
+  partition chain (`-r256` after the corpus root), each read records its runs' rank and a test read
+  is held to it, the gates read the rerun at `lora_rank=256` nested under `rerun`, and
+  `rank_reading` gives capacity-limited / bounded at both / bounded at 32 only beside the rank-32
+  verdicts; `likelihood_sesoi.py` keeps the rerun out of δ. Nothing registered in 1b6e349 is left
+  unbuilt. Verify: `uv run pytest tests/unit/experiment/test_decomposition.py
+  tests/unit/test_partition_pilot.py tests/unit/test_likelihood_sesoi.py`; papers harvest at
+  1b6e349.
+- **Issue #258, second raters for the label audit (AJ 2026-11-10): PR #260, review clean.**
+  `label_audit_page.py --second-rater` builds the page with no reveal for the human's 77 checked
+  OpenStack items; `label_audit_agreement.py --second-raters` reads the store export back
+  (research log, 2026-11-10). Eight fresh Opus rounds, the last clean (findings by round in the
+  PR). Page published privately at claude.ai/artifact/QwjuoMD8S33CmBjNnesngv (rules:
+  `scripts/label_audit/rater2-capabilities.json`; built from `scratch/audit-v2/batches`, rebuilt
+  from the September check page). AJ shares it by email as Editor (needs-you). Read-back once
+  labels arrive: `ArtifactData list answers`, then `list answers/<id>/items` with
+  `out_dir scratch/rater2/export` per rater, then the docstring command to
+  `datasets/results/label-audit-v2-rater2.json`. Follow-up: #259 (bootstrap speed).
+
 - **Issue #232, five registered-design decisions (AJ 2026-10-30).**
   PR #246, the sized runs, is merged (0d12cc3; research log, 2026-11-02, "Six-cell, s′ and
   calibrated H2 simulations"): every H1 cell on s and s′ and H2 at K = 40 calibrated detect below δ.
@@ -85,7 +122,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    set is frozen, `decomposition_gate` refuses every read: no decomposition-sensitivity artifact
    bounds Wikimedia's H1 cell or Qt's H2 cell (`detectable_effects` returns only H1 bounds, and
    the fullest artifact, `decomposition-sensitivity.json`, has them for OpenStack and Qt).
-   `h1_test_gate` refuses until H2's test read over partitions is built. Qt can be admitted until
+   `confirmatory_gate` reads H2's test read beside H1 under Holm (#262). Qt can be admitted until
    2026-11-20 with its cells' bounds simulated and committed by then (PR #246 did). Chromium is
    not admitted (no split qualified by 2026-10-23) and supplies H2's foreign pool.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:

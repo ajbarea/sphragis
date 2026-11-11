@@ -19,9 +19,10 @@ from collections.abc import Callable, Mapping, Sequence
 from statistics import NormalDist, stdev, variance
 from typing import Any
 
-from sphragis.experiment.across import one_sided_p
+from sphragis.experiment.across import bounded_p, one_sided_p
 from sphragis.experiment.cells import (
     K_COVERAGE,
+    POSITIVE_CONTROL_CONFIDENCE,
     REGISTERED_SPREAD_TARGET,
     SPREAD_TARGETS,
     Cell,
@@ -29,24 +30,31 @@ from sphragis.experiment.cells import (
     cell_of,
     cluster_of,
     is_count,
+    is_real,
     level_key,
     same_calibration,
 )
 from sphragis.experiment.decomposition import (
+    H2_POPULATION,
     SESOI,
     Restricted,
+    base_clusters,
     is_cpp,
+    joint_reading,
     matched_clusters,
     project_clusters,
     read_intervals,
 )
-from sphragis.experiment.neutral import source_root, source_windows
+from sphragis.experiment.neutral import Check, source_root, source_windows
 from sphragis.measure.stats import (
     MIN_CLUSTERS,
+    change_totals,
     equal_halves,
     one_sided_alpha,
     partitioned_crossed_draws,
     percentile_interval,
+    pooled_totals,
+    shared_partitioned_draws,
 )
 
 # Two independent aggregations agree within XI with probability about 1 - BETA (Ritzwoller and
@@ -96,6 +104,14 @@ def h2_contrast(source: str) -> Contrast:
         )
 
     return contrast
+
+
+def h1_cpp_contrast(
+    results: Results, *, org: str, seed: int | None, metric: str
+) -> list[list[Any]]:
+    """H1's contrast in one run on the C++ examples alone (`H2_POPULATION`): each half's own
+    adapter against its sibling, where H2's matched contrast is read."""
+    return project_clusters(Restricted(results, is_cpp), org=org, seed=seed, metric=metric)
 
 
 def reproducibility(estimates: Sequence[float], *, xi: float = XI, beta: float = BETA) -> dict:
@@ -360,6 +376,73 @@ def coverage_runs(
     }
 
 
+def null_reading(
+    entry: Mapping[str, Any],
+    levels: Sequence[float],
+    *,
+    calibrated: bool,
+    file: str,
+    at: str,
+) -> tuple[
+    dict[float, float],
+    bool,
+    dict[float, float] | None,
+    dict[float, float] | None,
+    dict[float, str],
+]:
+    """What a simulated null at one spread point says: its rates by level, whether they hold
+    nominal at every level, the critical p calibrated where they do not, the calibrated test's rate
+    on the second, independent null half, and why the calibration is refused at each level where it
+    is: that rate above Bradley's (1978) liberal bound, 1.5 alpha, so it did not carry over, or a
+    critical p of zero, which no p falls below.
+
+    Only a miss is calibrated, so a simulation that holds nominal and was calibrated, or misses
+    and was not, is refused.
+    """
+    nominal = {level_key(c): one_sided_alpha(c) for c in levels}
+    read = by_level(entry["null_false_positive"])
+    bad = [(c, v) for c, v in read.items() if not (is_real(v) and 0.0 <= v <= 1.0)]
+    if bad:
+        raise ValueError(f"{file}: null rate {bad[0][1]!r} at {bad[0][0]} is not in [0, 1]")
+    if set(read) != set(nominal):
+        raise ValueError(f"{file}: null rates at {sorted(read)}, the read is at {sorted(nominal)}")
+    within = all(read[c] <= nominal[c] for c in nominal)
+    if within == calibrated:
+        raise ValueError(
+            f"{file}: the null {'holds' if within else 'misses'} nominal at {at}, and the "
+            f"simulation is {'' if calibrated else 'not '}calibrated; only a miss is calibrated"
+        )
+    if not calibrated:
+        return read, within, None, None, {}
+    critical = by_level(entry["critical_p"])
+    measured = by_level(entry["null_false_positive_calibrated"])
+    bad = [
+        (name, c, v)
+        for name, values in (("critical p", critical), ("calibrated rate", measured))
+        for c, v in values.items()
+        if not (is_real(v) and 0.0 <= v <= 1.0)
+    ]
+    if bad:
+        raise ValueError(f"{file}: {bad[0][0]} {bad[0][2]!r} at {bad[0][1]} is not in [0, 1]")
+    if set(critical) != set(nominal):
+        raise ValueError(
+            f"{file}: critical p at {sorted(critical)}, the read is at {sorted(nominal)}"
+        )
+    if set(measured) != set(nominal):
+        raise ValueError(f"{file}: calibrated rates at {sorted(measured)}, not {sorted(nominal)}")
+    # A critical p of zero: the null's p resolves no alpha-quantile at its resamples.
+    refused = {}
+    for c in nominal:
+        if not critical[c] > 0.0:
+            refused[c] = "its critical p is zero, which no p falls below"
+        elif measured[c] > BRADLEY_LIBERAL * nominal[c]:
+            refused[c] = (
+                f"its calibrated test reads {measured[c]} on the second null half, above "
+                f"Bradley's {BRADLEY_LIBERAL} alpha"
+            )
+    return read, within, critical, measured, refused
+
+
 def registered_coverage(
     pilot: Mapping[str, Any],
     simulation: Mapping[str, Any],
@@ -403,31 +486,19 @@ def registered_coverage(
         if not holds:
             raise ValueError(f"{file} {reason}")
     entry = simulation["by_target"][REGISTERED_SPREAD_TARGET]
-    read = by_level(entry["null_false_positive"])
-    if set(read) != set(levels):
-        raise ValueError(f"{file}: null rates at {sorted(read)}, the pilot reads {levels}")
-    within = all(read[c] <= nominal[c] for c in levels)
-    calibrated = bool(simulation.get("calibrated"))
-    if within == calibrated:
+    read, within, critical, measured, refused = null_reading(
+        entry,
+        levels,
+        calibrated=bool(simulation.get("calibrated")),
+        file=file,
+        at=f"K = {runs}",
+    )
+    if refused:
         raise ValueError(
-            f"{file}: the null {'holds' if within else 'misses'} nominal at K = {runs}, and the "
-            f"simulation is {'' if calibrated else 'not '}calibrated; only a miss is calibrated"
+            f"{file}: the calibration is refused: "
+            + "; ".join(f"at {c}, {why}" for c, why in refused.items())
         )
-    critical = by_level(entry["critical_p"]) if calibrated else None
-    if critical is not None and set(critical) != set(levels):
-        raise ValueError(f"{file}: critical p at {sorted(critical)}, the pilot reads {levels}")
-    # The rate the calibrated test reads on the second, independent null half: above Bradley's
-    # liberal bound, 1.5 alpha, at either level, the calibration did not carry over.
-    measured = by_level(entry["null_false_positive_calibrated"]) if calibrated else None
-    if measured is not None:
-        if set(measured) != set(levels):
-            raise ValueError(f"{file}: calibrated rates at {sorted(measured)}, not {levels}")
-        loose = [c for c in levels if measured[c] > BRADLEY_LIBERAL * nominal[c]]
-        if loose:
-            raise ValueError(
-                f"{file}: the calibrated test reads {[measured[c] for c in loose]} on the second "
-                f"null half at {loose}, above {BRADLEY_LIBERAL} alpha"
-            )
+    calibrated = critical is not None
     return {
         "reproducibility_runs": None,
         "coverage_runs": None,
@@ -448,6 +519,110 @@ def registered_coverage(
         if measured is None
         else {str(c): v for c, v in measured.items()},
         "spread_targets": targets,
+    }
+
+
+#: The spread point a test read's own per-run spread is simulated at (Stage 1 report, Execution
+#: step 1 and "Measured calibration of the interval"): named apart from the development pilot's
+#: points, which the simulation keeps, so its calibration is checked against the read's K.
+TEST_SPREAD_TARGET = "run_spread"
+
+
+def run_spread(report: Mapping[str, Any]) -> float:
+    """A test read's per-run spread: the standard deviation of its K runs' estimates, the
+    quantity the sizing bound bounds (`spread_targets`)."""
+    per_run = report.get("per_run")
+    if not isinstance(per_run, list) or len(per_run) < 2 or not all(map(is_real, per_run)):
+        raise ValueError(f"a per-run spread needs at least two finite runs, got {per_run!r}")
+    return stdev(per_run)
+
+
+def spread_reading(
+    report: Mapping[str, Any], simulation: Mapping[str, Any] | None, *, name: str
+) -> dict[str, Any]:
+    """The spread rule for one test-window cell (Stage 1 report, "Measured calibration of the
+    interval": a cell whose per-run test spread exceeds its bound is simulated at that spread and
+    calibrated if over nominal, exploratory if refused).
+
+    Within the sizing bound its K was read at (`REGISTERED_SPREAD_TARGET` of the read's K source),
+    nothing changes and no simulation is read. Above it, `simulation` must be the cell's own null
+    at the read's spread (`partition_sensitivity.py --test-read`): `org`'s cell on the read's
+    metric and cluster unit, calibrated on the pilot its K came from, at the read's K and realised
+    size, with `COVERAGE_NULL_TRIALS` null studies. A null that holds nominal there changes
+    nothing; one that misses carries the critical p calibrated on it, which the read then applies,
+    and the levels at which that calibration is refused, with why: its rate on the second null half
+    above Bradley's 1.5 alpha, or a critical p of zero (`null_reading`). A cell read at a refused
+    level is exploratory.
+    """
+    spread = run_spread(report)
+    try:
+        bound = report["k_from"]["spread_targets"][REGISTERED_SPREAD_TARGET]
+    except (KeyError, TypeError) as error:
+        raise ValueError(f"{name}: its K records no sizing bound ({error})") from error
+    out: dict[str, Any] = {"spread": spread, "bound": bound, "above": spread > bound}
+    if not out["above"]:
+        if simulation is not None:
+            raise ValueError(f"{name}: spread {spread:.5f} is within its bound; nothing to read")
+        return out | {"file": None, "critical_p": None, "refused_at": [], "refused_why": {}}
+    if simulation is None:
+        raise ValueError(
+            f"{name}: per-run spread {spread:.5f} above its sizing bound {bound:.5f}, with no "
+            "simulation at that spread"
+        )
+    file = str(simulation.get("file", name))
+    recorded = simulation.get("test_read") or {}
+    checks = (
+        (simulation.get("org") == report.get("org"), f"simulates {simulation.get('org')}"),
+        (
+            simulation.get("metric", "exact_match") == report.get("metric", "exact_match"),
+            f"is on {simulation.get('metric', 'exact_match')}",
+        ),
+        (cell_of(simulation) == cell_of(report), f"simulates {cell_of(simulation)}"),
+        (cluster_of(simulation) == cluster_of(report), "was not drawn as the read was"),
+        (
+            same_calibration(simulation.get("spread_targets"), report["k_from"]["spread_targets"]),
+            "was calibrated on another pilot than the read's K",
+        ),
+        (
+            simulation.get("null_trials") == COVERAGE_NULL_TRIALS,
+            f"has {simulation.get('null_trials')} null studies, not {COVERAGE_NULL_TRIALS}",
+        ),
+        (simulation.get("runs") == report.get("runs"), f"is at K = {simulation.get('runs')!r}"),
+        (
+            simulation.get("planned_changes") == report.get("changes"),
+            f"is at {simulation.get('planned_changes')!r} changes, the read at "
+            f"{report.get('changes')!r}",
+        ),
+        (
+            is_real(recorded.get("spread")) and math.isclose(recorded["spread"], spread),
+            f"was simulated at spread {recorded.get('spread')!r}, the read's is {spread}",
+        ),
+        (TEST_SPREAD_TARGET in (simulation.get("by_target") or {}), "has no test-spread point"),
+    )
+    for holds, reason in checks:
+        if not holds:
+            raise ValueError(f"{name}: the spread simulation {file} {reason}")
+    entry = simulation["by_target"][TEST_SPREAD_TARGET]
+    target: Any = (entry.get("calibration") or {}).get("target")
+    if not (is_real(target) and math.isclose(target, spread)):
+        raise ValueError(f"{name}: {file} calibrated its run shift to another spread")
+    read, within, critical, measured, refused = null_reading(
+        entry,
+        report["levels"],
+        calibrated=bool(simulation.get("calibrated")),
+        file=file,
+        at="the test spread",
+    )
+    return out | {
+        "file": file,
+        "null_false_positive": read,
+        "within_nominal": within,
+        "critical_p": critical,
+        "null_false_positive_calibrated": measured,
+        # The levels where the calibration is refused, with why: read at any of them, the cell
+        # is exploratory (`decomposition._mark_exploratory`).
+        "refused_at": sorted(refused),
+        "refused_why": {str(c): why for c, why in refused.items()},
     }
 
 
@@ -550,6 +725,7 @@ def h1_over_partitions(
     sesoi: float = SESOI,
     contrast: Contrast = project_clusters,
     critical: Mapping[float, float] | None = None,
+    change_averaged: bool = True,
 ) -> dict[str, Any]:
     """One organization's H1 cell over its first `runs_fixed` partition runs, in admissible order;
     with `contrast`, another cell read the same way (`h2_contrast`).
@@ -559,6 +735,10 @@ def h1_over_partitions(
 
     Runs computed past K are reported, each on its own examples, and never enter the cell: not
     its estimate, not its interval, not the set of examples it is read on.
+
+    With `change_averaged`, the change-averaged estimate is reported outside the verdict, each
+    change counted once inside its resampled cluster, on the cell's own draws (Stage 1 report,
+    "Estimand").
     """
     if runs_fixed < 2:
         raise ValueError(f"a cell needs at least two runs, got runs_fixed={runs_fixed}")
@@ -574,9 +754,16 @@ def h1_over_partitions(
     if any(len(half) < MIN_CLUSTERS for run in past for half in run):
         raise ValueError(f"a run past K has a half with fewer than {MIN_CLUSTERS} changes")
     left_out = [equal_halves(run) for run in past]
-    estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
+    statistics = {"pooled": (clusters, pooled_totals)}
+    if change_averaged:
+        statistics["change_averaged"] = (clusters, change_totals)
+    estimates, every = shared_partitioned_draws(
+        statistics, seed=bootstrap_seed, resamples=resamples
+    )
+    estimate, draws = estimates["pooled"], every["pooled"]
     intervals = {c: percentile_interval(draws, c) for c in levels}
     registered = by_level(bounds) if bounds else {}
+    p_above, p_below = one_sided_p(draws), bounded_p(draws, sesoi)
     return {
         "org": org,
         "bootstrap_seed": bootstrap_seed,
@@ -591,11 +778,14 @@ def h1_over_partitions(
             intervals,
             registered,
             sesoi=sesoi,
-            p=one_sided_p(draws),
+            p=p_above,
             critical=None if critical is None else by_level(critical),
+            p_bounded=p_below,
         ),
         # The inputs of the readings across organizations, beside the pass rule.
-        "p_one_sided": one_sided_p(draws),
+        "p_one_sided": p_above,
+        # The bounded test's p against the SESOI, which a calibrated critical p also reads.
+        "p_bounded": p_below,
         "bootstrap_se": stdev(draws),
         "resamples": resamples,
         # The bounds the verdicts were read under, so a gate can check them against its own.
@@ -604,4 +794,93 @@ def h1_over_partitions(
         # The examples the cell's contrast reads in its first run: all of them for H1, the C++
         # ones for H2 (`h2_contrast`).
         "cell_examples": sum(len(c.treatment) for half in clusters[0] for c in half),
+        # Reported outside the gate, binding nothing.
+        "change_averaged": (
+            {
+                "estimate": estimates["change_averaged"],
+                "intervals": {
+                    c: dict(
+                        zip(
+                            ("low", "high"),
+                            percentile_interval(every["change_averaged"], c),
+                            strict=True,
+                        )
+                    )
+                    for c in levels
+                },
+                "p_one_sided": one_sided_p(every["change_averaged"]),
+            }
+            if change_averaged
+            else None
+        ),
+    }
+
+
+def positive_control_crossed(
+    runs: Sequence[tuple[Results, int]],
+    *,
+    org: str,
+    runs_fixed: int,
+    bootstrap_seed: int,
+    resamples: int,
+    metric: str,
+) -> Check:
+    """Outcome-neutral check 2 as registered: each half's own adapter against the base model on
+    that half, over the cell's first `runs_fixed` runs, read on the crossed interval (runs by
+    clusters, as the cell is) at `POSITIVE_CONTROL_CONFIDENCE`; it passes when the lower bound
+    is above zero. Read before every test read's cell (a development read's where its runs carry
+    the score), over that read's runs, on the registered score,
+    it withdraws the organization when it fails (`neutral.WITHDRAWING_CHECKS`), so Qt's H2 read
+    over its K runs can withdraw Qt on its own; each run's own check 2 is reported beside it."""
+    if runs_fixed < 2 or len(runs) < runs_fixed:
+        raise ValueError(f"check 2 reads {runs_fixed} runs of the {len(runs)} computed")
+    clusters, examples = common_runs(
+        runs[:runs_fixed], org=org, metric=metric, contrast=base_clusters
+    )
+    estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
+    low, high = percentile_interval(draws, POSITIVE_CONTROL_CONFIDENCE)
+    return Check(
+        f"positive_control_crossed:{org}",
+        low > 0.0,
+        {
+            "estimate": estimate,
+            "low": low,
+            "high": high,
+            "confidence": POSITIVE_CONTROL_CONFIDENCE,
+            "runs": runs_fixed,
+            "metric": metric,
+            "examples": examples["examples"],
+        },
+    )
+
+
+def joint_over_partitions(
+    runs: Sequence[tuple[Results, int]],
+    *,
+    org: str,
+    source: str,
+    runs_fixed: int,
+    bootstrap_seed: int,
+    resamples: int,
+    metric: str,
+) -> dict[str, Any]:
+    """H1 and H2 read jointly over H2's first `runs_fixed` runs, on its C++ examples and the same
+    draws: the share of draws above zero for each, the share in each sign quadrant, and their
+    sum, own adapter against the matched foreign arm, with its 95% interval
+    (`decomposition.joint_reading`; Stage 1 report, "Verdicts and Readings"). Binds no verdict."""
+    if runs_fixed < 2 or len(runs) < runs_fixed:
+        raise ValueError(f"the joint reading reads {runs_fixed} runs of the {len(runs)} computed")
+    h1, examples = common_runs(runs[:runs_fixed], org=org, metric=metric, contrast=h1_cpp_contrast)
+    h2, _ = common_runs(runs[:runs_fixed], org=org, metric=metric, contrast=h2_contrast(source))
+    drawn = shared_partitioned_draws(
+        {"H1": (h1, pooled_totals), "H2": (h2, pooled_totals)},
+        seed=bootstrap_seed,
+        resamples=resamples,
+    )
+    return {
+        **joint_reading(drawn, foreign=source, role="confirmatory", population=H2_POPULATION),
+        "runs": runs_fixed,
+        "metric": metric,
+        "examples": sum(len(c.treatment) for half in h1[0] for c in half),
+        "dropped": examples["dropped"],
     }

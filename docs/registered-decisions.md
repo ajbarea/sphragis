@@ -27,7 +27,9 @@ better-calibrated interval: under a true null its two-sided false-positive rate 
 changes and 0.0480 at 91, against the change-averaged interval's 0.0638 and 0.0555 (nominal
 0.05), and change-averaged runs above pooled at every size measured.
 
-Both are computed and reported. Fixed before any reading it could decide.
+Both are computed and reported: a cell's change-averaged estimate and interval, each change
+counted once inside its resampled relation chain, on the cell's own draws (`change_averaged` in
+`partitions.h1_over_partitions`), outside the gate. Fixed before any reading it could decide.
 
 ### Pass rule: every admitted organization's cell supported, Holm across H1 and H2
 
@@ -40,17 +42,33 @@ many C++ examples as the sibling, filled to N from the pool's other files, from 
 of Chromium, Fuchsia and AOSP, in that fixed order, whose host is admitted for this use and whose
 pool covers every matched draw (research log, 2026-10-14 and 2026-10-27).
 The two hypotheses share one family-wise level under Holm's step-down: both are read on a
-two-sided 97.5% interval, and if one passes, the other is read again on a 95% one. An
+two-sided 97.5% interval, and if one passes, the other is read again on a 95% one. A bounded
+reading is made only at the family's first level, and a second-level pass outranks it. An
 organization lost after acceptance is reported as a deviation and the hypotheses are read over
-the rest. Without Qt or Chromium's pool, or with H2 withdrawn because the pool fails check 4
-(`H2_WITHDRAWN`; research log, 2026-10-14), H2 is exploratory and H1, the whole family, carries
-the whole family-wise level: it is read on the 95% interval alone, bounded against δ.
+the rest. An organization whose recorded battery fails an outcome-neutral check from 2 to 6 is
+withdrawn this way (Stage 1 report, "Outcome-Neutral Tests"): the gate takes the battery, names
+its failed checks, and refuses one that failed none of the organization's own
+(`confirmatory_gate`'s `withdrawn`, `neutral.withdrawing_failures`). A foreign arm's failed check
+withdraws H2 alone and leaves the organization in H1: the Stage 1 report says so of the foreign
+pool over check 4, and a foreign adapter failing check 3 is read the same way, as the foreign
+source's failure. Without Qt or Chromium's pool, or with H2
+withdrawn because a foreign arm fails a check (`H2_WITHDRAWN`; research log, 2026-10-14), H2 is
+exploratory and H1, the whole family, carries the whole family-wise level: it is read on the 95%
+interval alone, bounded against δ.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the SESOI δ (a one-sided equivalence test; research log, 2026-10-14), and **inconclusive**
-otherwise. A cell is read bounded only once its sensitivity simulation, its power, is registered.
+otherwise, reported as "not detected above" its upper bound. A cell is read bounded only once its
+sensitivity simulation, its power, is registered.
 The margin moved to δ after the development pilots were read (research log, 2026-10-14).
-A hypothesis is bounded only when every cell is.
+A cell whose critical p is calibrated (H2's, H2's K; a co-primary cell whose null missed at its
+K, Number of runs; any cell calibrated at its test spread, The test window's per-run spread)
+reads supported only where its one-sided
+p, the share of draws at or below zero, is also below that critical p, and bounded only where its
+bounded-test p, the share of draws at or above δ, is below it too (Stage 1 report, "Verdicts";
+`read_intervals`). On an uncalibrated cell the bounded-test p repeats its interval: at 10,000
+draws it is below α exactly when the upper bound is below δ. A cell both supported and bounded
+counts as supported, below δ, never as bounded. A hypothesis is bounded only when every cell is.
 
 **Co-primary scores for H1 (registered 2026-10-30).** Each H1 organization is read on two
 scores, the reference's per-token log-probability and its non-identifier part
@@ -72,8 +90,9 @@ outcomes"), reported for every cell at every level it is read at: *supported* (a
 shown below δ), *supported, below SESOI* (above zero and below δ: an effect too small to matter),
 *bounded* (below δ, not above zero) and *inconclusive*. The test against δ is one-sided, the
 interval's upper bound below δ, since a cell below zero reads bounded too. They bind no verdict beyond the pass rule's,
-so the test's level and power are those registered; a hypothesis whose passing cells all sit below
-δ is reported so (`below_sesoi`).
+so the test's level and power are those registered; a hypothesis whose passing cells all read
+below δ is reported so (`below_sesoi`, the Table III legend's "below δ if every upper bound is";
+for a calibrated cell, its calibrated bounded test).
 
 **Mixed cells (registered 2026-10-30).** The every-cell rule stays the headline. When it fails, the
 result is read cell by cell, with the partial conjunction "at least r of k" beside it (Readings
@@ -81,7 +100,11 @@ beside the pass rule), on each co-primary score. In the form computed (Bonferron
 p-values made non-decreasing in r so a larger r is claimed only with every smaller one), r = k
 needs (k - r + 1) times the r-th smallest p below the level at every r, which is stricter than the
 conjunction: it can report fewer than k when every cell passes, and its power falls as r rises. It
-is read for how many organizations show the effect, never as a second chance to pass.
+is read for how many organizations show the effect, never as a second chance to pass. Table III of
+the Stage 1 report gives the case its own row: with some H1 cells supported and the rest bounded,
+at the family's first level, and H2 anything but a pass (untested included), the reading is
+"style transfers within a half in some cells, not all; read cell by cell, s against s′"
+(`is_mixed`, `MIXED_READING`).
 
 The admitted organizations are Gerrit hosts whose splits qualify: OpenStack, Wikimedia and Qt.
 Chromium is not admitted (no split qualifies) and supplies H2's foreign pool. H1 is
@@ -142,7 +165,8 @@ development pilot, in the read's cluster unit), its bounds from the organization
 7, the values every development reading used; it refuses to run without any of them. Every run it
 reads must carry an outcome-neutral battery that held, its own or, for a likelihood rescoring, the
 battery of the generation run it scored (`neutral.recorded_battery`); a run whose battery failed
-or is missing halts the read, and a planted run is never one of the runs read. Its levels,
+or is missing stops the read and withdraws the organization, and a planted run is never one of
+the runs read. Its levels,
 the cell count its bound is simulated for and the spread target it is read at come from the
 registration, never the command line: a Gerrit organization's from the design of the admitted
 organizations, frozen by one commit before any test window (the Holm levels of its confirmatory
@@ -168,7 +192,13 @@ holds more changes than that rate predicts (Wikimedia), the projection is a lowe
 enlarges the simulated bounds, provided arrivals do not fall below the training rate. So at fetch
 the realised change count is compared with the projection, and a window below it is reported
 beside the verdict with the simulation's power at the realised size, read with the cell's
-calibrated critical p where its K has one, as the read applies it at any size.
+calibrated critical p where its K has one, as the read applies it at any size. Beside power,
+`power_at_size.py`
+reports the smallest effect the cell detects at that size, by the simulation's own bisection at
+its registered per-cell power. A cell that then cannot detect δ, its detectable effect above
+δ at the family's first level, is exploratory: reported and left out of its hypothesis (Stage 1
+report, "Sample size"; `decomposition.small_window`). A hypothesis left with no cell is not
+tested, and the rest are read at the Holm levels of what remains.
 
 ### Contamination: provenance primary, membership scores descriptive
 
@@ -200,6 +230,17 @@ Bare hunks put only about a fifth of a deduplicated month over the 32-token mini
 to read. With context the scored share rises past four fifths, and the same text is what the
 model-less baseline was run on, so the two are directly comparable.
 
+### Rank 256: the grid rerun beside the verdicts, changing none
+
+Rank-32 LoRA learns less than full fine-tuning on code (Biderman et al., TMLR 2024), so a rank-32
+null may reflect capacity. The grid is rerun at 256 (Stage 1 report, "Rank 256"): the partition
+jobs take `LORA_RANK=256` and tag every result and adapter `-r256` on the registered run's
+corpus; each read records its runs' rank and refuses runs at two ranks; a test read is held to
+its rank (`cells.require_test_read`) and the rerun is read by the same gates at
+`lora_rank=RERUN_RANK`. `decomposition.rank_reading` sets the two gates side by side: a cell
+inconclusive at 32 and supported at 256 is capacity-limited; one bounded at 32 counts against a
+learnable house style only if bounded at 256 too. The verdicts are the rank-32 gate's.
+
 ### Secondary estimate: H1 and H2 summed per organization, reported beside the verdicts
 
 Within an organization both contrasts are bootstrapped on the same draws, so their sum, how much
@@ -207,7 +248,10 @@ an adapter from the evaluated half beats a foreign organization's, is reported w
 interval. It answers a weaker question than either hypothesis and binds no verdict. For an
 organization with a confirmatory H2 cell, the joint reading and the sum are taken on its C++
 examples, where both contrasts share one example set, with H1 restricted there reported beside
-them; H1's verdict stays on every example (research log, 2026-10-14).
+them; H1's verdict stays on every example (research log, 2026-10-14). For Qt the sum is read on
+C++ over H2's K runs, H2's 40, so both contrasts share one set of runs as well as of examples
+(Stage 1 report, "Verdicts and Readings"): its H2 read carries it as `joint`
+(`partitions.joint_over_partitions`), and the gate refuses an H2 test read without it.
 
 ### Readings beside the pass rule, each binding no verdict (registered 2026-10-02)
 
@@ -228,7 +272,10 @@ hypothesis the gate reads, on the same draws, at the same levels:
   critical p (its critical p capped at α), so at the r = k step, which reads α, it counts exactly
   where its own reading does; each r < k reads α / (k - r + 1), where the scaling is an
   approximation, since the critical p was calibrated at α alone; and r = k is claimed only when
-  every smaller r is too. The organizations are disjoint corpora, so the cells are independent. A failed every-organization rule then still says how many show it.
+  every smaller r is too. The organizations are disjoint corpora, so the cells are independent. A
+  failed every-organization rule then still says how many show it. A cell whose spread calibration
+  is refused at the level read has no critical p to scale by, so it is left out of this reading and
+  the summary below; a cell exploratory by a small window stays in them.
 - **Without AI-assisted targets.** The primary estimate recomputed without examples whose change's
   merged commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s rule, read
   at fetch time for the test window). Trailers are voluntary, so this bounds nothing; it shows
@@ -266,6 +313,13 @@ hypothesis the gate reads, on the same draws, at the same levels:
   with shared reviewers rather than the organization as a whole. Reviewers are read from
   attention sets, per change, not per comment.
 
+- **Reads as names.** Per H1 cell and level, an s cell supported where its s′ reading at the
+  same level is not reads as names: within-half on s alone (Stage 1 report, "Verdicts and
+  Readings"; `confirmatory_gate`'s `names`). For H2 the same reading, Qt's vocabulary, takes H2's
+  s′ read at its s level, a secondary analysis on the same runs and levels, with no bound or
+  calibrated p (the H2 read's `on_s_prime`; `confirmatory_gate`'s `vocabulary`). Read on its
+  interval alone, s′ reads supported at least as often as a calibrated read would, so the
+  vocabulary reading can only be rarer for it.
 - **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
   and GitHub, each weighted by its bootstrap standard error: REML for the between-organization
   variance, the modified Hartung-Knapp-Sidik-Jonkman interval (scale held at one or above; Röver,
@@ -293,6 +347,9 @@ secondary, none binding a verdict:
   blindness to correct rewrites is measured rather than assumed.
 - **Renamed identifiers**: the base model's exact match with identifiers renamed against the
   original, post-cutoff against pre-cutoff, read descriptively as exposure through reused code.
+- **Label quality on the test window**: the valid share is measured again on the test window,
+  since model raters' labels estimate only the valid share and the audited sample spans train and
+  development examples alone (Stage 1 report, "Label quality").
 - **A second foreign organization for H2** (registered 2026-10-30): Fuchsia, next after Chromium in
   the registered order, whose pool also covers every matched draw (research log, 2026-10-20),
   trains a second foreign arm on the same runs (`decomposition.EXPLORATORY_FOREIGN_SOURCE`).
@@ -310,6 +367,9 @@ secondary, none binding a verdict:
 The threshold has to clear the measured train-into-dev rate, which is 0.97% for OpenStack on corpus v3. At
 Jaccard 0.8 that rate is 0.00% by construction, because dedup removes pairs at that threshold
 across windows as well as within them, so registering there would be a test that cannot fail.
+The same threshold applies to each sibling half's training window and to the foreign pool against
+the evaluated half's test window, since shared boilerplate would credit the sibling with
+something other than style (Stage 1 report, check 4).
 
 ## Decided by the measurements their rules named in advance
 
@@ -336,7 +396,9 @@ Qt, against 0.0125, and at the 95% level 0.019, 0.02475 and 0.025, against 0.025
 0.01875 (`partition-sensitivity-<org>-rp1.0-logprob_per_token-chains*.json`). The rates in the
 rest of this section are the by-change simulations'. A run is one admissible partition at its
 own training seed; runs and clusters are crossed rather than nested, so they are resampled
-independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
+independently (Owen's pigeonhole bootstrap). The gate reads no half of fewer than 10 clusters
+(`stats.MIN_CLUSTERS`; Stage 1 report, "Measured calibration of the interval"). On one partition at
+three seeds and a seed effect of
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122. Over
 the registered runs, simulated on the registered metric, its one-sided false-positive rate at the
 stricter level is 0.00725 to 0.01125 for OpenStack and 0.0035 to 0.01325 for Wikimedia, against a
@@ -399,10 +461,28 @@ Monte Carlo error. The K source records that rate and refuses the simulation if 
 Bradley's liberal bound, 1.5α, at either level (`partitions.BRADLEY_LIBERAL`), since the
 calibration would then not carry over; the gate refuses bounds powered at another critical p
 than the one its K applies. Its K source is that simulation read at K = 40 (`k_coverage.py
---registered-runs`), which carries the critical p. H2's test read over partitions is not built yet,
-so the gate that will read H2's cell with it is not either. Its detectable effects are those of
+--registered-runs`), which carries the critical p. H2's test read over partitions
+(`partition_pilot.py --hypothesis H2` on the test window, at `registered_read(org,
+hypothesis="H2")`) and the gate that reads it beside H1 under Holm (`confirmatory_gate`) are
+built. Its detectable effects are those of
 that calibrated simulation, +0.0109 and +0.0103 nats per token at the two levels (research log,
 2026-11-02), below δ.
+
+### The test window's per-run spread: simulated above the sizing bound
+
+Registered by the Stage 1 report (papers#145, 2026-11-10). Every bound and K is read at the 90%
+upper bound of its development pilot's per-run spread (Stated power), and the interval's measured
+error rate is within nominal at that bound but not at every spread above it. So the Stage 1 report's
+Execution step 1 fixes each confirmatory cell's critical-value rule, not only the development
+critical values: a cell whose per-run spread on the test window, the standard deviation of its K
+runs' estimates (`partitions.run_spread`), exceeds that bound is simulated at that spread, at its K
+and realised size, with `COVERAGE_NULL_TRIALS` null studies (`partition_sensitivity.py
+--test-read`). A null that holds nominal there changes nothing. One that misses is calibrated as
+H2's is, and the cell reads at the smaller of that critical p and its K's own at each level, so
+calibration only tightens. A calibration whose rate on the second null half exceeds Bradley's 1.5α
+at a level the family reads, or whose critical p is zero there (no p falls below it), leaves the
+cell exploratory (`partitions.spread_reading`, `null_reading`). The rule applies to every cell, H2's
+and the GitHub family's too, since the family is read with the Gerrit cells' rules.
 
 ### Stated power: sensitivity, not power at an observed effect
 
@@ -462,13 +542,13 @@ Qt's foreign organization (V8, AOSP, Fuchsia).
 
 | decision | enforced by |
 |---|---|
-| cells, pass rule, Holm, verdicts (`h1_test_gate` on test reads), the replication family | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
-| K, the reading over partitions | [`sphragis/experiment/partitions.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/partitions.py) |
-| power at a test window's realised size (Fetch horizon) | [`scripts/power_at_size.py`](https://github.com/ajbarea/sphragis/blob/main/scripts/power_at_size.py) |
+| cells, pass rule, Holm, verdicts (`confirmatory_gate` on test reads), the replication family | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
+| K, the reading over partitions, the spread rule | [`sphragis/experiment/partitions.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/partitions.py) |
+| power and the detectable effect at a test window's realised size (Fetch horizon) | [`scripts/power_at_size.py`](https://github.com/ajbarea/sphragis/blob/main/scripts/power_at_size.py) |
 | what makes a cell readable, the test-window read's resamples and seed | [`sphragis/experiment/cells.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/cells.py) |
 | readings beside the pass rule, across organizations | [`sphragis/experiment/across.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/across.py) |
 | estimand, interval | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |
-| outcome-neutral checks and the halt rule | [`sphragis/experiment/neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py) |
+| outcome-neutral checks and the withdrawal rule | [`sphragis/experiment/neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py) |
 | the seal, and refusing to fetch past it | [`sphragis/corpus/`](https://github.com/ajbarea/sphragis/tree/main/sphragis/corpus) |
 | the evidence behind every row above | [Artifact index](artifacts.md) |
 

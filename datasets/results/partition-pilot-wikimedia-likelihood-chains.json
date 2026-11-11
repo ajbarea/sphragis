@@ -1,6 +1,7 @@
 {
   "hypothesis": "H1",
   "foreign_source": null,
+  "exploratory": false,
   "run_files": [
     "datasets/results/likelihood-partition-wikimedia-p1-n1850-rp1.0.json",
     "datasets/results/likelihood-partition-wikimedia-p2-s2-n1850-rp1.0.json",
@@ -44,7 +45,32 @@
     0.95
   ],
   "window": "development",
-  "sensitivity": null,
+  "sensitivity": {
+    "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-cells6-logprob_per_token-chains-k20.json",
+    "org": "wikimedia",
+    "cell": [
+      "H1",
+      null
+    ],
+    "runs": 20,
+    "spread_target": "sizing_bound_90",
+    "cells": 6,
+    "spread_targets": {
+      "pilot_lower_90": 0.0053326617425512,
+      "pilot_estimate": 0.006332729148564618,
+      "sizing_bound_90": 0.007975596278887944,
+      "pilot_upper_99": 0.009729128390786195
+    },
+    "planned_changes": 2782,
+    "metric": "logprob_per_token",
+    "cluster_unit": {
+      "unit": "chain",
+      "file": "datasets/results/relation-chains-wikimedia.json",
+      "sha256": "39178eb8ea8d9887cb7af7918430937012e80c9e2464cee870ed6cd94224a5be",
+      "planned_ratio": 0.9770017035775128
+    },
+    "calibrated": false
+  },
   "planted_convention": null,
   "outcome_neutral_runs": [
     {
@@ -206,9 +232,18 @@
     }
   },
   "verdicts": {
-    "0.975": "inconclusive",
+    "0.975": "bounded",
     "0.95": "supported"
   },
+  "four_way": {
+    "0.975": "bounded",
+    "0.95": "supported, below SESOI"
+  },
+  "below": {
+    "0.975": true,
+    "0.95": true
+  },
+  "calibrated": false,
   "within_sesoi": {
     "0.975": true,
     "0.95": true
@@ -218,15 +253,30 @@
     "0.95": false
   },
   "p_one_sided": 0.022,
+  "p_bounded": 0.0002,
   "bootstrap_se": 0.0029007432764448057,
   "resamples": 10000,
   "bounds": {
-    "0.975": null,
-    "0.95": null
+    "0.975": 0.0080078125,
+    "0.95": 0.007421875
   },
   "examples": 711,
   "dropped": 0,
   "cell_examples": 711,
+  "change_averaged": {
+    "estimate": 0.004161940297049188,
+    "intervals": {
+      "0.975": {
+        "low": -0.0018833793075550055,
+        "high": 0.010527742483489378
+      },
+      "0.95": {
+        "low": -0.0012403475583590501,
+        "high": 0.009786625656551248
+      }
+    },
+    "p_one_sided": 0.0661
+  },
   "sizing": {
     "pilot_runs": 22,
     "sd": 0.006332729148564618,
@@ -241,17 +291,33 @@
   "cluster_unit": {
     "unit": "chain",
     "file": "datasets/results/relation-chains-wikimedia.json",
+    "sha256": "39178eb8ea8d9887cb7af7918430937012e80c9e2464cee870ed6cd94224a5be",
     "changes": 429,
     "chains": 422
   },
+  "positive_control": {
+    "name": "positive_control_crossed:wikimedia",
+    "passed": true,
+    "evidence": {
+      "estimate": 0.4688001698651052,
+      "low": 0.43151623781153003,
+      "high": 0.5087068942686935,
+      "confidence": 0.95,
+      "runs": 22,
+      "metric": "logprob_per_token",
+      "examples": 711
+    }
+  },
+  "joint": null,
+  "on_s_prime": null,
   "provenance": {
-    "generated_at": "2026-10-21T08:54:55.484770+00:00",
+    "generated_at": "2026-11-11T14:31:04.874592+00:00",
     "git": {
-      "commit": "977253f69f27d342f05ae1aa7fcf640af1c58f88",
-      "branch": "registration/relation-chains"
+      "commit": "ab4d48a376314eaf92d11b6cef0d1de888403845",
+      "branch": "feat/253-test-reads"
     },
     "python": "3.14.4",
-    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
       "pygments": "2.21.0"
     }

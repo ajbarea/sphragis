@@ -281,3 +281,25 @@ def test_a_rescored_run_reads_the_battery_beside_it(tmp_path) -> None:
     assert recorded_battery({**identity, "scored_from": "/x/broken.json"}, run) is None
     (tmp_path / "list.json").write_text("[]")
     assert recorded_battery({**identity, "scored_from": "/x/list.json"}, run) is None
+
+
+def test_one_runs_check_2_withdraws_nothing_and_the_crossed_check_2_withdraws() -> None:
+    """Check 2 is registered on the crossed interval over the cell's runs; each run's own is
+    reported beside it (Stage 1 report, "Outcome-Neutral Tests")."""
+    from sphragis.experiment.neutral import battery_holds, withdrawing_failures
+
+    per_run = {"name": "positive_control:openstack-a|s1", "passed": False}
+    passed = {"name": "manipulation:openstack-a|s1", "passed": True}
+    battery = {"apparatus_holds": False, "checks": [per_run, passed]}
+    assert battery_holds(battery)
+    assert withdrawing_failures(battery, org="openstack") == []
+    crossed = {"name": "positive_control_crossed:openstack", "passed": False}
+    withdrawn = {"apparatus_holds": False, "checks": [crossed]}
+    assert not battery_holds(withdrawn)
+    assert withdrawing_failures(withdrawn, org="openstack") == [crossed["name"]]
+    # A flag that disagrees with the checks it summarises is not read, either way round.
+    assert not battery_holds({"apparatus_holds": True, "checks": [per_run, passed]})
+    assert not battery_holds({"apparatus_holds": False, "checks": [passed]})
+    # Every other check still holds the battery to its result.
+    failed = {"name": "manipulation:openstack-a|s1", "passed": False}
+    assert not battery_holds({"apparatus_holds": False, "checks": [per_run, failed]})

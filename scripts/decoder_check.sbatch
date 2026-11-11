@@ -48,6 +48,9 @@ case "${KIND:-partition}" in
 esac
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
 ROOT="${PLACEBO_ROOT:-$SPHRAGIS_DATA/corpus-$NAME$RESULT_SUFFIX}"
+# LORA_RANK=256 is the rerun the Stage 1 report registers ("Rank 256"): tagged -r256 after the
+# corpus root, so it reads the registered run's corpus and writes its own results and adapters.
+tag_result_suffix LORA_RANK
 SIZE=(--seeds "$SEEDS" ${TRAIN_SIZE:+--train-size "$TRAIN_SIZE"})
 
 STORED="$SPHRAGIS_RESULTS/rq1-$NAME$RESULT_SUFFIX.json"
@@ -56,6 +59,7 @@ claim_result OUT "$SPHRAGIS_RESULTS/rq1-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALT
 uv run --no-sync python scripts/rq1_pilot.py \
   --root "$ROOT" --org "$ORG-a" --org "$ORG-b" \
   "${SIZE[@]}" --equalize-train \
+  ${LORA_RANK:+--lora-rank "$LORA_RANK"} \
   --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-$NAME$RESULT_SUFFIX" \
   --reuse-from "$STORED" \
   --repetition-penalty "$REPETITION_PENALTY" \

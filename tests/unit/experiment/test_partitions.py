@@ -24,7 +24,7 @@ from sphragis.experiment.cells import (
     cluster_unit_of,
     sensitivity_bounds,
 )
-from sphragis.experiment.decomposition import SESOI
+from sphragis.experiment.decomposition import COPRIMARY_METRIC, SESOI
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.partitions import (
     BETA,
@@ -258,7 +258,7 @@ def test_sensitivity_bounds_read_the_named_spread_target_and_cell_count() -> Non
     with pytest.raises(ValueError, match="no bound for 3"):
         sensitivity_bounds(artifact, "pilot_estimate", [0.975], cells=3)
     h2 = artifact | {"hypothesis": "H2", "foreign_source": "aosp"}
-    with pytest.raises(ValueError, match="not H1's"):
+    with pytest.raises(ValueError, match=r"not \('H1', None\)"):
         sensitivity_bounds(h2, "pilot_estimate", [0.975], cells=1)
 
 
@@ -337,10 +337,21 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
     report = {
         **cell,
         "window": "test",
+        "lora_rank": 32,
         "planted_convention": {"passed": True},
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
+        "positive_control": {
+            "name": "positive_control_crossed:apache",
+            "passed": True,
+            "evidence": {
+                "runs": 4,
+                "metric": "logprob_per_token",
+                "confidence": 0.95,
+                "low": 0.1,
+            },
+        },
         "without": {
             name: {"estimate": cell["estimate"], "intervals": cell["intervals"]}
             for name in REGISTERED_SENSITIVITIES
@@ -378,7 +389,14 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         "spread_target": "sizing_bound_90",
         "cells": 1,
         "trials": 1_000,
-        "by_level": {str(level): {"bound": bound, "power": 0.5, "mc_se": (0.25 / 1_000) ** 0.5}},
+        "by_level": {
+            str(level): {
+                "bound": bound,
+                "power": 0.5,
+                "mc_se": (0.25 / 1_000) ** 0.5,
+                "detectable": 0.012,
+            }
+        },
     }
     loaded = json.loads(json.dumps({"report": report, "simulation": simulation, "power": power}))
     out = decomposition.replication_gate(
@@ -391,7 +409,12 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
     assert out["cells"]["apache"]["size"]["realised"] == cell["changes"]
     assert out["below_projection"] == ["apache"]
     assert out["cells"]["apache"]["size"]["power"] == {
-        level: {"power": 0.5, "mc_se": (0.25 / 1_000) ** 0.5}
+        level: {
+            "power": 0.5,
+            "mc_se": (0.25 / 1_000) ** 0.5,
+            "detectable": 0.012,
+            "detectable_above": None,
+        }
     }
 
 
@@ -827,3 +850,295 @@ def test_a_registered_k_refuses_a_simulation_it_cannot_read(
         registered_coverage(
             _COVERAGE_PILOT, simulation, org="wikimedia", name="p", file="f", runs=runs
         )
+
+
+# --- The spread rule (Stage 1 report, Execution step 1; sphragis#253).
+
+from sphragis.experiment.partitions import (  # noqa: E402
+    BRADLEY_LIBERAL,
+    TEST_SPREAD_TARGET,
+    run_spread,
+    spread_reading,
+)
+
+_TARGETS = {
+    "pilot_lower_90": 0.004,
+    "pilot_estimate": 0.006,
+    "sizing_bound_90": 0.008,
+    "pilot_upper_99": 0.011,
+}
+_UNIT = {"unit": "chain", "file": "chains-qt.json", "sha256": "a" * 64}
+
+
+def _read(per_run: list[float]) -> dict:
+    """A test read of Qt's H1 cell at K = 4, its K calibrated on `_TARGETS`."""
+    return {
+        "org": "qt",
+        "metric": "logprob_per_token",
+        "runs": len(per_run),
+        "changes": 900,
+        "levels": [0.975, 0.95],
+        "per_run": per_run,
+        "cluster_unit": _UNIT,
+        "k_from": {"spread_targets": _TARGETS},
+    }
+
+
+def _spread_sim(report: dict, null: dict, **fields: object) -> dict:
+    """A null at `report`'s own spread, as `partition_sensitivity.py --test-read` writes it."""
+    spread = run_spread(report)
+    return {
+        "org": "qt",
+        "metric": "logprob_per_token",
+        "runs": report["runs"],
+        "planned_changes": report["changes"],
+        "null_trials": COVERAGE_NULL_TRIALS,
+        "spread_targets": _TARGETS,
+        "cluster_unit": _UNIT,
+        "calibrated": "critical_p" in null,
+        "test_read": {"spread": spread},
+        "by_target": {TEST_SPREAD_TARGET: {"calibration": {"target": spread}, **null}},
+        **fields,
+    }
+
+
+_WIDE = [0.0, 0.01, -0.01, 0.02]  # sd 0.0129, above the 0.008 bound
+_NARROW = [0.0, 0.001, -0.001, 0.002]  # sd 0.0013, within it
+
+
+def test_a_read_within_its_sizing_bound_reads_no_spread_simulation() -> None:
+    out = spread_reading(_read(_NARROW), None, name="qt")
+    assert out["above"] is False and out["critical_p"] is None and out["refused_at"] == []
+    with pytest.raises(ValueError, match="within its bound; nothing to read"):
+        spread_reading(_read(_NARROW), _spread_sim(_read(_NARROW), {}), name="qt")
+
+
+def test_a_read_above_its_bound_needs_its_spread_simulated() -> None:
+    assert run_spread(_read(_WIDE)) == pytest.approx(stdev(_WIDE))
+    with pytest.raises(ValueError, match="above its sizing bound 0.00800, with no simulation"):
+        spread_reading(_read(_WIDE), None, name="qt")
+
+
+def test_a_null_that_holds_at_the_test_spread_changes_nothing() -> None:
+    report = _read(_WIDE)
+    null = {"null_false_positive": {"0.975": 0.012, "0.95": 0.024}}
+    out = spread_reading(report, _spread_sim(report, null), name="qt")
+    assert out["above"] and out["within_nominal"] and out["critical_p"] is None
+    assert out["refused_at"] == []
+
+
+def test_a_miss_at_the_test_spread_is_calibrated() -> None:
+    report = _read(_WIDE)
+    null = {
+        "null_false_positive": {"0.975": 0.019, "0.95": 0.03},
+        "critical_p": {"0.975": 0.008, "0.95": 0.02},
+        "null_false_positive_calibrated": {"0.975": 0.013, "0.95": 0.026},
+    }
+    out = spread_reading(report, _spread_sim(report, null), name="qt")
+    assert out["within_nominal"] is False
+    assert out["critical_p"] == {0.975: 0.008, 0.95: 0.02} and out["refused_at"] == []
+    # Only a miss is calibrated: a miss without a critical p is refused.
+    plain = {"null_false_positive": null["null_false_positive"]}
+    with pytest.raises(ValueError, match="misses nominal at the test spread"):
+        spread_reading(report, _spread_sim(report, plain), name="qt")
+
+
+def test_a_calibration_above_bradleys_bound_is_refused_at_its_level() -> None:
+    report = _read(_WIDE)
+    nominal = one_sided_alpha(0.975)
+    null = {
+        "null_false_positive": {"0.975": 0.03, "0.95": 0.03},
+        "critical_p": {"0.975": 0.004, "0.95": 0.02},
+        # At 0.975 above 1.5 alpha; at 0.95 exactly at it, which holds.
+        "null_false_positive_calibrated": {
+            "0.975": BRADLEY_LIBERAL * nominal + 0.001,
+            "0.95": BRADLEY_LIBERAL * one_sided_alpha(0.95),
+        },
+    }
+    out = spread_reading(report, _spread_sim(report, null), name="qt")
+    assert out["refused_at"] == [0.975]
+
+
+@pytest.mark.parametrize(
+    ("fields", "match"),
+    [
+        ({"org": "openstack"}, "simulates openstack"),
+        ({"metric": COPRIMARY_METRIC}, "is on"),
+        ({"hypothesis": "H2", "foreign_source": "chromium"}, "simulates"),
+        ({"cluster_unit": {"unit": "change"}}, "was not drawn as the read was"),
+        ({"spread_targets": {**_TARGETS, "sizing_bound_90": 0.009}}, "another pilot"),
+        ({"null_trials": 1_000}, "1000 null studies"),
+        ({"runs": 5}, "is at K = 5"),
+        ({"planned_changes": 1_913}, "is at 1913 changes, the read at 900"),
+        ({"test_read": {"spread": 0.02}}, "was simulated at spread 0.02"),
+        ({"by_target": {"sizing_bound_90": {}}}, "has no test-spread point"),
+    ],
+)
+def test_a_spread_simulation_must_be_the_reads_own(fields: dict, match: str) -> None:
+    report = _read(_WIDE)
+    null = {"null_false_positive": {"0.975": 0.012, "0.95": 0.024}}
+    with pytest.raises(ValueError, match=match):
+        spread_reading(report, _spread_sim(report, null, **fields), name="qt")
+
+
+def test_a_spread_simulation_calibrated_to_another_spread_is_refused() -> None:
+    report = _read(_WIDE)
+    sim = _spread_sim(report, {"null_false_positive": {"0.975": 0.012, "0.95": 0.024}})
+    sim["by_target"][TEST_SPREAD_TARGET]["calibration"]["target"] = 0.02
+    with pytest.raises(ValueError, match="calibrated its run shift to another spread"):
+        spread_reading(report, sim, name="qt")
+
+
+def test_a_critical_p_of_zero_is_a_refused_calibration() -> None:
+    """No p falls below zero: the null resolves no alpha-quantile, so the cell is exploratory."""
+    report = _read(_WIDE)
+    null = {
+        "null_false_positive": {"0.975": 0.03, "0.95": 0.03},
+        "critical_p": {"0.975": 0.0, "0.95": 0.02},
+        "null_false_positive_calibrated": {"0.975": 0.0, "0.95": 0.024},
+    }
+    out = spread_reading(report, _spread_sim(report, null), name="qt")
+    assert out["refused_at"] == [0.975]
+    assert out["refused_why"] == {"0.975": "its critical p is zero, which no p falls below"}
+
+
+@pytest.mark.parametrize("per_run", [[0.01], [0.01, None], [0.01, float("nan")], [0.01, True]])
+def test_a_per_run_spread_needs_two_finite_runs(per_run: list) -> None:
+    with pytest.raises(ValueError, match="two finite runs"):
+        run_spread({"per_run": per_run})
+
+
+def test_a_spread_simulation_without_its_calibration_is_refused() -> None:
+    report = _read(_WIDE)
+    sim = _spread_sim(report, {"null_false_positive": {"0.975": 0.012, "0.95": 0.024}})
+    sim["by_target"][TEST_SPREAD_TARGET]["calibration"] = None
+    with pytest.raises(ValueError, match="calibrated its run shift to another spread"):
+        spread_reading(report, sim, name="qt")
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("critical_p", None),
+        ("critical_p", -0.001),
+        ("critical_p", 1.5),
+        ("null_false_positive_calibrated", float("nan")),
+        ("null_false_positive", -0.5),
+        ("null_false_positive", None),
+        ("null_false_positive", 1.5),
+    ],
+)
+def test_a_spread_calibration_out_of_range_is_refused(field: str, value: object) -> None:
+    report = _read(_WIDE)
+    null = {
+        "null_false_positive": {"0.975": 0.019, "0.95": 0.03},
+        "critical_p": {"0.975": 0.008, "0.95": 0.02},
+        "null_false_positive_calibrated": {"0.975": 0.013, "0.95": 0.026},
+    }
+    null[field] = {**null[field], "0.975": value}
+    with pytest.raises(ValueError, match=r"is not in \[0, 1\]"):
+        spread_reading(report, _spread_sim(report, null), name="qt")
+
+
+def _with_base(results: dict, org: str, seed: int, *, base: float) -> dict:
+    """`results` with the base model scored `base` on every example of both halves."""
+    for window in (f"{org}-a", f"{org}-b"):
+        rows = results[run_id(EvalRun(f"adapter:{window}", window, seed))]
+        results[run_id(EvalRun("base", window, None))] = [
+            {"id": r["id"], "change_id": r["change_id"], "exact_match": base} for r in rows
+        ]
+    return results
+
+
+def test_check_2_reads_own_against_base_on_the_crossed_interval_over_the_cells_runs() -> None:
+    from sphragis.experiment.partitions import positive_control_crossed
+
+    everything = {"org-a": set(range(24)), "org-b": set(range(24, 48))}
+    nothing = {"org-a": set(), "org-b": set()}
+    runs = [(_with_base(_results(s, everything), "org", s, base=0.0), s) for s in (1, 2, 3)]
+    check = positive_control_crossed(
+        runs, org="org", runs_fixed=2, bootstrap_seed=7, resamples=500, metric="exact_match"
+    )
+    assert check.passed and check.name == "positive_control_crossed:org"
+    assert check.evidence["runs"] == 2 and check.evidence["confidence"] == 0.95
+    assert check.evidence["low"] > 0.0 and check.evidence["estimate"] == pytest.approx(1.0)
+    # An adapter no better than base fails, though one run past K would have passed.
+    flat = [(_with_base(_results(s, nothing), "org", s, base=0.0), s) for s in (1, 2)]
+    check = positive_control_crossed(
+        [*flat, runs[0]],
+        org="org",
+        runs_fixed=2,
+        bootstrap_seed=7,
+        resamples=500,
+        metric="exact_match",
+    )
+    assert not check.passed and check.evidence["low"] == 0.0
+    with pytest.raises(ValueError, match="reads 3 runs of the 2"):
+        positive_control_crossed(
+            flat, org="org", runs_fixed=3, bootstrap_seed=7, resamples=10, metric="exact_match"
+        )
+
+
+def test_a_cell_reports_its_change_averaged_estimate_beside_its_pooled_one() -> None:
+    everything = {"org-a": set(range(24)), "org-b": set(range(24, 48))}
+    some = {"org-a": set(range(6)), "org-b": set(range(24, 36))}
+    runs = [(_results(1, everything), 1), (_results(2, some), 2)]
+    with_it, without = (
+        h1_over_partitions(
+            runs,
+            org="org",
+            runs_fixed=2,
+            levels=[0.95],
+            bounds=None,
+            bootstrap_seed=0,
+            resamples=300,
+            change_averaged=averaged,
+        )
+        for averaged in (True, False)
+    )
+    # The pooled reading is the same draw for draw either way.
+    assert {k: v for k, v in with_it.items() if k != "change_averaged"} == {
+        k: v for k, v in without.items() if k != "change_averaged"
+    }
+    assert without["change_averaged"] is None
+    # One example per change: change-averaged and pooled agree.
+    averaged = with_it["change_averaged"]
+    assert averaged["estimate"] == pytest.approx(with_it["estimate"])
+    assert averaged["intervals"][0.95] == pytest.approx(with_it["intervals"][0.95])
+    assert 0.0 <= averaged["p_one_sided"] <= 1.0
+
+
+def test_the_joint_reading_sums_h1_and_h2_on_the_same_cpp_draws() -> None:
+    from sphragis.experiment.partitions import h2_contrast, joint_over_partitions
+
+    every_cpp = {i for i in range(40) if i % 2 == 0}
+    runs = [(_h2_results(1, every_cpp), 1), (_h2_results(2, set()), 2), (_h2_results(3, set()), 3)]
+    joint = joint_over_partitions(
+        runs,
+        org="qt",
+        source="aosp",
+        runs_fixed=2,
+        bootstrap_seed=7,
+        resamples=400,
+        metric="exact_match",
+    )
+    h2 = h1_over_partitions(
+        runs,
+        org="qt",
+        runs_fixed=2,
+        levels=[0.95],
+        bounds=None,
+        bootstrap_seed=7,
+        resamples=400,
+        contrast=h2_contrast("aosp"),
+    )
+    # Own against sibling and sibling against foreign share the sibling, so they sum to own
+    # against foreign: on C++ the own adapter never matches and the foreign arm never does.
+    assert joint["summed"]["estimate"] == pytest.approx(
+        joint["h1_on_cpp"]["estimate"] + h2["estimate"]
+    )
+    assert joint["h1_on_cpp"]["estimate"] == pytest.approx(-0.5)
+    assert joint["summed"]["estimate"] == pytest.approx(0.0)
+    assert joint["runs"] == 2 and joint["population"] == "cpp" and joint["examples"] == 20
+    assert set(joint["above_zero"]) == {"H1", "H2"}
+    assert sum(joint["shares"].values()) == pytest.approx(1.0)

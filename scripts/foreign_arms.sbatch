@@ -42,6 +42,9 @@ repetition_penalty
 NAME="partition-$ORG-p$PARTITION_SEED"
 tag_result_suffix SEEDS TRAIN_SIZE
 ROOT="$SPHRAGIS_DATA/corpus-$NAME$RESULT_SUFFIX"
+# LORA_RANK=256 is the rerun the Stage 1 report registers ("Rank 256"): tagged -r256 after the
+# corpus root, so it reads the registered run's corpus and writes its own results and adapters.
+tag_result_suffix LORA_RANK
 STORED="$SPHRAGIS_RESULTS/rq1-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALTY.json"
 if [ ! -s "$STORED" ]; then
   echo "no $STORED: run decoder_check.sbatch with the same variables first" >&2
@@ -52,6 +55,7 @@ claim_result OUT "$SPHRAGIS_RESULTS/rq1-$NAME$RESULT_SUFFIX-foreign$FOREIGN_SOUR
 uv run --no-sync python scripts/rq1_pilot.py \
   --root "$ROOT" --org "$ORG-a" --org "$ORG-b" \
   --seeds "$SEEDS" --train-size "$TRAIN_SIZE" --equalize-train \
+  ${LORA_RANK:+--lora-rank "$LORA_RANK"} \
   --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-$NAME$RESULT_SUFFIX" \
   --reuse-from "$STORED" \
   --foreign-pool "$FOREIGN_POOL" --foreign-source "$FOREIGN_SOURCE" \

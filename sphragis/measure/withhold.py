@@ -158,8 +158,8 @@ WHITESPACE_KEYS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "pairs",
-        r"(?:human|[ABC])~[ABC](?: (?:first|second) half)?"
-        r"(?: (?:outside_names|valid_vs_rest|on checked items))?(?: without slips)?",
+        r"(?:human|[ABC]|L[1-9][0-9]*)~(?:[ABC]|L[1-9][0-9]*)(?: (?:first|second) half)?"
+        r"(?: (?:outside_names|valid_vs_rest))?(?: on checked items)?(?: without slips)?",
         "label_audit_agreement",
     ),
     (
