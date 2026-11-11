@@ -44,6 +44,8 @@ case "${KIND:-partition}" in
   *) echo "KIND must be partition or placebo, not $KIND" >&2; exit 1 ;;
 esac
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
+# LORA_RANK=256 scores the registered rerun's runs (-r256); the scored run records its rank.
+tag_result_suffix LORA_RANK
 # FOREIGN_SOURCE scores foreign_arms.sbatch's run of the same partition, whose arms were saved
 # beside its halves' adapters.
 SCORED="$RESULT_SUFFIX${FOREIGN_SOURCE:+-foreign$FOREIGN_SOURCE}"

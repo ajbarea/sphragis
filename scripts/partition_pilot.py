@@ -30,7 +30,9 @@ from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
     K_COVERAGE,
     REGISTERED_METRIC,
+    REGISTERED_RANK,
     REGISTERED_SENSITIVITIES,
+    RERUN_RANK,
     SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
     TEST_RESAMPLES,
@@ -311,6 +313,7 @@ def main() -> None:
     pools: set[str | None] = set()
     windows: set[str] = set()
     decoders: set[str] = set()
+    ranks: set[Any] = set()
     batteries = []
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
@@ -340,6 +343,12 @@ def main() -> None:
             pools.add((run.get("foreign_pool") or {}).get("pool_sha256"))
         runs.append((run["results"], k))
         decoders.add(json.dumps(decoder(run), sort_keys=True))
+        ranks.add(run.get("lora_rank"))
+    # Runs at the registered rank and the rerun's are two studies of one grid (Stage 1 report,
+    # "Rank 256"), never one cell.
+    if len(ranks) != 1:
+        raise SystemExit(f"runs trained at ranks {sorted(map(str, ranks))}, not one study")
+    lora_rank = next(iter(ranks))
     if len(decoders) != 1:
         raise SystemExit(f"runs decoded differently, not one study: {sorted(decoders)}")
     cluster_unit: dict[str, Any] = {"unit": "change"}
@@ -394,6 +403,13 @@ def main() -> None:
         # A Gerrit H1 cell is read on each co-primary score, its registration otherwise the same.
         if args.org not in REPLICATION_FAMILY and args.metric == COPRIMARY_METRIC:
             expected = coprimary_read(expected)
+        # A test read is of the registered rank, or of the rerun at 256 that reads beside it.
+        if lora_rank not in (REGISTERED_RANK, RERUN_RANK):
+            raise SystemExit(
+                f"not read: runs at rank {lora_rank!r}, registered {REGISTERED_RANK} and "
+                f"{RERUN_RANK}"
+            )
+        expected["lora_rank"] = lora_rank
         chosen = {
             "levels": None if args.hypotheses is None else holm_levels(args.hypotheses),
             "cells": args.h1_cells,
@@ -729,6 +745,7 @@ def main() -> None:
         "metric",
         "sesoi",
         "decoder",
+        "lora_rank",
         "admissible",
         "k_source",
         "k_from",
@@ -756,6 +773,7 @@ def main() -> None:
         "metric": args.metric,
         "sesoi": sesoi,
         "decoder": json.loads(next(iter(decoders))),
+        "lora_rank": lora_rank,
         "admissible": str(args.admissible),
         "k_source": k_source,
         "k_from": k_from,

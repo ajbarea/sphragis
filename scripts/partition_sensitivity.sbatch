@@ -79,6 +79,8 @@ if [ -n "${TEST_READ:-}" ]; then
     echo "TEST_READ takes no RUNS, CALIBRATE or NULL_ONLY" >&2; exit 1
   fi
   COVERAGE_ARGS+=(--test-read "$TEST_READ"); RESULT_SUFFIX="$RESULT_SUFFIX-test-spread"
+  # The rank-256 rerun's read (LORA_RANK=256) claims its own name beside the registered one's.
+  tag_result_suffix LORA_RANK
 fi
 # CELLS="2 4 6": the H1 cell counts bounds are read at; the script's default otherwise.
 if [ -n "${CELLS:-}" ]; then read -r -a CELL_COUNTS <<< "$CELLS"; COVERAGE_ARGS+=(--cells "${CELL_COUNTS[@]}"); fi

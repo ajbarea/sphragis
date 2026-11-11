@@ -230,6 +230,17 @@ Bare hunks put only about a fifth of a deduplicated month over the 32-token mini
 to read. With context the scored share rises past four fifths, and the same text is what the
 model-less baseline was run on, so the two are directly comparable.
 
+### Rank 256: the grid rerun beside the verdicts, changing none
+
+Rank-32 LoRA learns less than full fine-tuning on code (Biderman et al., TMLR 2024), so a rank-32
+null may reflect capacity. The grid is rerun at 256 (Stage 1 report, "Rank 256"): the partition
+jobs take `LORA_RANK=256` and tag every result and adapter `-r256` on the registered run's
+corpus; each read records its runs' rank and refuses runs at two ranks; a test read is held to
+its rank (`cells.require_test_read`) and the rerun is read by the same gates at
+`lora_rank=RERUN_RANK`. `decomposition.rank_reading` sets the two gates side by side: a cell
+inconclusive at 32 and supported at 256 is capacity-limited; one bounded at 32 counts against a
+learnable house style only if bounded at 256 too. The verdicts are the rank-32 gate's.
+
 ### Secondary estimate: H1 and H2 summed per organization, reported beside the verdicts
 
 Within an organization both contrasts are bootstrapped on the same draws, so their sum, how much

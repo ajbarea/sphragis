@@ -78,6 +78,7 @@ def _inputs(
                 {
                     "seeds": [k],
                     "max_new_tokens": 256,
+                    "lora_rank": 32,
                     "train_size": TRAIN_SIZE,
                     "corpora": {org: {"source": source}},
                     "results": _results(org, k),
@@ -1636,3 +1637,51 @@ def test_an_h2_read_on_the_registered_score_carries_its_joint_and_s_prime_readin
             Path(path).write_text(json.dumps(run))
     _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
     assert json.loads(out.read_text())["on_s_prime"] is None
+
+
+def _rank(argv: list[str], ranks: dict[int, int]) -> None:
+    """Record run k's rank as `ranks[k]` (absent where not given)."""
+    for path in argv:
+        if path.endswith(".json") and "run-" in path:
+            k = int(Path(path).stem.split("-")[1])
+            run = json.loads(Path(path).read_text())
+            run.pop("lora_rank", None)
+            if k in ranks:
+                run["lora_rank"] = ranks[k]
+            Path(path).write_text(json.dumps(run))
+
+
+def test_runs_at_two_ranks_are_two_studies_never_one_cell(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _inputs(tmp_path, "openstack")
+    out = tmp_path / "out.json"
+    _main(monkeypatch, [*argv, "--out", str(out)])
+    assert json.loads(out.read_text())["lora_rank"] == 32
+    _rank(argv, dict.fromkeys(range(1, len(ADMISSIBLE) + 1), 256))
+    _main(monkeypatch, [*argv, "--out", str(out)])
+    assert json.loads(out.read_text())["lora_rank"] == 256
+    _rank(argv, {1: 32, 2: 256, 3: 256, 4: 256})
+    with pytest.raises(SystemExit, match="ranks"):
+        _main(monkeypatch, [*argv, "--out", str(out)])
+
+
+def test_a_test_read_is_of_the_registered_rank_or_the_rerun(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _replication_argv(tmp_path, "test")
+    _rank(argv, dict.fromkeys(range(1, len(ADMISSIBLE) + 1), 64))
+    with pytest.raises(SystemExit, match="runs at rank 64, registered 32 and 256"):
+        _main(monkeypatch, argv)
+    _rank(argv, dict.fromkeys(range(1, len(ADMISSIBLE) + 1), 256))
+    _main(monkeypatch, argv)
+    report = json.loads((tmp_path / "pilot.json").read_text())
+    assert report["lora_rank"] == 256
+    # The rerun is read by its own gate, never the registered one.
+    simulations = {"apache": _simulation(tmp_path)}
+    with pytest.raises(ValueError, match="at rank 256, read at 32"):
+        decomposition.replication_gate({"apache": report}, simulations=simulations)
+    gate = decomposition.replication_gate(
+        {"apache": report}, simulations=simulations, lora_rank=256
+    )
+    assert gate["lora_rank"] == 256 and gate["supplementary"]

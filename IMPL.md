@@ -25,11 +25,15 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   written; `replication_gate` takes `withdrawn` too), the H1 + H2 sum over H2's K on C++
   (`joint`), H2 on s′ and Qt's vocabulary (`on_s_prime`, `vocabulary`), the change-averaged
   estimate (`change_averaged`); `require_registered_analyses` refuses a test read without them.
-  The four development pilots carry them (research log, 2026-11-11, second entry). 📋 Next: rank
-  256 (90-conditional.tex:52-56): the rerun's job wiring (`LORA_RANK` through the partition chain),
-  a test read that records and checks its rank, and the capacity reading against rank 32. Verify:
-  `uv run pytest tests/unit/experiment/test_decomposition.py tests/unit/test_partition_pilot.py`;
-  papers `make harvest` at 1b6e349.
+  The four development pilots carry them (research log, 2026-11-11, second entry). PR #268.
+  ✅ Rank 256 (90-conditional.tex:52-56, branch `feat/253-rank256`): `LORA_RANK=256` through the
+  partition chain (`-r256` after the corpus root), each read records its runs' rank and a test read
+  is held to it, the gates read the rerun at `lora_rank=256` nested under `rerun`, and
+  `rank_reading` gives capacity-limited / bounded at both / bounded at 32 only beside the rank-32
+  verdicts; `likelihood_sesoi.py` keeps the rerun out of δ. Nothing registered in 1b6e349 is left
+  unbuilt. Verify: `uv run pytest tests/unit/experiment/test_decomposition.py
+  tests/unit/test_partition_pilot.py tests/unit/test_likelihood_sesoi.py`; papers harvest at
+  1b6e349.
 - **Issue #258, second raters for the label audit (AJ 2026-11-10): PR #260, review clean.**
   `label_audit_page.py --second-rater` builds the page with no reveal for the human's 77 checked
   OpenStack items; `label_audit_agreement.py --second-raters` reads the store export back

@@ -31,7 +31,9 @@ from sphragis.experiment.cells import (
     MIN_RESAMPLES,
     POSITIVE_CONTROL_CONFIDENCE,
     REGISTERED_METRIC,
+    REGISTERED_RANK,
     REGISTERED_SPREAD_TARGET,
+    RERUN_RANK,
     below_level,
     by_level,
     cluster_of,
@@ -417,6 +419,7 @@ def registered_design(admitted: Iterable[str], *, withdrawn: Iterable[str] = ())
 
 def _read_at(levels: list[float], *, cells: int, cluster_unit: str) -> dict[str, Any]:
     return {
+        "lora_rank": REGISTERED_RANK,
         "levels": levels,
         "cells": cells,
         "spread_target": REGISTERED_SPREAD_TARGET,
@@ -915,6 +918,7 @@ def confirmatory_gate(
     coprimary_spreads: Mapping[str, Mapping[str, Any]] | None = None,
     h2_spreads: Mapping[str, Mapping[str, Any]] | None = None,
     withdrawn: Mapping[str, Any] | None = None,
+    lora_rank: int = REGISTERED_RANK,
 ) -> dict[str, Any]:
     """The registered verdicts over the admitted organizations' test-window reads: H1 and, where
     the design has one, H2, under Holm's step-down (Stage 1 report, Execution, "Gate").
@@ -945,7 +949,11 @@ def confirmatory_gate(
     outcome, the readings across organizations (`_across`: without a cell whose spread
     calibration is refused at the level read, and None with none left), and each cell's realised
     test size against its simulation's projection ("Fetch horizon", registered-decisions.md).
+
+    `lora_rank` `RERUN_RANK` reads the grid's rerun at 256 the same way, every report of it at
+    that rank; its verdicts are supplementary and change no registered one (`rank_reading`).
     """
+    _require_rank(lora_rank)
     if ADMITTED_ORGANIZATIONS is None:
         raise ValueError("the admitted organizations are not frozen yet")
     lost = _withdrawals(withdrawn)
@@ -970,6 +978,7 @@ def confirmatory_gate(
     # Every report was read at the registration's levels and cell count; the verdicts at the Holm
     # levels of what remains tested, a subset of them.
     expected = _gerrit_read(registered)
+    expected["lora_rank"] = lora_rank
     sesoi = _sesoi_of(expected["metric"])
     cells, detectable = _read_cells(reports, simulations, powers, expected, sesoi, spreads)
     other = coprimary_read(expected)
@@ -991,7 +1000,7 @@ def confirmatory_gate(
             {org: (h2 or {})[org]},
             {org: (h2_simulations or {})[org]},
             h2_powers,
-            _h2_read(registered, org),
+            _h2_read(registered, org) | {"lora_rank": lora_rank},
             sesoi,
             {o: sim for o, sim in (h2_spreads or {}).items() if o == org},
         )
@@ -1073,56 +1082,60 @@ def confirmatory_gate(
     untested = [m for m, read in scores.items() if read == "not tested"]
     if verdicts["H1"] != "not tested" and untested:
         said += f"; {', '.join(untested)} not tested (every cell exploratory)"
-    return {
-        "design": spec,
-        "withdrawn": dict(lost),
-        "verdicts": verdicts,
-        "passed_at": passed_at,
-        "reading": said,
-        "mixed": mixed,
-        "vocabulary_only": vocabulary_only,
-        # Per H1 cell and level, binding no verdict: an s cell supported where its s' reading at
-        # the same level is not reads as names (Stage 1 report, "Verdicts and Readings").
-        "names": {
-            org: {
-                c: cells[org]["verdicts"][c] == "supported"
-                and other_cells[org]["verdicts"][c] != "supported"
-                for c in cells[org]["verdicts"]
-            }
-            for org in cells
-        },
-        # Per H2 cell and level, binding no verdict: its s cell supported where its s' reading at
-        # the same level is not reads as Qt's vocabulary (Stage 1 report, "Verdicts and Readings").
-        "vocabulary": {
-            org: {
-                c: cell["verdicts"][c] == "supported"
-                and by_level(cell["on_s_prime"]["verdicts"])[level_key(c)] != "supported"
-                for c in cell["verdicts"]
-            }
-            for org, cell in h2_cells.items()
-        },
-        "too_small": too_small,
-        "scores": scores,
-        "below_sesoi": below_sesoi(tested, passed_at, sesoi=sesoi),
-        "exploratory": exploratory,
-        "cells": cells,
-        "coprimary_cells": other_cells,
-        "h2_cells": h2_cells,
-        "metric": expected["metric"],
-        "coprimary_metric": COPRIMARY_METRIC,
-        "sesoi": sesoi,
-        "detectable": {
-            "H1": detectable,
-            f"H1:{COPRIMARY_METRIC}": other_detectable,
-            "H2": h2_detectable,
-        },
-        "holm_levels": levels,
-        "below_projection": _below_projection(cells, powers),
-        "coprimary_below_projection": _below_projection(other_cells, coprimary_powers),
-        "h2_below_projection": _below_projection(h2_cells, h2_powers),
-        "across": _across(reports, cells, levels[0]),
-        "coprimary_across": _across(coprimary, other_cells, levels[0]),
-    }
+    return _marked_by_rank(
+        {
+            "lora_rank": lora_rank,
+            "design": spec,
+            "withdrawn": dict(lost),
+            "verdicts": verdicts,
+            "passed_at": passed_at,
+            "reading": said,
+            "mixed": mixed,
+            "vocabulary_only": vocabulary_only,
+            # Per H1 cell and level, binding no verdict: an s cell supported where its s' reading at
+            # the same level is not reads as names (Stage 1 report, "Verdicts and Readings").
+            "names": {
+                org: {
+                    c: cells[org]["verdicts"][c] == "supported"
+                    and other_cells[org]["verdicts"][c] != "supported"
+                    for c in cells[org]["verdicts"]
+                }
+                for org in cells
+            },
+            # Per H2 cell and level, binding no verdict: its s cell supported where its s' reading
+            # at the same level is not reads as Qt's vocabulary (Stage 1 report, "Verdicts and
+            # Readings").
+            "vocabulary": {
+                org: {
+                    c: cell["verdicts"][c] == "supported"
+                    and by_level(cell["on_s_prime"]["verdicts"])[level_key(c)] != "supported"
+                    for c in cell["verdicts"]
+                }
+                for org, cell in h2_cells.items()
+            },
+            "too_small": too_small,
+            "scores": scores,
+            "below_sesoi": below_sesoi(tested, passed_at, sesoi=sesoi),
+            "exploratory": exploratory,
+            "cells": cells,
+            "coprimary_cells": other_cells,
+            "h2_cells": h2_cells,
+            "metric": expected["metric"],
+            "coprimary_metric": COPRIMARY_METRIC,
+            "sesoi": sesoi,
+            "detectable": {
+                "H1": detectable,
+                f"H1:{COPRIMARY_METRIC}": other_detectable,
+                "H2": h2_detectable,
+            },
+            "holm_levels": levels,
+            "below_projection": _below_projection(cells, powers),
+            "coprimary_below_projection": _below_projection(other_cells, coprimary_powers),
+            "h2_below_projection": _below_projection(h2_cells, h2_powers),
+            "across": _across(reports, cells, levels[0]),
+            "coprimary_across": _across(coprimary, other_cells, levels[0]),
+        }
+    )
 
 
 def _withdrawals(
@@ -1156,6 +1169,100 @@ def _withdrawals(
     return {o: failed[o] for o in order if o in failed}
 
 
+def _require_rank(lora_rank: Any) -> None:
+    if lora_rank not in (REGISTERED_RANK, RERUN_RANK):
+        raise ValueError(f"rank {lora_rank!r}: registered {REGISTERED_RANK}, rerun {RERUN_RANK}")
+
+
+#: The rank-256 rerun's readings (Stage 1 report, "Rank 256"), per cell and level.
+CAPACITY_LIMITED = "capacity-limited"
+BOUNDED_AT_BOTH = "bounded at both ranks"
+BOUNDED_AT_32_ONLY = "bounded at 32 only"
+
+
+def rank_reading(registered: Mapping[str, Any], rerun: Mapping[str, Any]) -> dict[str, Any]:
+    """The rank-256 rerun read beside the registered gate, binding no verdict: "a cell
+    inconclusive at 32 and supported at 256 is capacity-limited, and one bounded at 32 counts
+    against a learnable house style only if bounded at 256" (Stage 1 report, "Rank 256").
+
+    `registered` is a `confirmatory_gate` (or `replication_gate`) output at `REGISTERED_RANK`,
+    `rerun` the same gate's at `RERUN_RANK` (`_marked_by_rank`). Each cell read at both ranks, at
+    each level, is `CAPACITY_LIMITED`, `BOUNDED_AT_BOTH` (counts against), `BOUNDED_AT_32_ONLY`
+    (does not), or None; a cell read at one rank only, its organization withdrawn at the other,
+    is listed under `one_rank`, and a cell set aside at either rank carries its reason under
+    `exploratory` (a reading of it is no evidence either way). The verdicts returned are the
+    registered gate's, unchanged.
+    """
+    inner = rerun.get("rerun")
+    if (
+        registered.get("lora_rank") != REGISTERED_RANK
+        or rerun.get("lora_rank") != RERUN_RANK
+        or not isinstance(inner, Mapping)
+    ):
+        raise ValueError(
+            f"read at ranks {registered.get('lora_rank')!r} and {rerun.get('lora_rank')!r}, not "
+            f"{REGISTERED_RANK} and {RERUN_RANK}"
+        )
+    replication = "members" in registered
+    if replication != ("members" in inner):
+        raise ValueError("a replication gate's output is read beside a replication gate's alone")
+    groups = ("cells",) if replication else ("cells", "coprimary_cells", "h2_cells")
+    readings: dict[str, dict[str, dict[float, str | None]]] = {}
+    one_rank: dict[str, list[str]] = {}
+    exploratory: dict[str, dict[str, dict[int, str]]] = {}
+    for group in groups:
+        at_32, at_256 = registered.get(group) or {}, inner.get(group) or {}
+        if set(at_32) ^ set(at_256):
+            one_rank[group] = sorted(set(at_32) ^ set(at_256))
+        for cell in sorted(set(at_32) & set(at_256)):
+            if replication:
+                verdicts_32 = {level_key(REPLICATION_CONFIDENCE): at_32[cell]["verdict"]}
+                verdicts_256 = {level_key(REPLICATION_CONFIDENCE): at_256[cell]["verdict"]}
+            else:
+                verdicts_32 = by_level(at_32[cell]["verdicts"])
+                verdicts_256 = by_level(at_256[cell]["verdicts"])
+            if set(verdicts_32) != set(verdicts_256):
+                raise ValueError(f"{group}:{cell}: read at other levels in the rerun")
+            readings.setdefault(group, {})[cell] = {
+                c: _rank_cell(v, verdicts_256[c]) for c, v in verdicts_32.items()
+            }
+            why = {
+                rank: read[cell]["exploratory"]
+                for rank, read in ((REGISTERED_RANK, at_32), (RERUN_RANK, at_256))
+                if read[cell].get("exploratory")
+            }
+            if why:
+                exploratory.setdefault(group, {})[cell] = why
+    return {
+        "verdicts": registered.get("verdicts"),
+        "readings": readings,
+        "one_rank": one_rank,
+        "exploratory": exploratory,
+    }
+
+
+def _marked_by_rank(out: dict[str, Any]) -> dict[str, Any]:
+    """A gate output at `RERUN_RANK` nested whole under `rerun` beside a supplementary marker, so
+    nothing in it, verdicts, readings or the replication family's r, can be quoted as the
+    registered gate's (Stage 1 report, "Rank 256": "cannot change a verdict"); at
+    `REGISTERED_RANK`, as it is."""
+    if out["lora_rank"] != RERUN_RANK:
+        return out
+    return {
+        "lora_rank": RERUN_RANK,
+        "supplementary": "Rank 256: binds no verdict (rank_reading)",
+        "rerun": {k: v for k, v in out.items() if k != "lora_rank"},
+    }
+
+
+def _rank_cell(at_32: str, at_256: str) -> str | None:
+    if at_32 == "inconclusive" and at_256 == "supported":
+        return CAPACITY_LIMITED
+    if at_32 == "bounded":
+        return BOUNDED_AT_BOTH if at_256 == "bounded" else BOUNDED_AT_32_ONLY
+    return None
+
+
 def replication_gate(
     cells: Mapping[str, Mapping[str, Any]],
     *,
@@ -1163,8 +1270,11 @@ def replication_gate(
     powers: Mapping[str, Mapping[str, Any]] | None = None,
     spreads: Mapping[str, Mapping[str, Any]] | None = None,
     withdrawn: Mapping[str, Any] | None = None,
+    lora_rank: int = REGISTERED_RANK,
 ) -> dict[str, Any]:
     """Each frozen member's H1 verdict and the family's partial conjunction r.
+
+    `lora_rank` `RERUN_RANK` reads the rerun at 256, supplementary (`rank_reading`).
 
     `withdrawn` maps each member that failed an outcome-neutral check to its recorded battery (a
     failed crossed check 2 is written by `partition_pilot.py`), reported as the deviation; the
@@ -1189,6 +1299,7 @@ def replication_gate(
     """
     from sphragis.experiment.partitions import spread_reading
 
+    _require_rank(lora_rank)
     if REPLICATION_MEMBERS is None:
         raise ValueError("the replication family's members are not frozen yet (Stage 1)")
     family = replication(REPLICATION_MEMBERS)
@@ -1207,6 +1318,7 @@ def replication_gate(
     for org in members:
         cell, simulation = cells[org], simulations[org]
         expected = registered_read(org)
+        expected["lora_rank"] = lora_rank
         readings = require_test_read(cell, org=org, expected=expected)
         require_registered_analyses(cell, org=org, expected=expected)
         # Only H2's K and a co-primary score's are registered as calibrated.
@@ -1256,18 +1368,21 @@ def replication_gate(
         for o, c in read.items()
         if c["exploratory"] is None
     }
-    return {
-        **family,
-        "withdrawn": lost,
-        "cells": read,
-        "exploratory": sorted(o for o, c in read.items() if c["exploratory"] is not None),
-        "below_projection": _below_projection(read, powers),
-        "partial_conjunction": partial_conjunction(
-            counted, alpha=one_sided_alpha(REPLICATION_CONFIDENCE)
-        )
-        if counted
-        else None,
-    }
+    return _marked_by_rank(
+        {
+            **family,
+            "lora_rank": lora_rank,
+            "withdrawn": lost,
+            "cells": read,
+            "exploratory": sorted(o for o, c in read.items() if c["exploratory"] is not None),
+            "below_projection": _below_projection(read, powers),
+            "partial_conjunction": partial_conjunction(
+                counted, alpha=one_sided_alpha(REPLICATION_CONFIDENCE)
+            )
+            if counted
+            else None,
+        }
+    )
 
 
 # C++ source and header suffixes. Qt writes .cpp and Chromium .cc, so a suffix match that

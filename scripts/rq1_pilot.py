@@ -17,6 +17,7 @@ import torch
 
 from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
+from sphragis.experiment.cells import RERUN_RANK
 from sphragis.experiment.decomposition import (
     FOREIGN_SOURCES,
     FOREIGN_SPANS,
@@ -113,8 +114,9 @@ parser.add_argument(
 parser.add_argument(
     "--lora-rank",
     type=int,
+    choices=(REGISTERED_RANK, RERUN_RANK),
     default=REGISTERED_RANK,
-    help="the registered rank by default; the conditional branch reruns an arm at 256",
+    help="the registered rank by default; the registered rerun is at 256 (cells.RERUN_RANK)",
 )
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 parser.add_argument(
