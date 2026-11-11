@@ -247,7 +247,7 @@ that its change could alter; `make deploy FORCE=1` overrides.
 
 **The measurement never needs a GPU.** No module under `sphragis/measure/` may import torch,
 transformers, peft or datasets, and a test enforces it in a clean interpreter. The
-outcome-neutral checks halt the study when they fail, and a halt condition that can only be
+outcome-neutral checks withdraw the organization they fail on, and a condition that can only be
 exercised on a cluster is one that never fires.
 
 **Dependencies are pinned, not floated.** This is a paper artifact that has to reproduce years

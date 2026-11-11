@@ -1,9 +1,11 @@
 """Outcome-neutral tests: checks on the apparatus, independent of which way RQ1 falls.
 
-Pre-registered in design section 3. They run before the confirmatory comparison, and a
-failure halts the study and is reported as an apparatus failure rather than a result. Each
-check returns its evidence beside its pass flag, and `apparatus_holds` is the one place the
-halt rule lives.
+Pre-registered in design section 3. They run before the confirmatory comparison. A failure
+withdraws the organization it fails on: it is reported as a deviation, an apparatus failure
+rather than a result, and the hypotheses are read over the remaining organizations (Stage 1
+report, "Outcome-Neutral Tests"; `decomposition.h1_test_gate`'s `withdrawn`). Each check returns
+its evidence beside its pass flag, and `apparatus_holds` is the one place the withdrawal rule
+lives.
 
 The contamination battery is test 1 and is deliberately absent: its report returns no
 verdict, because with no published content cutoff a flat gap is ambiguous and the reading is
@@ -242,7 +244,8 @@ def planted_convention(
 
 
 def apparatus_holds(checks: Sequence[Check]) -> bool:
-    """True only if every outcome-neutral check passed. False halts the study: H1 is not read."""
+    """True only if every outcome-neutral check on one organization passed. False withdraws that
+    organization: none of its cells is read, and the hypotheses are read over the rest."""
     return bool(checks) and all(check.passed for check in checks)
 
 

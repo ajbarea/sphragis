@@ -378,7 +378,14 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         "spread_target": "sizing_bound_90",
         "cells": 1,
         "trials": 1_000,
-        "by_level": {str(level): {"bound": bound, "power": 0.5, "mc_se": (0.25 / 1_000) ** 0.5}},
+        "by_level": {
+            str(level): {
+                "bound": bound,
+                "power": 0.5,
+                "mc_se": (0.25 / 1_000) ** 0.5,
+                "detectable": 0.012,
+            }
+        },
     }
     loaded = json.loads(json.dumps({"report": report, "simulation": simulation, "power": power}))
     out = decomposition.replication_gate(
@@ -391,7 +398,12 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
     assert out["cells"]["apache"]["size"]["realised"] == cell["changes"]
     assert out["below_projection"] == ["apache"]
     assert out["cells"]["apache"]["size"]["power"] == {
-        level: {"power": 0.5, "mc_se": (0.25 / 1_000) ** 0.5}
+        level: {
+            "power": 0.5,
+            "mc_se": (0.25 / 1_000) ** 0.5,
+            "detectable": 0.012,
+            "detectable_above": None,
+        }
     }
 
 

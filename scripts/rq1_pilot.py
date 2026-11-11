@@ -443,8 +443,8 @@ for org, interval in verdict["binding"].items():
     )
 print(f"GATE (pilot scale, not confirmatory): {verdict['verdict']}", flush=True)
 
-# Outcome-neutral tests. At confirmatory scale a failure here halts the study before the gate
-# is read; at pilot scale they are reported beside it.
+# Outcome-neutral tests. At confirmatory scale a failure here withdraws the organization before
+# the gate is read; at pilot scale they are reported beside it.
 checks = []
 for org in orgs:
     for seed in seeds:

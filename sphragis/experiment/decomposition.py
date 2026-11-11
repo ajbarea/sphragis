@@ -31,6 +31,7 @@ from sphragis.experiment.cells import (
     MIN_RESAMPLES,
     REGISTERED_METRIC,
     REGISTERED_SPREAD_TARGET,
+    below_level,
     by_level,
     cluster_of,
     is_count,
@@ -132,7 +133,11 @@ H2_POPULATION = "cpp"
 
 
 def design(
-    admitted: Iterable[str], foreign_source: str | None = None, *, h2_withdrawn: bool = False
+    admitted: Iterable[str],
+    foreign_source: str | None = None,
+    *,
+    h2_withdrawn: bool = False,
+    withdrawn: Iterable[str] = (),
 ) -> dict[str, Any]:
     """The registered cells for whichever organizations are admitted.
 
@@ -144,11 +149,26 @@ def design(
     Every other admitted organization gets one exploratory H2 cell instead, paired with the first
     other admitted organization in registration order: computed and reported, never part of a
     verdict.
+
+    `withdrawn` names admitted organizations that failed an outcome-neutral check: each is
+    reported as a deviation and the cells are those of the rest ("Outcome-Neutral Tests" and "An
+    organization lost after acceptance", Stage 1 report), so without Qt H2 has no cell. OpenStack
+    can be among them; at least one organization must remain.
     """
     ordered = _registered(admitted, ORGANIZATIONS, role="admitted")
-    admitted_set = set(ordered)
-    if "openstack" not in admitted_set:
+    if "openstack" not in ordered:
         raise ValueError("openstack must always be admitted")
+    lost = _registered(withdrawn, ORGANIZATIONS, role="withdrawn")
+    outside = [o for o in lost if o not in ordered]
+    if outside:
+        raise ValueError(f"withdrawn organization(s) {outside} were never admitted")
+    if len(lost) == len(ordered):
+        raise ValueError("every admitted organization is withdrawn, so no hypothesis is read")
+    admitted_list = ordered
+    ordered = tuple(o for o in ordered if o not in lost)
+    if H2_ORGANIZATION in lost or foreign_source in lost:
+        foreign_source = None
+    admitted_set = set(ordered)
     if foreign_source is not None and foreign_source not in FOREIGN_SOURCES:
         raise ValueError(f"unknown foreign source {foreign_source!r}; registered {FOREIGN_SOURCES}")
     h2: tuple[tuple[str, str], ...]
@@ -174,7 +194,8 @@ def design(
         if others:
             exploratory.append((org, others[0]))
     return {
-        "admitted": ordered,
+        "admitted": admitted_list,
+        "withdrawn": lost,
         "H1": ordered,
         "H2": h2,
         "foreign_source": foreign_source,
@@ -354,17 +375,19 @@ def registered_read(org: str) -> dict[str, Any]:
     return _gerrit_read(registered_design(ADMITTED_ORGANIZATIONS))
 
 
-def registered_design(admitted: Iterable[str]) -> dict[str, Any]:
+def registered_design(admitted: Iterable[str], *, withdrawn: Iterable[str] = ()) -> dict[str, Any]:
     """`design` for `admitted` with the registered `FOREIGN_SOURCE` and `H2_WITHDRAWN`: what every
-    read uses. The source applies only with Qt admitted; with the pair admitted, a source other
-    than Chromium is refused by `design`."""
-    admitted = tuple(admitted)
+    read uses. The source applies only with Qt admitted, and `design` drops it with Qt or the
+    source withdrawn; with the pair admitted, a source other than Chromium is refused by
+    `design`."""
+    admitted, withdrawn = tuple(admitted), tuple(withdrawn)
     if FOREIGN_SOURCE is not None and FOREIGN_SOURCE not in FOREIGN_SOURCES:
         raise ValueError(
             f"registered FOREIGN_SOURCE {FOREIGN_SOURCE!r} is not in {FOREIGN_SOURCES}"
         )
+    # `design` drops the source with Qt or the source withdrawn.
     source = FOREIGN_SOURCE if H2_ORGANIZATION in admitted else None
-    return design(admitted, source, h2_withdrawn=H2_WITHDRAWN is not None)
+    return design(admitted, source, h2_withdrawn=H2_WITHDRAWN is not None, withdrawn=withdrawn)
 
 
 def _read_at(levels: list[float], *, cells: int, cluster_unit: str) -> dict[str, Any]:
@@ -494,8 +517,34 @@ def _power_at_realised(
             and math.isclose(se, math.sqrt(p * (1.0 - p) / power["trials"]), abs_tol=1e-12)
         ):
             raise ValueError(f"{org}: power {p!r}, Monte Carlo SE {se!r} at {c}")
-        out[c] = {"power": p, "mc_se": se}
+        # The smallest effect the cell detects at the realised size, at its registered power, or
+        # the bracket's top it detects nothing below (`power_at_size.power_at`).
+        detects, above = entry.get("detectable"), entry.get("detectable_above")
+        if not (valid_bound(detects) if above is None else detects is None and valid_bound(above)):
+            raise ValueError(
+                f"{org}: no detectable effect at the realised size at {c}: {detects!r}, "
+                f"above {above!r}"
+            )
+        out[c] = {"power": p, "mc_se": se, "detectable": detects, "detectable_above": above}
     return out
+
+
+def small_window(size: Mapping[str, Any], sesoi: float) -> str | None:
+    """Why a cell read below its projected size is exploratory, or None: at some level it reads,
+    the smallest effect it detects at the realised size exceeds δ ("Sample size", Stage 1 report:
+    a cell that then cannot detect δ is exploratory)."""
+    above = []
+    for c, at in sorted((size.get("power") or {}).items()):
+        if at["detectable"] is None:
+            above.append(f"nothing up to {at['detectable_above']:+.4f} at {c}")
+        elif at["detectable"] > sesoi:
+            above.append(f"{at['detectable']:+.4f} at {c}")
+    if not above:
+        return None
+    return (
+        f"detects {', '.join(above)} at its realised {size['realised']} of "
+        f"{size['projected']} projected, above the SESOI {sesoi}"
+    )
 
 
 def _below_projection(
@@ -600,6 +649,8 @@ def _h1_cells(
         calibrated = (
             report["k_from"].get("critical_p") if report["k_from"].get("calibrated") else None
         )
+        p_bounded = _bounded_test_p(org, report, at, sesoi, calibrated=calibrated is not None)
+        size = _test_size(org, report, simulation, powers, detectable[org], expected["cells"])
         cells[org] = {
             "estimate": report["estimate"],
             **read_intervals(
@@ -608,13 +659,45 @@ def _h1_cells(
                 sesoi=sesoi,
                 p=report["p_one_sided"],
                 critical=None if calibrated is None else by_level(calibrated),
+                p_bounded=p_bounded,
             ),
             "p_one_sided": report["p_one_sided"],
-            "size": _test_size(org, report, simulation, powers, detectable[org], expected["cells"]),
+            "p_bounded": p_bounded,
+            "size": size,
+            # Why the cell left the confirmatory family, or None while it stands in it.
+            "exploratory": small_window(size, sesoi),
             # The registered sensitivities the report read (partition_pilot.py --without).
             "without": readings,
         }
     return cells, detectable
+
+
+def _bounded_test_p(
+    org: str,
+    report: Mapping[str, Any],
+    at: Mapping[float, Mapping[str, float]],
+    sesoi: float,
+    *,
+    calibrated: bool,
+) -> float | None:
+    """The report's bounded-test p (`partitions.h1_over_partitions`), which a calibrated cell
+    must carry. It must agree with the intervals at every level, as the one-sided p must
+    (`require_readable`): from the same draws against the same SESOI, it is below a level's alpha
+    exactly when that level's upper bound is below the SESOI."""
+    p = report.get("p_bounded")
+    if p is None:
+        if calibrated:
+            raise ValueError(f"{org}: a calibrated cell carries no bounded-test p; re-read it")
+        return None
+    if not (is_real(p) and 0.0 <= p <= 1.0):
+        raise ValueError(f"{org}: bounded-test p {p!r} is not in [0, 1]")
+    for c, interval in at.items():
+        if below_level(p, one_sided_alpha(c)) != (interval["high"] < sesoi):
+            raise ValueError(
+                f"{org}: bounded-test p {p} and interval high {interval['high']} disagree at "
+                f"{c} against the SESOI {sesoi}, so they are not from the same draws"
+            )
+    return p
 
 
 def _critical_at(reports: Mapping[str, Mapping[str, Any]], level: float) -> dict[str, float]:
@@ -644,29 +727,40 @@ def h1_test_gate(
     coprimary_simulations: Mapping[str, Mapping[str, Any]],
     powers: Mapping[str, Mapping[str, Any]] | None = None,
     coprimary_powers: Mapping[str, Mapping[str, Any]] | None = None,
+    withdrawn: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     """H1's registered verdict over the admitted organizations' test-window reads.
 
     The organizations are `ADMITTED_ORGANIZATIONS`, never an argument; the gate refuses to run
     before they are frozen, and while H2 is confirmatory, since H2's test read over partitions is
-    not built and Holm cannot be read without it. `reports` holds each admitted organization's
+    not built and Holm cannot be read without it. `withdrawn` maps each admitted organization that
+    failed an outcome-neutral check to the check it failed: it is reported as a deviation and the
+    hypotheses are read over the rest ("Outcome-Neutral Tests", Stage 1 report), so a withdrawn
+    Qt leaves H1 alone confirmatory. `reports` holds each remaining organization's
     `partition_pilot.py` test-window report on the registered score and `coprimary` its report
     on `COPRIMARY_METRIC`, the same runs and changes, each with its simulation, all for exactly
-    the admitted set; each report is checked by `require_readable` and by `require_test_read`
-    against the registered read, and its bounds read from its simulation. H1 is the
-    intersection-union over every organization's cell on both scores at the registered Holm
-    levels (`holm_steps`): it passes only when all of them do (research log, 2026-10-30).
+    the remaining set; each report is checked by `require_readable` and by `require_test_read`
+    against the registered read, which withdrawal does not change, and its bounds read from its
+    simulation. H1 is the intersection-union over every organization's cell on both scores at the
+    Holm levels of the hypotheses that remain (`holm_steps`): it passes only when all of them do
+    (research log, 2026-10-30).
+
+    A cell read below its projected size whose detectable effect there exceeds δ at a level it
+    reads is exploratory (`small_window`): reported beside the verdict and left out of it. With
+    every cell exploratory, H1 is not tested.
 
     Beside the verdict, binding none: each score's own reading, each cell's `FOUR_WAY` outcome,
     the readings across organizations, and each cell's realised test size against its
     simulation's projection ("Fetch horizon", registered-decisions.md). An organization in
-    `below_projection` is reported with the simulation's power at its realised size, read from
-    its `power_at_size.py` artifact in `powers`, which it must have, and its co-primary read
-    from `coprimary_powers`, since power is read at each score's own bound.
+    `below_projection` is reported with the simulation's power and detectable effect at its
+    realised size, read from its `power_at_size.py` artifact in `powers`, which it must have, and
+    its co-primary read from `coprimary_powers`, since power is read at each score's own bound.
     """
     if ADMITTED_ORGANIZATIONS is None:
         raise ValueError("the admitted organizations are not frozen yet")
-    spec = registered_design(ADMITTED_ORGANIZATIONS)
+    lost = _withdrawals(withdrawn)
+    registered = registered_design(ADMITTED_ORGANIZATIONS)
+    spec = registered_design(ADMITTED_ORGANIZATIONS, withdrawn=lost)
     if "H2" in confirmatory(spec):
         raise ValueError("H2 is confirmatory, and its test read over partitions is not built")
     orgs = spec["H1"]
@@ -679,30 +773,42 @@ def h1_test_gate(
         _require_exactly(given, orgs, what=what)
     for org in orgs:
         _same_runs(reports[org], coprimary[org], org)
-    expected = _gerrit_read(spec)
-    levels = expected["levels"]
+    # Every report was read at the registration's levels and cell count; the verdict at the Holm
+    # levels of what remains, a subset of them.
+    expected = _gerrit_read(registered)
+    levels = holm_levels(len(confirmatory(spec)))
     sesoi = _sesoi_of(expected["metric"])
     cells, detectable = _h1_cells(reports, simulations, powers, expected, sesoi)
     other = coprimary_read(expected)
     other_cells, other_detectable = _h1_cells(
         coprimary, coprimary_simulations, coprimary_powers, other, _sesoi_of(COPRIMARY_METRIC)
     )
-    per_hypothesis = {
-        "H1": {**cells, **{f"{org}:{COPRIMARY_METRIC}": c for org, c in other_cells.items()}}
-    }
-    verdicts, passed_at = holm_steps(per_hypothesis)
-    # Each score read alone at the strictest level, binding no verdict: the whole score passing
-    # where the non-identifier score does not says the gain may be vocabulary alone.
+    every = {**cells, **{f"{org}:{COPRIMARY_METRIC}": c for org, c in other_cells.items()}}
+    tested = {"H1": {name: c for name, c in every.items() if c["exploratory"] is None}}
+    exploratory = sorted(f"H1:{name}" for name, c in every.items() if c["exploratory"] is not None)
+    if tested["H1"]:
+        verdicts, passed_at = holm_steps(tested)
+    else:
+        verdicts, passed_at = {"H1": "not tested"}, {"H1": None}
+    # Each score's confirmatory cells read alone at the strictest level, binding no verdict: the
+    # whole score passing where the non-identifier score does not says the gain may be vocabulary
+    # alone.
     scores = {
-        expected["metric"]: _hypothesis(cells, levels[0]),
-        COPRIMARY_METRIC: _hypothesis(other_cells, levels[0]),
+        metric: _hypothesis(standing, levels[0]) if standing else "not tested"
+        for metric, standing in (
+            (expected["metric"], {o: c for o, c in cells.items() if c["exploratory"] is None}),
+            (COPRIMARY_METRIC, {o: c for o, c in other_cells.items() if c["exploratory"] is None}),
+        )
     }
     vocabulary_only = verdicts["H1"] != "pass" and scores[expected["metric"]] == "pass"
-    # A pass whose every cell sits below δ is an effect too small to matter (`FOUR_WAY`).
+    # A pass whose every cell reads below δ is an effect too small to matter (`FOUR_WAY`).
     too_small = verdicts["H1"] == "pass" and all(
-        c["four_way"][passed_at["H1"]] == FOUR_WAY[1] for c in per_hypothesis["H1"].values()
+        c["four_way"][passed_at["H1"]] == FOUR_WAY[1] for c in tested["H1"].values()
     )
-    if vocabulary_only:
+    mixed = bool(tested["H1"]) and verdicts["H1"] != "pass" and is_mixed(tested["H1"], levels[0])
+    if mixed:
+        said = reading(verdicts["H1"], None, mixed=True)
+    elif vocabulary_only:
         said = "within-half on the whole score alone"
     elif too_small:
         said = "within-half, below the SESOI in every cell"
@@ -710,11 +816,15 @@ def h1_test_gate(
         said = reading(verdicts["H1"], None)
     return {
         "design": spec,
+        "withdrawn": dict(lost),
         "verdicts": verdicts,
         "passed_at": passed_at,
         "reading": said,
+        "mixed": mixed,
+        "vocabulary_only": vocabulary_only,
         "scores": scores,
-        "below_sesoi": below_sesoi(per_hypothesis, passed_at, sesoi=sesoi),
+        "below_sesoi": below_sesoi(tested, passed_at, sesoi=sesoi),
+        "exploratory": exploratory,
         "cells": cells,
         "coprimary_cells": other_cells,
         "metric": expected["metric"],
@@ -731,6 +841,22 @@ def h1_test_gate(
             coprimary, confidence=levels[0], critical=_critical_at(coprimary, levels[0])
         ),
     }
+
+
+def _withdrawals(withdrawn: Mapping[str, str] | None) -> dict[str, str]:
+    """Each withdrawn organization with the outcome-neutral check it failed, refused unless every
+    one is an admitted organization and names its reason."""
+    if withdrawn is None:
+        return {}
+    if not isinstance(withdrawn, Mapping):
+        raise ValueError(f"withdrawn must map organizations to reasons, got {type(withdrawn)}")
+    unnamed = sorted(o for o, why in withdrawn.items() if not (isinstance(why, str) and why))
+    if unnamed:
+        raise ValueError(f"withdrawn organization(s) {unnamed} name no failed check")
+    outside = sorted(set(withdrawn) - set(ADMITTED_ORGANIZATIONS or ()))
+    if outside:
+        raise ValueError(f"withdrawn organization(s) {outside} are not among the admitted")
+    return {o: withdrawn[o] for o in ORGANIZATIONS if o in withdrawn}
 
 
 def replication_gate(
@@ -817,14 +943,34 @@ def halves(org: str) -> tuple[str, str]:
     return (f"{org}-a", f"{org}-b")
 
 
-def reading(h1: str, h2: str | None) -> str:
-    """The pre-committed reading of one combination of hypothesis verdicts.
+#: Table III's mixed row: some H1 cells supported, the rest bounded, H2 anything but a pass.
+MIXED_READING = "within-half in some cells, read cell by cell"
+
+
+def reading(h1: str, h2: str | None, *, mixed: bool = False) -> str:
+    """The pre-committed reading of one combination of hypothesis verdicts (Table III).
 
     `h2` is None under a design with no confirmatory H2 cell, where only H1 is confirmatory.
+    `mixed` says H1's cells are mixed (`is_mixed`); with H1 not passing and H2 anything but a pass
+    (the legend's "not pass", H2 untested included) that is the mixed row.
     """
+    if mixed and h1 != "pass" and h2 != "pass":
+        return MIXED_READING
     if h2 is None:
         return {"pass": "within-half", "bounded": "no within-half transfer"}.get(h1, "unresolved")
     return READINGS.get((h1, h2), "unresolved")
+
+
+def is_mixed(cells: Mapping[str, Mapping[str, Any]], confidence: float) -> bool:
+    """Whether a hypothesis's cells are mixed at `confidence`: some supported and every other one
+    bounded (Table III's legend). Read at the family's first level, the only one a bounded reading
+    is made at."""
+    verdicts = [cell["verdicts"][confidence] for cell in cells.values()]
+    return (
+        "supported" in verdicts
+        and "bounded" in verdicts
+        and all(v in ("supported", "bounded") for v in verdicts)
+    )
 
 
 def holm_levels(hypotheses: int) -> list[float]:
@@ -835,7 +981,12 @@ def holm_levels(hypotheses: int) -> list[float]:
 
 
 def cell_verdict(
-    low: float, high: float, *, margin: float | None, above: bool | None = None
+    low: float,
+    high: float,
+    *,
+    margin: float | None,
+    above: bool | None = None,
+    below: bool | None = None,
 ) -> str:
     """Supported above zero, bounded below the equivalence margin, or inconclusive.
 
@@ -843,13 +994,19 @@ def cell_verdict(
     2018): its upper bound excludes every effect as large as the smallest of interest. `margin` is
     None for a cell without a registered sensitivity analysis, which can be supported but never
     bounded; the analysis is the power justification, not the margin (research log, 2026-10-14).
-    `above` replaces the lower bound's test where a critical p is calibrated (`read_intervals`).
+    `above` and `below` replace the lower and upper bound's tests where a critical p is calibrated
+    (`read_intervals`). A cell both supported and bounded reads supported.
     """
     if (low > 0.0) if above is None else above:
         return "supported"
-    if margin is not None and high < margin:
+    if _below(high, margin, below):
         return "bounded"
     return "inconclusive"
+
+
+def _below(high: float, margin: float | None, below: bool | None) -> bool:
+    """The bounded test: the upper bound below a registered margin, and `below` where given."""
+    return margin is not None and high < margin and (below is None or below)
 
 
 #: The four outcomes of a test against zero beside an equivalence test against δ (Lakens 2017,
@@ -859,12 +1016,20 @@ def cell_verdict(
 FOUR_WAY = ("supported", "supported, below SESOI", "bounded", "inconclusive")
 
 
-def four_way(low: float, high: float, *, margin: float | None, above: bool | None = None) -> str:
-    """A cell's `FOUR_WAY` outcome; with no registered margin, never one that reads below δ."""
-    below = margin is not None and high < margin
+def four_way(
+    low: float,
+    high: float,
+    *,
+    margin: float | None,
+    above: bool | None = None,
+    below: bool | None = None,
+) -> str:
+    """A cell's `FOUR_WAY` outcome; with no registered margin, never one that reads below δ.
+    `above` and `below` as in `cell_verdict`."""
+    under = _below(high, margin, below)
     if (low > 0.0) if above is None else above:
-        return FOUR_WAY[1] if below else FOUR_WAY[0]
-    return FOUR_WAY[2] if below else FOUR_WAY[3]
+        return FOUR_WAY[1] if under else FOUR_WAY[0]
+    return FOUR_WAY[2] if under else FOUR_WAY[3]
 
 
 def meaningful(low: float, sesoi: float = SESOI) -> bool:
@@ -884,29 +1049,39 @@ def read_intervals(
     sesoi: float = SESOI,
     p: float | None = None,
     critical: Mapping[float, float] | None = None,
+    p_bounded: float | None = None,
 ) -> dict[str, Any]:
     """A cell's interval at each level, its verdict, and the readings beside it. A level with a
     registered bound in `bounds` (keyed by `level_key`) is read bounded against the SESOI; a level
     without one is never read bounded. With a `critical` p calibrated from the simulated null
     (keyed by `level_key`), a level reads above zero only where its interval does and the one-sided
-    `p` is below it too, so calibration only tightens (research log, 2026-10-30)."""
+    `p` is below it too (research log, 2026-10-30), and bounded only where its upper bound is below
+    the SESOI and the bounded test's `p_bounded`, the share of draws at or above it, is below it
+    too, so calibration only tightens either reading (Stage 1 report, "Verdicts")."""
     margins = {c: sesoi if valid_bound(bounds.get(level_key(c))) else None for c in intervals}
-    if critical is not None and p is None:
-        raise ValueError("a calibrated critical p needs the cell's one-sided p")
+    if critical is not None and (p is None or p_bounded is None):
+        raise ValueError("a calibrated critical p needs the cell's one-sided p and bounded-test p")
     above = {
         c: lo > 0.0 and (critical is None or (p is not None and p < critical[level_key(c)]))
         for c, (lo, _) in intervals.items()
     }
+    below = {
+        c: _below(hi, margins[c], None)
+        and (critical is None or (p_bounded is not None and p_bounded < critical[level_key(c)]))
+        for c, (_, hi) in intervals.items()
+    }
     return {
         "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
         "verdicts": {
-            c: cell_verdict(lo, hi, margin=margins[c], above=above[c])
+            c: cell_verdict(lo, hi, margin=margins[c], above=above[c], below=below[c])
             for c, (lo, hi) in intervals.items()
         },
         "four_way": {
-            c: four_way(lo, hi, margin=margins[c], above=above[c])
+            c: four_way(lo, hi, margin=margins[c], above=above[c], below=below[c])
             for c, (lo, hi) in intervals.items()
         },
+        # Whether each level reads below δ: the bounded test, calibrated where `critical` is.
+        "below": below,
         "calibrated": critical is not None,
         "within_sesoi": {c: within_sesoi(lo, hi, sesoi) for c, (lo, hi) in intervals.items()},
         # Readings beside the pass rule (registered-decisions.md): a supported cell whose lower
@@ -1198,13 +1373,20 @@ def below_sesoi(
     *,
     sesoi: float = SESOI,
 ) -> list[str]:
-    """Passing cells whose interval, at the level the hypothesis passed at, sits inside SESOI."""
+    """Passing cells that read below δ at the level the hypothesis passed at: the Table III legend's
+    "below δ if every upper bound is". A cell that records its bounded test (`read_intervals`'s
+    `below`, calibrated where its critical p is) is read by it; otherwise its upper bound is
+    compared with `sesoi`."""
     return sorted(
         f"{name}:{org}"
         for name, cells in per_hypothesis.items()
         if passed_at[name] is not None
         for org, cell in cells.items()
-        if cell["intervals"][passed_at[name]]["high"] < sesoi
+        if (
+            cell["below"][passed_at[name]]
+            if "below" in cell
+            else cell["intervals"][passed_at[name]]["high"] < sesoi
+        )
     )
 
 
@@ -1392,11 +1574,13 @@ def decomposition_gate(
         for name in hypotheses
     }
     verdicts, passed_at = holm_steps(tested)
+    mixed = verdicts["H1"] != "pass" and is_mixed(tested["H1"], levels[0])
     return {
         "design": cells,
         "verdicts": verdicts,
         "passed_at": passed_at,
-        "reading": reading(verdicts["H1"], verdicts.get("H2")),
+        "reading": reading(verdicts["H1"], verdicts.get("H2"), mixed=mixed),
+        "mixed": mixed,
         "below_sesoi": below_sesoi(tested, passed_at, sesoi=sesoi),
         "per_org": per_org,
         "joint": joint,

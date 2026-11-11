@@ -8,6 +8,16 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **Issue #253, the code mirrors the Stage 1 report's registered rules (papers 1b6e349).**
+  Three PRs, each traced to the paper's lines. PR A (branch `fix/253-verdict-rules`): the
+  calibrated bounded side (`p_bounded`, `read_intervals`), a failed check withdraws its
+  organization (`design(withdrawn=)`, `h1_test_gate(withdrawn=)`), the small-window rule
+  (`power_at_size.py` detectable effect, `small_window`), the mixed row (`is_mixed`). Next, PR B:
+  the spread rule (simulate at the test spread, calibrate on a miss, exploratory when Bradley
+  refuses) and H2's test read over partitions with the Holm gate. Then PR C: re-read the four
+  development pilots with their registered sensitivities, registered-decisions.md, and the
+  research-log HSRO amendment. Verify: `make verify`; the new tests are at the end of
+  `tests/unit/experiment/test_decomposition.py` and `tests/unit/test_power_at_size.py`.
 - **Issue #258, second raters for the label audit (AJ 2026-11-10): PR #260, review clean.**
   `label_audit_page.py --second-rater` builds the page with no reveal for the human's 77 checked
   OpenStack items; `label_audit_agreement.py --second-raters` reads the store export back

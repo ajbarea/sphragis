@@ -5,7 +5,11 @@ projection is reported beside its verdict with the simulation's power at the rea
 reruns that simulation's trials at the number of changes the test read was read on, at the lift
 that registered each level's bound and the run shift it was calibrated to, and records the share
 of trials supported at that level with its Monte Carlo standard error (Morris, White and Crowther,
-Stat. Med. 2019). Power is at the registered bound, never at an observed effect.
+Stat. Med. 2019). Power is at the registered bound, never at an observed effect. Beside it, the
+smallest effect the cell detects at the realised size, by the simulation's own bisection at its
+registered per-cell power: a cell that detects no effect as small as δ there is exploratory
+("Sample size", Stage 1 report: a smaller test window is read at its size, and a cell that then
+cannot detect δ is exploratory; `decomposition.small_window` reads it).
 
 Every input is read from an artifact: the realised size, levels, cell count and spread target
 from the test report (`require_test_read` fixed them); K, trials, resamples, churn, the run shift
@@ -37,7 +41,17 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 import partition_sensitivity  # noqa: E402
-from partition_sensitivity import Pool, _init, pools, supported, trials_at, worker_args  # noqa: E402
+from partition_sensitivity import (  # noqa: E402
+    Pool,
+    _init,
+    detectable_lift,
+    lift_ceiling,
+    pools,
+    realised_effect,
+    supported,
+    trials_at,
+    worker_args,
+)
 
 from sphragis.experiment.cells import by_level, is_count, level_key, same_calibration  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
@@ -131,22 +145,29 @@ def power_at(
     lifts: Mapping[float, Mapping[str, float]],
     simulation: Mapping[str, Any],
     critical: Mapping[float, float] | None = None,
+    cells: int,
+    pilot_halves: list[list[Any]],
 ) -> dict[float, dict[str, float]]:
-    """Each level's power at its registered lift on `changes` changes, with its Monte Carlo SE.
+    """Each level's power at its registered lift on `changes` changes, with its Monte Carlo SE,
+    and the smallest effect the cell detects there at its registered per-cell power.
 
-    The trials take the simulation's own seed, churn, resamples and K. One set of trials per
-    distinct lift reads every level, as the simulation's bisection does. With a `critical` p,
-    calibrated at the projected size, a trial reads supported only below it too, as the read
-    applies it at any size.
+    The trials take the simulation's own seed, churn, resamples, K and bisection steps. One set of
+    trials per distinct lift reads every level, as the simulation's bisection does. With a
+    `critical` p, calibrated at the projected size, a trial reads supported only below it too, as
+    the read applies it at any size. The detectable effect is the simulation's own bisection
+    (`partition_sensitivity.detectable_lift`) at `changes`, at the cell power the simulation
+    registered for `cells`: above δ, the cell cannot detect δ at this size and is exploratory
+    ("Sample size", Stage 1 report; `decomposition.small_window`).
     """
     if not is_count(changes):
         raise ValueError(f"changes {changes!r} is not a positive whole number")
     levels = list(lifts)
     trials = simulation["trials"]
+    continuous = simulation.get("metric", "exact_match") != "exact_match"
+    target_power = simulation["cell_power"][str(cells)]
     at_lift: dict[float, list[dict]] = {}
-    out: dict[float, dict[str, float]] = {}
-    for c, registered in lifts.items():
-        lift = registered["lift"]
+
+    def at(lift: float) -> list[dict]:
         if lift not in at_lift:
             at_lift[lift] = trials_at(
                 executor,
@@ -161,13 +182,48 @@ def power_at(
                 runs=simulation["runs"],
                 count=trials,
             )
-        power = fmean(supported(t, c, critical) for t in at_lift[lift])
+        return at_lift[lift]
+
+    out: dict[float, dict[str, float]] = {}
+    for c, registered in lifts.items():
+        power = fmean(supported(t, c, critical) for t in at(registered["lift"]))
+        try:
+            lift = detectable_lift(
+                at,
+                level=c,
+                target_power=target_power,
+                critical=None if critical is None else dict(critical),
+                continuous=continuous,
+                steps=simulation_steps(simulation),
+            )
+        except ValueError:
+            # Not reached under the bracket's top: the cell detects nothing as small as it.
+            lift = None
+
+        def effect(lift: float) -> float:
+            return realised_effect(
+                lift,
+                continuous=continuous,
+                pilot_halves=pilot_halves,
+                seed=simulation_seed(simulation),
+            )
+
         out[c] = {
             **registered,
             "power": power,
             "mc_se": math.sqrt(power * (1.0 - power) / trials),
+            "cell_power": target_power,
+            "detectable_lift": lift,
+            "detectable": None if lift is None else effect(lift),
+            "detectable_above": effect(lift_ceiling(continuous)) if lift is None else None,
         }
     return out
+
+
+def simulation_steps(simulation: Mapping[str, Any]) -> int:
+    """The bisection steps the simulation's detectable effects took: recorded, or
+    `partition_sensitivity.py`'s default, which every simulation that predates the record ran."""
+    return simulation.get("steps", partition_sensitivity.parser.get_default("steps"))
 
 
 def main() -> None:
@@ -232,20 +288,34 @@ def main() -> None:
         raise SystemExit(
             f"{metric}'s SESOI is {initargs[2]}, the simulation's {simulation['sesoi']}"
         )
+    # The halves the simulation realised a lift on: its first pooled partition's.
+    first = partitions[0]
+    pilot_halves = [[c for c, p in pool if first[p] == side] for side in (0, 1)]
     with ProcessPoolExecutor(args.workers, initializer=_init, initargs=initargs) as executor:
-        by_level_ = power_at(
-            executor,
-            pool,
-            changes=changes,
-            sigma_run=sigma_run,
-            lifts=lifts,
-            simulation=simulation,
-            critical=critical,
-        )
+        try:
+            by_level_ = power_at(
+                executor,
+                pool,
+                changes=changes,
+                sigma_run=sigma_run,
+                lifts=lifts,
+                simulation=simulation,
+                critical=critical,
+                cells=report["sensitivity"]["cells"],
+                pilot_halves=pilot_halves,
+            )
+        except ValueError as error:
+            raise SystemExit(f"{args.report}: {error}") from error
     for c, at in by_level_.items():
         print(
             f"{org} at {c}: power {at['power']:.3f} (MC SE {at['mc_se']:.3f}) at bound "
-            f"{at['bound']:+.4f} on {changes} changes, {simulation['planned_changes']} projected"
+            f"{at['bound']:+.4f} on {changes} changes, {simulation['planned_changes']} projected; "
+            + (
+                f"detects {at['detectable']:+.4f}"
+                if at["detectable"] is not None
+                else f"detects nothing up to {at['detectable_above']:+.4f}"
+            )
+            + f" at power {at['cell_power']:.4f} (SESOI {initargs[2]})"
         )
     out = {
         "org": org,
@@ -263,6 +333,8 @@ def main() -> None:
         "trials": simulation["trials"],
         "resamples": simulation["resamples"],
         "seed": simulation_seed(simulation),
+        "steps": simulation_steps(simulation),
+        "sesoi": initargs[2],
         "by_level": {str(c): at for c, at in by_level_.items()},
         "provenance": provenance_header(),
     }

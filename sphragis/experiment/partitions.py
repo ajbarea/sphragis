@@ -19,7 +19,7 @@ from collections.abc import Callable, Mapping, Sequence
 from statistics import NormalDist, stdev, variance
 from typing import Any
 
-from sphragis.experiment.across import one_sided_p
+from sphragis.experiment.across import bounded_p, one_sided_p
 from sphragis.experiment.cells import (
     K_COVERAGE,
     REGISTERED_SPREAD_TARGET,
@@ -577,6 +577,7 @@ def h1_over_partitions(
     estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
     intervals = {c: percentile_interval(draws, c) for c in levels}
     registered = by_level(bounds) if bounds else {}
+    p_above, p_below = one_sided_p(draws), bounded_p(draws, sesoi)
     return {
         "org": org,
         "bootstrap_seed": bootstrap_seed,
@@ -591,11 +592,14 @@ def h1_over_partitions(
             intervals,
             registered,
             sesoi=sesoi,
-            p=one_sided_p(draws),
+            p=p_above,
             critical=None if critical is None else by_level(critical),
+            p_bounded=p_below,
         ),
         # The inputs of the readings across organizations, beside the pass rule.
-        "p_one_sided": one_sided_p(draws),
+        "p_one_sided": p_above,
+        # The bounded test's p against the SESOI, which a calibrated critical p also reads.
+        "p_bounded": p_below,
         "bootstrap_se": stdev(draws),
         "resamples": resamples,
         # The bounds the verdicts were read under, so a gate can check them against its own.

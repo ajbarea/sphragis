@@ -142,7 +142,8 @@ development pilot, in the read's cluster unit), its bounds from the organization
 7, the values every development reading used; it refuses to run without any of them. Every run it
 reads must carry an outcome-neutral battery that held, its own or, for a likelihood rescoring, the
 battery of the generation run it scored (`neutral.recorded_battery`); a run whose battery failed
-or is missing halts the read, and a planted run is never one of the runs read. Its levels,
+or is missing stops the read and withdraws the organization, and a planted run is never one of
+the runs read. Its levels,
 the cell count its bound is simulated for and the spread target it is read at come from the
 registration, never the command line: a Gerrit organization's from the design of the admitted
 organizations, frozen by one commit before any test window (the Holm levels of its confirmatory
@@ -468,7 +469,7 @@ Qt's foreign organization (V8, AOSP, Fuchsia).
 | what makes a cell readable, the test-window read's resamples and seed | [`sphragis/experiment/cells.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/cells.py) |
 | readings beside the pass rule, across organizations | [`sphragis/experiment/across.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/across.py) |
 | estimand, interval | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |
-| outcome-neutral checks and the halt rule | [`sphragis/experiment/neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py) |
+| outcome-neutral checks and the withdrawal rule | [`sphragis/experiment/neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py) |
 | the seal, and refusing to fetch past it | [`sphragis/corpus/`](https://github.com/ajbarea/sphragis/tree/main/sphragis/corpus) |
 | the evidence behind every row above | [Artifact index](artifacts.md) |
 

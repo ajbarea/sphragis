@@ -51,6 +51,7 @@ import argparse
 import json
 import random
 from collections import defaultdict
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from statistics import fmean, stdev
@@ -602,6 +603,48 @@ def supported(t: dict, level: float, critical: dict[float, float] | None) -> boo
     return t["supported"][level] and (critical is None or t["p"] < critical[level])
 
 
+def lift_ceiling(continuous: bool) -> float:
+    """The top of the lift bracket a detectable effect is searched under, in the metric's units."""
+    return CONTINUOUS_CEILING if continuous else LIFT_CEILING
+
+
+def detectable_lift(
+    trials_at_lift: Callable[[float], list[dict]],
+    *,
+    level: float,
+    target_power: float,
+    critical: dict[float, float] | None,
+    continuous: bool,
+    steps: int,
+) -> float:
+    """The smallest lift at which the cell reads supported at `level` in `target_power` of its
+    trials: bisection over [0, the metric's ceiling] in `steps` halvings, each step's trials from
+    `trials_at_lift` (common random numbers across steps). Refused when the ceiling is reached."""
+    ceiling = lift_ceiling(continuous)
+    low, high = 0.0, ceiling
+    for _ in range(steps):
+        mid = (low + high) / 2
+        if fmean(supported(t, level, critical) for t in trials_at_lift(mid)) >= target_power:
+            high = mid
+        else:
+            low = mid
+    if high == ceiling:
+        raise ValueError(f"power {target_power} not reached")
+    return high
+
+
+def realised_effect(
+    lift: float, *, continuous: bool, pilot_halves: list[list[Cluster]], seed: int
+) -> float:
+    """The effect a lift realises: a shift realises itself; on exact match a lift realises what
+    the pilot's rates allow, averaged over the first pooled partition's halves."""
+    if continuous:
+        return lift
+    return fmean(
+        realised_difference(h, lift=lift, seed=seed, draws=EFFECT_DRAWS) for h in pilot_halves
+    )
+
+
 def _cached_trials(
     at_lift: dict[float, list[dict]], executor, pool, args, lift, sigma_run, levels
 ) -> list[dict]:
@@ -773,6 +816,7 @@ def main() -> None:
         "resamples": args.resamples,
         "redraw": args.redraw,
         "seed": args.seed,
+        "steps": args.steps,
         "size_floor": admissible["size_floor"],
         "partitions_pooled": len(partitions),
         "partition_seeds_tried": tried,
@@ -831,27 +875,21 @@ def main() -> None:
             for level in levels:
                 entry["by_level"][level] = {"by_cells": {}}
                 for cells, target_power in cell_power.items():
-                    ceiling = CONTINUOUS_CEILING if continuous else LIFT_CEILING
-                    low, high = 0.0, ceiling
-                    for _ in range(args.steps):
-                        mid = (low + high) / 2
-                        trials = _cached_trials(
-                            at_lift, executor, pool, args, mid, sigma_run, levels
+                    try:
+                        high = detectable_lift(
+                            lambda lift, cache=at_lift, sigma=sigma_run: _cached_trials(
+                                cache, executor, pool, args, lift, sigma, levels
+                            ),
+                            level=level,
+                            target_power=target_power,
+                            critical=critical,
+                            continuous=continuous,
+                            steps=args.steps,
                         )
-                        if fmean(supported(t, level, critical) for t in trials) >= target_power:
-                            high = mid
-                        else:
-                            low = mid
-                    if high == ceiling:
-                        raise SystemExit(f"{label} at {level}: power {target_power} not reached")
-                    # A shift realises itself; a lift realises what the pilot's rates allow.
-                    effect = (
-                        high
-                        if continuous
-                        else fmean(
-                            realised_difference(h, lift=high, seed=args.seed, draws=EFFECT_DRAWS)
-                            for h in pilot_halves
-                        )
+                    except ValueError as error:
+                        raise SystemExit(f"{label} at {level}: {error}") from error
+                    effect = realised_effect(
+                        high, continuous=continuous, pilot_halves=pilot_halves, seed=args.seed
                     )
                     at = {
                         "cell_power": target_power,
