@@ -634,7 +634,7 @@ _RATER2_STORE_LINES = (
     # A button and a key store the label itself, never its shown name.
     'b.addEventListener("click",()=>onPick(lab));',
     "lab=>{ draft.label=lab; render(); }",
-    "draft.label=keyPick(LABELS[+e.key-1]);",
+    "draft.label=LABELS[+e.key-1];",
     'await db.doc("answers/"+uid+"/items/"+item).update({slips});',
     'db.collection("answers/"+uid+"/items").onSnapshot(',
     "if(v&&v.rubric===RUBRIC&&LABELS.includes(v.label)) answers[d.id]=v;",
@@ -652,9 +652,7 @@ _RATER2_SHOWN_LINES = (
     'q.appendChild(el("p","note",Q2_RULES));',
     'el("b",null,NAMES[draft.label])',
     '"Locked: "+NAMES[s.label]+',
-    "practice.label=keyPick(LABELS[+e.key-1]);",
-    "function keyPick(lab){ if(document.activeElement&&"
-    'document.activeElement.classList.contains("opt")) refocus="opt-"+lab; return lab; }',
+    "practice.label=LABELS[+e.key-1];",
     'lab in NAMES?"\u201c"+NAMES[lab]+"\u201d":m',
 )
 _RATER2_CAPABILITIES_SHA256 = "06c8ce65722427bda1df50fce18ae7c2410296686a3cb6ea70ea257e515d577e"
@@ -693,7 +691,7 @@ def test_the_second_rater_page_keeps_its_published_instrument_word_for_word() ->
     # A label is set only from the button's own label or the key's place in LABELS.
     for answer in ("draft", "practice"):
         sources = set(re.findall(rf"{answer}\.label=(?!=)([^;}}]+)", template))
-        assert sources == {"lab", "keyPick(LABELS[+e.key-1])"}, (answer, sources)
+        assert sources == {"lab", "LABELS[+e.key-1]"}, (answer, sources)
     assert re.findall(r"onPick\(([^)]*)\)", template) == ["lab"]
     rules = (page_tool.PAGES / "rater2-capabilities.json").read_bytes()
     assert hashlib.sha256(rules).hexdigest() == _RATER2_CAPABILITIES_SHA256

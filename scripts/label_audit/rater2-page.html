@@ -318,11 +318,23 @@ function renderItem(stage){
 }
 
 function canLock(){ return mode==="saving"||mode==="preview"; }
+// Until a rater's saved answers arrive (or the wait gives up), nothing takes input, so a
+// returning rater is never moved off an item they had started on.
+let waited=false;
+function holding(){ return mode==="connecting"||(mode==="saving"&&!loaded&&!waited); }
 let refocus=null;  // a control's key to focus once it is enabled again (after a save)
 let shownView=null;  // the screen and item last drawn
+// Which control takes focus after a re-render. The stage is rebuilt on every change, and the
+// keys act on the page: Enter locks unless a button holds focus. So focus comes back only to a
+// field being typed in or ticked; an answer's focus goes to the chosen answer, where Enter
+// locks; anything else falls to the page, as it always did. A new item starts with none.
+function focusAfter(key){
+  if(!key) return null;
+  if(key==="note"||key==="outside"||key.startsWith("slip-")) return key;
+  if(key.startsWith("opt-")){ const on=document.querySelector('#stage .opt[aria-pressed="true"]'); return on?on.dataset.key:null; }
+  return null;
+}
 function render(){
-  // The stage is rebuilt on every change, so focus returns to the control that held it, but
-  // only on the same screen and item: a new item starts with nothing focused, as before.
   const view=screen+":"+current, same=view===shownView; shownView=view;
   if(!same) refocus=null;
   const active=same&&document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.key:null;
@@ -330,11 +342,13 @@ function render(){
   const note=had==="note"?document.activeElement:null, caret=note?[note.selectionStart,note.selectionEnd]:null;
   const stage=document.getElementById("stage"); stage.textContent="";
   document.getElementById("lede").hidden=screen!=="intro";
+  if(holding()){ stage.appendChild(el("p","note","Loading your answers…")); progress(); return; }
   if(screen==="intro") renderIntro(stage);
   else renderItem(stage);
   progress();
-  if(had){
-    const back=stage.querySelector('[data-key="'+had+'"]');
+  const want=focusAfter(had);
+  if(want){
+    const back=stage.querySelector('[data-key="'+want+'"]');
     if(back&&!back.disabled){ back.focus({preventScroll:true}); refocus=null; if(caret) back.setSelectionRange(...caret); }
   }
 }
@@ -405,26 +419,27 @@ function readonlyText(){ return "Saving is not available in this view, so nothin
 function refusedText(){ return "This page could not save your answer, so nothing you pick here is kept. Your access may not allow saving; please tell AJ, who can change it. Answers you locked before are kept."; }
 
 // Enter acts on the page unless it would press a control; on the chosen answer it acts too.
-// A key pick moves focus to the answer it chose when an answer held focus, so Enter then
-// locks that answer rather than pressing the one clicked before.
-function keyPick(lab){ if(document.activeElement&&document.activeElement.classList.contains("opt")) refocus="opt-"+lab; return lab; }
 function enterActs(e){
   const t=e.target;
   return (t.tagName!=="BUTTON"&&t.tagName!=="SUMMARY")||(t.classList.contains("opt")&&t.getAttribute("aria-pressed")==="true");
 }
+// A rater who has started on the start page stays there when saved answers arrive.
+let touched=false;
+for(const kind of ["keydown","pointerdown"]) document.addEventListener(kind,()=>{ touched=true; },{capture:true});
 document.addEventListener("keydown",e=>{
+  if(holding()) return;
   const tag=e.target.tagName;
   if(tag==="TEXTAREA"||e.ctrlKey||e.metaKey||e.altKey) return;
   if(screen==="intro"){
     if(practice.checked) return;
-    if(e.key>="1"&&e.key<="5"){ practice.label=keyPick(LABELS[+e.key-1]); render(); }
+    if(e.key>="1"&&e.key<="5"){ practice.label=LABELS[+e.key-1]; render(); }
     else if(e.key==="x"){ practice.outside=!practice.outside; render(); }
     else if(e.key==="Enter"&&practice.label&&enterActs(e)){ e.preventDefault(); practice.checked=true; render(); }
     return;
   }
   const ex=ITEMS[current], locked=!!answers[ex.item];
   const draft=drafts[ex.item]||(drafts[ex.item]={label:null,outside:false,note:""});
-  if(e.key>="1"&&e.key<="5"&&!locked&&!busy){ draft.label=keyPick(LABELS[+e.key-1]); render(); }
+  if(e.key>="1"&&e.key<="5"&&!locked&&!busy){ draft.label=LABELS[+e.key-1]; render(); }
   else if(e.key==="x"&&!locked&&!busy){ draft.outside=!draft.outside; render(); }
   else if(e.key==="Enter"&&!locked&&draft.label&&enterActs(e)){ e.preventDefault(); lockCurrent(); }
   else if(e.key==="n") go(1); else if(e.key==="p") go(-1);
@@ -445,7 +460,8 @@ new ResizeObserver(([e])=>document.documentElement.style.setProperty("--below-st
   }
   if(!db||!uid){ mode="readonly"; conn.textContent="Not saving"; notice(readonlyText()); render(); return; }
   mode="saving"; conn.textContent="Loading your answers…";
-  const timer=setTimeout(()=>{ if(!loaded) conn.textContent="Your saved answers can't be reached yet"; },10000);
+  render();
+  const timer=setTimeout(()=>{ if(!loaded){ conn.textContent="Your saved answers can't be reached yet"; waited=true; render(); } },10000);
   db.collection("answers/"+uid+"/items").onSnapshot(snap=>{
     for(const d of snap.docs){
       const v=d.data();
@@ -455,7 +471,7 @@ new ResizeObserver(([e])=>document.documentElement.style.setProperty("--below-st
     if(!snap.metadata.fromCache){
       clearTimeout(timer); conn.textContent="Progress saves as you lock";
       // A returning rater opens on their first open item; the start page stays one click away.
-      if(!loaded){ loaded=true; if(lockedCount()){ current=firstOpen(); if(screen==="intro"&&!practice.label) screen="items"; } }
+      if(!loaded){ loaded=true; if(lockedCount()){ current=firstOpen(); if(screen==="intro"&&!touched) screen="items"; } }
     }
     render();
   },e=>{
