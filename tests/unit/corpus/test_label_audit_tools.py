@@ -641,6 +641,20 @@ _RATER2_STORE_LINES = (
     'const RUBRIC = "v2";',
     'const LABELS = ["valid","non_actionable","unrelated_rewrite","partial","context_dependent"];',
 )
+# What a rater reads beside each item: every button shows its own label's name and definition,
+# the rules are drawn, and a locked answer is named after the label it stored.
+_RATER2_SHOWN_LINES = (
+    "LABELS.forEach(lab=>{",
+    'const name=el("span","name",NAMES[lab]), def=el("span","def",DEFINITIONS[lab]);',
+    'ask.appendChild(el("h2",null,Q1_ASK));',
+    'd.appendChild(el("p","note",named(TRICKY)))',
+    'q.appendChild(el("p",null,Q2_ASK));',
+    'q.appendChild(el("p","note",Q2_RULES));',
+    'el("b",null,NAMES[draft.label])',
+    '"Locked: "+NAMES[s.label]+',
+    "practice.label=LABELS[+e.key-1];",
+    'lab in NAMES?"\u201c"+NAMES[lab]+"\u201d":m',
+)
 _RATER2_CAPABILITIES_SHA256 = "06c8ce65722427bda1df50fce18ae7c2410296686a3cb6ea70ea257e515d577e"
 
 
@@ -672,6 +686,13 @@ def test_the_second_rater_page_keeps_its_published_instrument_word_for_word() ->
     for line in _RATER2_STORE_LINES:
         assert line in template, line
     assert re.search(r'\[\["label","[^"]*"\],\["outside_names","[^"]*"\]\]', template)
+    for line in _RATER2_SHOWN_LINES:
+        assert line in template, line
+    # A label is set only from the button's own label or the key's place in LABELS.
+    for answer in ("draft", "practice"):
+        sources = set(re.findall(rf"{answer}\.label=(?!=)([^;}}]+)", template))
+        assert sources == {"lab", "LABELS[+e.key-1]"}, (answer, sources)
+    assert re.findall(r"onPick\(([^)]*)\)", template) == ["lab"]
     rules = (page_tool.PAGES / "rater2-capabilities.json").read_bytes()
     assert hashlib.sha256(rules).hexdigest() == _RATER2_CAPABILITIES_SHA256
 
