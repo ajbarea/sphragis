@@ -13,7 +13,7 @@ header p{color:var(--ink)}
 .card{gap:16px}
 .card-head{align-items:center}
 .pair{display:grid;gap:20px}
-.pair>*{min-width:0}
+.pair>*,.show>*{min-width:0}
 .show,.ask{display:grid;gap:12px;align-content:start}
 @media (min-width:960px){
   .pair{grid-template-columns:minmax(0,1fr) minmax(420px,520px)}
@@ -31,7 +31,6 @@ header p{color:var(--ink)}
 .opt[aria-pressed="true"]::before{border:4.5px solid var(--accent)}
 .opt:hover:not(:disabled){border-color:var(--accent)}
 .opt:disabled{cursor:default}
-.opt:disabled:not([aria-pressed="true"]){opacity:.6}
 .opt:focus-visible,.flag input:focus-visible,details.tricky summary:focus-visible,details.about summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 details.tricky,details.about{border:1px solid var(--rule);border-radius:8px;padding:8px 12px;background:var(--panel)}
 details.tricky summary,details.about summary{cursor:pointer;font-weight:500}
@@ -93,7 +92,7 @@ const NAMES = {
   non_actionable: "No change asked",
   unrelated_rewrite: "Unrelated change",
   partial: "Partly done",
-  context_dependent: "Can't tell"
+  context_dependent: "Can't tell what's asked"
 };
 // The rubric's rules, worded as before; {label} is shown as that label's name.
 const Q1_ASK = "1. The label: did the reviewer ask for a change, and is the rewrite the author's answer to it? Pick one.";
@@ -215,7 +214,7 @@ function aboutStudy(){
 
 function renderIntro(stage){
   const facts=el("ul","facts");
-  ["Under a minute each","Stop anytime: progress saves",GOAL+" to start is a big help"].forEach(t=>facts.appendChild(el("li",null,t)));
+  ["About a minute each","Stop anytime: locked answers are saved",GOAL+" to start is a big help"].forEach(t=>facts.appendChild(el("li",null,t)));
   stage.appendChild(facts);
   stage.appendChild(el("p","privacy","Your answers are blind and private: you won't see anyone else's labels, and only AJ reads yours."));
   if(lockedCount()){

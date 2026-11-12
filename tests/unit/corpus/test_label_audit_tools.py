@@ -606,7 +606,7 @@ _RATER2_NAMES = {
     "non_actionable": "No change asked",
     "unrelated_rewrite": "Unrelated change",
     "partial": "Partly done",
-    "context_dependent": "Can't tell",
+    "context_dependent": "Can't tell what's asked",
 }
 _RATER2_RULES = {
     "q1": "1. The label: did the reviewer ask for a change, and is the rewrite the author's answer"

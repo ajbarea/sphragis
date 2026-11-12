@@ -52,18 +52,18 @@ dd{margin:0;color:var(--muted)}
 .del{background:var(--del-bg);color:var(--del-ink)}
 .add{background:var(--add-bg);color:var(--add-ink)}
 .choices{display:flex;flex-wrap:wrap;gap:8px}
-.choices button{font:500 13.5px var(--sans);border:1px solid var(--rule);background:var(--chip);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.choices button{font:500 13.5px var(--sans);border:1px solid var(--edge);background:var(--chip);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
 .choices button kbd{font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:6px}
 .choices button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .choices button[aria-pressed="true"] kbd{color:inherit}
 .choices button:focus-visible,textarea:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-textarea{width:100%;min-height:38px;font:14px var(--sans);color:var(--ink);background:var(--ground);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;resize:vertical}
+textarea{width:100%;min-height:38px;font:14px var(--sans);color:var(--ink);background:var(--ground);border:1px solid var(--edge);border-radius:6px;padding:6px 10px;resize:vertical}
 .saved{font-size:13.5px;color:var(--muted);min-height:1em}
 .saved.ok{color:var(--done)}
 .banner{margin-top:12px;padding:10px 14px;border-radius:6px;background:var(--chip);color:var(--muted);font-size:13.5px}
 @media (prefers-reduced-motion: reduce){.meter span{transition:none}}
 .nav{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.nav button{font:500 13.5px var(--sans);border:1px solid var(--rule);background:var(--panel);color:var(--ink);border-radius:6px;padding:6px 14px;cursor:pointer}
+.nav button{font:500 13.5px var(--sans);border:1px solid var(--edge);background:var(--panel);color:var(--ink);border-radius:6px;padding:6px 14px;cursor:pointer}
 .nav button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .nav button:disabled{opacity:.6;cursor:default}
 .nav button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
