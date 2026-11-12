@@ -326,13 +326,17 @@ function render(){
   const view=screen+":"+current, same=view===shownView; shownView=view;
   if(!same) refocus=null;
   const active=same&&document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.key:null;
-  const had=active||refocus;
+  const had=refocus||active;
+  const note=had==="note"?document.activeElement:null, caret=note?[note.selectionStart,note.selectionEnd]:null;
   const stage=document.getElementById("stage"); stage.textContent="";
   document.getElementById("lede").hidden=screen!=="intro";
   if(screen==="intro") renderIntro(stage);
   else renderItem(stage);
   progress();
-  if(had){ const back=stage.querySelector('[data-key="'+had+'"]'); if(back&&!back.disabled){ back.focus({preventScroll:true}); refocus=null; } }
+  if(had){
+    const back=stage.querySelector('[data-key="'+had+'"]');
+    if(back&&!back.disabled){ back.focus({preventScroll:true}); refocus=null; if(caret) back.setSelectionRange(...caret); }
+  }
 }
 function go(step){ current=Math.max(0,Math.min(ITEMS.length-1,current+step)); render(); window.scrollTo({top:0}); }
 
@@ -401,6 +405,9 @@ function readonlyText(){ return "Saving is not available in this view, so nothin
 function refusedText(){ return "This page could not save your answer, so nothing you pick here is kept. Your access may not allow saving; please tell AJ, who can change it. Answers you locked before are kept."; }
 
 // Enter acts on the page unless it would press a control; on the chosen answer it acts too.
+// A key pick moves focus to the answer it chose when an answer held focus, so Enter then
+// locks that answer rather than pressing the one clicked before.
+function keyPick(lab){ if(document.activeElement&&document.activeElement.classList.contains("opt")) refocus="opt-"+lab; return lab; }
 function enterActs(e){
   const t=e.target;
   return (t.tagName!=="BUTTON"&&t.tagName!=="SUMMARY")||(t.classList.contains("opt")&&t.getAttribute("aria-pressed")==="true");
@@ -410,14 +417,14 @@ document.addEventListener("keydown",e=>{
   if(tag==="TEXTAREA"||e.ctrlKey||e.metaKey||e.altKey) return;
   if(screen==="intro"){
     if(practice.checked) return;
-    if(e.key>="1"&&e.key<="5"){ practice.label=LABELS[+e.key-1]; render(); }
+    if(e.key>="1"&&e.key<="5"){ practice.label=keyPick(LABELS[+e.key-1]); render(); }
     else if(e.key==="x"){ practice.outside=!practice.outside; render(); }
     else if(e.key==="Enter"&&practice.label&&enterActs(e)){ e.preventDefault(); practice.checked=true; render(); }
     return;
   }
   const ex=ITEMS[current], locked=!!answers[ex.item];
   const draft=drafts[ex.item]||(drafts[ex.item]={label:null,outside:false,note:""});
-  if(e.key>="1"&&e.key<="5"&&!locked&&!busy){ draft.label=LABELS[+e.key-1]; render(); }
+  if(e.key>="1"&&e.key<="5"&&!locked&&!busy){ draft.label=keyPick(LABELS[+e.key-1]); render(); }
   else if(e.key==="x"&&!locked&&!busy){ draft.outside=!draft.outside; render(); }
   else if(e.key==="Enter"&&!locked&&draft.label&&enterActs(e)){ e.preventDefault(); lockCurrent(); }
   else if(e.key==="n") go(1); else if(e.key==="p") go(-1);
