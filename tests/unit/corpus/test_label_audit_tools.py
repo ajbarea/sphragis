@@ -661,6 +661,7 @@ _RATER2_SHOWN_LINES = (
 _RATER2_FOCUS_LINES = (
     'function enterActs(e){ return e.target.tagName!=="BUTTON"&&e.target.tagName!=="SUMMARY"; }',
     'return key&&(key==="note"||key==="outside"||key.startsWith("slip-"))?key:null;',
+    "const want=focusAfter(had);",
     'e.key==="Enter"&&practice.label&&enterActs(e)){',
     'e.key==="Enter"&&!locked&&draft.label&&enterActs(e)){',
 )
