@@ -347,11 +347,19 @@ function render(){
   else renderItem(stage);
   progress();
   const want=focusAfter(had);
+  armed=null;
   if(want){
     const back=stage.querySelector('[data-key="'+want+'"]');
-    if(back&&!back.disabled){ back.focus({preventScroll:true}); refocus=null; if(caret) back.setSelectionRange(...caret); }
+    if(back&&!back.disabled){
+      if(want.startsWith("opt-")) armed=want;
+      back.focus({preventScroll:true}); refocus=null; if(caret) back.setSelectionRange(...caret);
+    }
   }
 }
+// The answer the page itself focused after a pick; Enter there locks, as Enter on the page did.
+// Focus that reaches an answer any other way (Tab, a click) leaves Enter as a press, as on main.
+let armed=null;
+document.addEventListener("focusin",e=>{ if(!(e.target.dataset&&e.target.dataset.key===armed)) armed=null; });
 function go(step){ current=Math.max(0,Math.min(ITEMS.length-1,current+step)); render(); window.scrollTo({top:0}); }
 
 async function lockCurrent(){
@@ -421,7 +429,7 @@ function refusedText(){ return "This page could not save your answer, so nothing
 // Enter acts on the page unless it would press a control; on the chosen answer it acts too.
 function enterActs(e){
   const t=e.target;
-  return (t.tagName!=="BUTTON"&&t.tagName!=="SUMMARY")||(t.classList.contains("opt")&&t.getAttribute("aria-pressed")==="true");
+  return (t.tagName!=="BUTTON"&&t.tagName!=="SUMMARY")||(t.classList.contains("opt")&&t.getAttribute("aria-pressed")==="true"&&t.dataset.key===armed);
 }
 // A rater who has started on the start page stays there when saved answers arrive.
 let touched=false;
