@@ -629,6 +629,12 @@ _RATER2_STORE_LINES = (
     "note:draft.note.trim(),slips:[],locked_at:new Date().toISOString()};",
     'const ref=db.doc("answers/"+uid+"/items/"+ex.item);',
     'const ref=db.doc("answers/"+uid);',
+    "await ref.set(body);",
+    "await ref.set({rubric:RUBRIC});",
+    # A button and a key store the label itself, never its shown name.
+    'b.addEventListener("click",()=>onPick(lab));',
+    "lab=>{ draft.label=lab; render(); }",
+    "draft.label=LABELS[+e.key-1];",
     'await db.doc("answers/"+uid+"/items/"+item).update({slips});',
     'db.collection("answers/"+uid+"/items").onSnapshot(',
     "if(v&&v.rubric===RUBRIC&&LABELS.includes(v.label)) answers[d.id]=v;",

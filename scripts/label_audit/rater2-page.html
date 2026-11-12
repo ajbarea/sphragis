@@ -19,7 +19,7 @@ header p{color:var(--ink)}
   .pair{grid-template-columns:minmax(0,1fr) minmax(420px,520px)}
   .ask{border-left:1px solid var(--rule);padding-left:20px}
   /* The item stays in view while the answers beside it scroll. */
-  .show{position:sticky;top:64px;align-self:start;max-height:calc(100vh - 80px);overflow:auto}
+  .show{position:sticky;top:var(--below-status,64px);align-self:start;max-height:calc(100vh - 80px);overflow:auto}
 }
 .ask h2{font-size:15px;font-weight:600;margin:0;max-width:60ch}
 .opts{display:grid;gap:6px}
@@ -118,7 +118,7 @@ const shown = {tricky:false, about:false};  // toggles stay as the rater left th
 
 function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
 function keyed(e, key){ e.dataset.key=key; return e; }
-function named(text){ return text.replace(/\{(\w+)\}/g,(_,lab)=>"“"+NAMES[lab]+"”"); }
+function named(text){ return text.replace(/\{(\w+)\}/g,(m,lab)=>lab in NAMES?"“"+NAMES[lab]+"”":m); }
 function diffBlock(ex){
   const box=el("div","diff"), pre=el("pre");
   const add=(text,cls,prefix)=>{ if(!text) return; for(const line of text.split("\n")) pre.appendChild(el("span",cls,prefix+line+"\n")); };
@@ -150,6 +150,7 @@ function choiceGroup(selected, disabled, onPick){
     b.setAttribute("aria-labelledby",name.id); b.setAttribute("aria-describedby",def.id);
     b.append(name, def);
     b.setAttribute("aria-pressed",String(selected===lab));
+    b.setAttribute("aria-keyshortcuts",String(LABELS.indexOf(lab)+1));
     b.addEventListener("click",()=>onPick(lab));
     ch.appendChild(b);
   });
@@ -194,7 +195,7 @@ function keysTip(lock){
 function navButton(text, key, onClick, primary){
   const b=keyed(el("button",primary?"primary":null,text),key); b.type="button"; b.onclick=onClick; return b;
 }
-function startItems(at){ screen="items"; current=at; render(); window.scrollTo({top:0}); }
+function startItems(at){ if(!ITEMS.length) return; screen="items"; current=at; render(); window.scrollTo({top:0}); }
 
 function aboutStudy(){
   return toggle("about","about","About this study",d=>{
@@ -250,7 +251,7 @@ function renderIntro(stage){
     r.appendChild(el("div","note","This is the only answer you will see. The "+ITEMS.length+" items show none."));
     ask.appendChild(r);
   }
-  ask.appendChild(keysTip("checks"));
+  if(!practice.checked) ask.appendChild(keysTip("checks"));
   pair.appendChild(ask);
   card.appendChild(pair);
   stage.appendChild(card);
@@ -297,7 +298,7 @@ function renderItem(stage){
   const lock=navButton(locked?"Locked":(busy?"Saving…":"Lock answer"),"lock",lockCurrent,true);
   lock.disabled=locked||busy||!draft.label||!canLock();
   const next=navButton("Next","next",()=>go(1)); next.disabled=current===ITEMS.length-1;
-  const jump=navButton("First open item","jump",()=>{ current=firstOpen(); render(); });
+  const jump=navButton("First open item","jump",()=>{ current=firstOpen(); render(); window.scrollTo({top:0}); });
   nav.append(prev,lock,next,jump); ask.appendChild(nav);
   if(!locked) ask.appendChild(el("p","lock-hint","A locked answer is final; you can still mark a mis-click."));
   const err=el("div","saved err"); err.id="err"; ask.appendChild(err);
@@ -317,15 +318,17 @@ function renderItem(stage){
 }
 
 function canLock(){ return mode==="saving"||mode==="preview"; }
+let refocus=null;  // a control's key to focus once it is enabled again (after a save)
 function render(){
   // The stage is rebuilt on every change, so focus returns to the control that held it.
-  const had=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.key:null;
+  const active=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.key:null;
+  const had=active||refocus;
   const stage=document.getElementById("stage"); stage.textContent="";
   document.getElementById("lede").hidden=screen!=="intro";
   if(screen==="intro") renderIntro(stage);
   else renderItem(stage);
   progress();
-  if(had){ const back=stage.querySelector('[data-key="'+had+'"]'); if(back&&!back.disabled) back.focus({preventScroll:true}); }
+  if(had){ const back=stage.querySelector('[data-key="'+had+'"]'); if(back&&!back.disabled){ back.focus({preventScroll:true}); refocus=null; } }
 }
 function go(step){ current=Math.max(0,Math.min(ITEMS.length-1,current+step)); render(); window.scrollTo({top:0}); }
 
@@ -383,7 +386,7 @@ async function markSlip(item, field, on){
   const s=answers[item]; if(!s||busy) return;
   const cur=new Set(s.slips||[]); on?cur.add(field):cur.delete(field);
   const slips=[...cur].sort();
-  busy=true; render();
+  refocus="slip-"+field; busy=true; render();
   let failed=null;
   try{ await db.doc("answers/"+uid+"/items/"+item).update({slips}); answers[item]={...answers[item],slips}; }
   catch(e){ failed=e; }
@@ -411,6 +414,7 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="n") go(1); else if(e.key==="p") go(-1);
 });
 render();
+new ResizeObserver(([e])=>document.documentElement.style.setProperty("--below-status",(e.target.offsetHeight+16)+"px")).observe(document.querySelector(".status"));
 
 (async()=>{
   const conn=document.getElementById("conn");
