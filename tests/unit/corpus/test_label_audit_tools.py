@@ -661,6 +661,8 @@ _RATER2_SHOWN_LINES = (
 _RATER2_FOCUS_LINES = (
     'function enterActs(e){ return e.target.tagName!=="BUTTON"&&e.target.tagName!=="SUMMARY"; }',
     'return key&&(key==="note"||key==="outside"||key.startsWith("slip-"))?key:null;',
+    'e.key==="Enter"&&practice.label&&enterActs(e)){',
+    'e.key==="Enter"&&!locked&&draft.label&&enterActs(e)){',
 )
 _RATER2_CAPABILITIES_SHA256 = "06c8ce65722427bda1df50fce18ae7c2410296686a3cb6ea70ea257e515d577e"
 
@@ -695,6 +697,7 @@ def test_the_second_rater_page_keeps_its_published_instrument_word_for_word() ->
     assert re.search(r'\[\["label","[^"]*"\],\["outside_names","[^"]*"\]\]', template)
     for line in _RATER2_SHOWN_LINES + _RATER2_FOCUS_LINES:
         assert line in template, line
+    assert template.count('e.key==="Enter"') == 2  # each Enter branch goes through enterActs
     # A label is set only from the button's own label or the key's place in LABELS.
     for answer in ("draft", "practice"):
         sources = set(re.findall(rf"{answer}\.label=(?!=)([^;}}]+)", template))

@@ -49,8 +49,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   the same five stored labels, a goal of 10 first, warm palette in `page.css` (shared with the
   check page). `test_..._keeps_its_published_instrument_word_for_word` pins definitions, rules,
   names, stored values and the rules file to the published page; the contrast test gates 4.5:1.
-  Built page: main checkout `scratch/rater2/label-audit-rater2-ux.html` (same 77 items as the
-  published build); Heph republishes it to the same URL with `rater2-capabilities.json`. Verify:
+  Built page: main checkout `scratch/rater2/label-audit-rater2-ux.html`, rebuilt from the merge
+  commit with the module docstring's `--second-rater` command (same 77 items as the published
+  build); Heph republishes it to the same URL with `rater2-capabilities.json`. Verify:
   `uv run pytest tests/unit/corpus/test_label_audit_tools.py`.
 
 - **Issue #232, five registered-design decisions (AJ 2026-10-30).**
