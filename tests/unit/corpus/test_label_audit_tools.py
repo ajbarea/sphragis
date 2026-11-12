@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import math
@@ -584,3 +585,165 @@ def test_the_org_reproduction_refuses_a_pair_only_one_side_has() -> None:
     assert by_org_tool.reproduces(recorded, {**recorded, "q": recorded["p"]}) == [
         "q: only one side has it"
     ]
+
+
+# The second-rater page's instrument, as published for the first raters (PR #260). A change to
+# how the page looks keeps every word a rater judges by and every value the store receives.
+_RATER2_DEFINITIONS = {
+    "valid": "The comment asks for a change and the rewrite makes it. Extra edits alongside are"
+    " fine.",
+    "non_actionable": "The comment asks for no change (praise, FYI, agreement, a question the"
+    " author could answer in words), or it withdraws its own request.",
+    "unrelated_rewrite": "The requested change is absent; the code changed for some other reason.",
+    "partial": "The rewrite makes part of what was asked, or makes it in a clearly different way"
+    " than the comment suggested.",
+    "context_dependent": 'You cannot tell what the comment asks for from what is shown: "same'
+    ' here", "see above", a reference to other lines, files or patch sets, a bare "?" or "why?",'
+    ' "remove" without saying what, or only a link.',
+}
+_RATER2_NAMES = {
+    "valid": "Valid",
+    "non_actionable": "No change asked",
+    "unrelated_rewrite": "Unrelated change",
+    "partial": "Partly done",
+    "context_dependent": "Can't tell what's asked",
+}
+_RATER2_RULES = {
+    "q1": "1. The label: did the reviewer ask for a change, and is the rewrite the author's answer"
+    " to it? Pick one.",
+    "tricky": "context_dependent is about understanding the request. A clear request answered"
+    " with names defined elsewhere is still valid; that is question 2. Several comments: judge"
+    " the requests together. All made is valid, some is partial, none is unrelated_rewrite;"
+    " ignore comments that ask for nothing when others do. A deletion the comment asked for is"
+    " valid, and a question the author answers by changing the code counts as a request. Judge"
+    " only what is shown; do not guess the project or the author.",
+    "q2": "2. Names from outside: does the rewrite use a name or value that appears nowhere in the"
+    " item, not in the before lines, the surrounding lines or the comment (a helper, constant,"
+    " module, class, config key, file name, version or hash defined elsewhere)? A name the"
+    " comment spells out counts as shown. New local variable names, plain rewording and ordinary"
+    " library or language names (open, len, std::move) do not count. Answer it for every item,"
+    " whatever its label.",
+}
+_RATER2_STORE_LINES = (
+    "const body={rubric:RUBRIC,label:draft.label,outside_names:!!draft.outside,"
+    "note:draft.note.trim(),slips:[],locked_at:new Date().toISOString()};",
+    'const ref=db.doc("answers/"+uid+"/items/"+ex.item);',
+    'const ref=db.doc("answers/"+uid);',
+    "await ref.set(body);",
+    "await ref.set({rubric:RUBRIC});",
+    # A button and a key store the label itself, never its shown name.
+    'b.addEventListener("click",()=>onPick(lab));',
+    "lab=>{ draft.label=lab; render(); }",
+    "draft.label=LABELS[+e.key-1];",
+    'await db.doc("answers/"+uid+"/items/"+item).update({slips});',
+    'db.collection("answers/"+uid+"/items").onSnapshot(',
+    "if(v&&v.rubric===RUBRIC&&LABELS.includes(v.label)) answers[d.id]=v;",
+    'const RUBRIC = "v2";',
+    'const LABELS = ["valid","non_actionable","unrelated_rewrite","partial","context_dependent"];',
+)
+# What a rater reads beside each item: every button shows its own label's name and definition,
+# the rules are drawn, and a locked answer is named after the label it stored.
+_RATER2_SHOWN_LINES = (
+    "LABELS.forEach(lab=>{",
+    'const name=el("span","name",NAMES[lab]), def=el("span","def",DEFINITIONS[lab]);',
+    'ask.appendChild(el("h2",null,Q1_ASK));',
+    'd.appendChild(el("p","note",named(TRICKY)))',
+    'q.appendChild(el("p",null,Q2_ASK));',
+    'q.appendChild(el("p","note",Q2_RULES));',
+    'el("b",null,NAMES[draft.label])',
+    '"Locked: "+NAMES[s.label]+',
+    "practice.label=LABELS[+e.key-1];",
+    'lab in NAMES?"\u201c"+NAMES[lab]+"\u201d":m',
+)
+# Main's keyboard contract: Enter locks unless a button holds focus, and a re-render gives focus
+# back only to a field, never to a button. Keeping focus on a button let Enter press it instead
+# of locking, or lock where main did not (PR #271, review rounds 2 to 8).
+_RATER2_FOCUS_LINES = (
+    'function enterActs(e){ return e.target.tagName!=="BUTTON"&&e.target.tagName!=="SUMMARY"; }',
+    'return key&&(key==="note"||key==="outside"||key.startsWith("slip-"))?key:null;',
+    "const want=focusAfter(had);",
+    'e.key==="Enter"&&practice.label&&enterActs(e)){',
+    'e.key==="Enter"&&!locked&&draft.label&&enterActs(e)){',
+)
+_RATER2_CAPABILITIES_SHA256 = "06c8ce65722427bda1df50fce18ae7c2410296686a3cb6ea70ea257e515d577e"
+
+
+def _js_string(template: str, name: str) -> str:
+    found = re.search(rf'^const {name} = ("(?:[^"\\]|\\.)*");$', template, re.M)
+    assert found, f"the page declares no {name}"
+    return json.loads(found.group(1))
+
+
+def _js_table(template: str, name: str) -> dict[str, str]:
+    found = re.search(rf"^const {name} = \{{\n(.*?)\n\}};$", template, re.M | re.S)
+    assert found, f"the page declares no {name}"
+    rows = re.findall(r'^\s*(\w+): ("(?:[^"\\]|\\.)*"),?$', found.group(1), re.M)
+    return {key: json.loads(text) for key, text in rows}
+
+
+def test_the_second_rater_page_keeps_its_published_instrument_word_for_word() -> None:
+    """Definitions, rules and stored values are those the first raters saw; only names change."""
+    template = page_tool.SECOND_RATER_TEMPLATE.read_text()
+    assert _js_table(template, "DEFINITIONS") == _RATER2_DEFINITIONS
+    # Each button's name, pinned to the one label it stores: a swap would mislabel answers.
+    assert _js_table(template, "NAMES") == _RATER2_NAMES
+    assert _js_string(template, "Q1_ASK") == _RATER2_RULES["q1"]
+    tricky = _js_string(template, "TRICKY")
+    assert re.sub(r"\{(\w+)\}", r"\1", tricky) == _RATER2_RULES["tricky"]
+    assert set(re.findall(r"\{(\w+)\}", tricky)) <= set(sample_tool.LABELS)
+    q2 = _js_string(template, "Q2_ASK") + " " + _js_string(template, "Q2_RULES")
+    assert q2 == _RATER2_RULES["q2"]
+    for line in _RATER2_STORE_LINES:
+        assert line in template, line
+    assert re.search(r'\[\["label","[^"]*"\],\["outside_names","[^"]*"\]\]', template)
+    for line in _RATER2_SHOWN_LINES + _RATER2_FOCUS_LINES:
+        assert line in template, line
+    assert template.count('e.key==="Enter"') == 2  # each Enter branch goes through enterActs
+    # A label is set only from the button's own label or the key's place in LABELS.
+    for answer in ("draft", "practice"):
+        sources = set(re.findall(rf"{answer}\.label=(?!=)([^;}}]+)", template))
+        assert sources == {"lab", "LABELS[+e.key-1]"}, (answer, sources)
+    assert re.findall(r"onPick\(([^)]*)\)", template) == ["lab"]
+    rules = (page_tool.PAGES / "rater2-capabilities.json").read_bytes()
+    assert hashlib.sha256(rules).hexdigest() == _RATER2_CAPABILITIES_SHA256
+
+
+def _luminance(hex_colour: str) -> float:
+    channels = [int(hex_colour[i : i + 2], 16) / 255 for i in (1, 3, 5)]
+    linear = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def _contrast(a: str, b: str) -> float:
+    hi, lo = sorted((_luminance(a), _luminance(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+# Every text colour on the pages, on each surface it is drawn on; and control edges.
+_TEXT_ON = {
+    "ink": ("ground", "panel", "chip", "sel"),
+    "muted": ("ground", "panel", "chip", "sel"),
+    "ctx": ("panel",),
+    "accent": ("ground", "panel", "sel"),
+    "accent-ink": ("accent",),
+    "del-ink": ("del-bg", "panel"),
+    "add-ink": ("add-bg",),
+    "done": ("ground", "panel"),
+}
+
+
+def test_the_pages_text_meets_wcag_aa_contrast_in_both_schemes() -> None:
+    """4.5:1 for every text colour (WCAG 1.4.3), 3:1 for control edges (1.4.11), light and dark."""
+    css = page_tool.STYLE.read_text()
+    blocks = re.findall(r"\{([^{}]*--ground:[^{}]*)\}", css)
+    assert len(blocks) == 3, "expected the light block and two dark blocks"
+    schemes = [dict(re.findall(r"--([\w-]+):(#[0-9a-fA-F]{6})", b)) for b in blocks]
+    assert schemes[1] == schemes[2], "the two dark blocks differ"
+    for tokens in schemes[:2]:
+        for fg, grounds in _TEXT_ON.items():
+            for bg in grounds:
+                ratio = _contrast(tokens[fg], tokens[bg])
+                assert ratio >= 4.5, f"{fg} on {bg}: {ratio:.2f}"
+        for bg in ("panel", "ground"):
+            assert _contrast(tokens["edge"], tokens[bg]) >= 3, f"edge on {bg}"
+            assert _contrast(tokens["focus"], tokens[bg]) >= 3, f"focus on {bg}"
