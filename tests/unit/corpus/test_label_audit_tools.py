@@ -655,6 +655,13 @@ _RATER2_SHOWN_LINES = (
     "practice.label=LABELS[+e.key-1];",
     'lab in NAMES?"\u201c"+NAMES[lab]+"\u201d":m',
 )
+# Main's keyboard contract: Enter locks unless a button holds focus, and a re-render gives focus
+# back only to a field, never to a button. Keeping focus on a button let Enter press it instead
+# of locking, or lock where main did not (PR #271, review rounds 2 to 8).
+_RATER2_FOCUS_LINES = (
+    'function enterActs(e){ return e.target.tagName!=="BUTTON"&&e.target.tagName!=="SUMMARY"; }',
+    'return key&&(key==="note"||key==="outside"||key.startsWith("slip-"))?key:null;',
+)
 _RATER2_CAPABILITIES_SHA256 = "06c8ce65722427bda1df50fce18ae7c2410296686a3cb6ea70ea257e515d577e"
 
 
@@ -686,7 +693,7 @@ def test_the_second_rater_page_keeps_its_published_instrument_word_for_word() ->
     for line in _RATER2_STORE_LINES:
         assert line in template, line
     assert re.search(r'\[\["label","[^"]*"\],\["outside_names","[^"]*"\]\]', template)
-    for line in _RATER2_SHOWN_LINES:
+    for line in _RATER2_SHOWN_LINES + _RATER2_FOCUS_LINES:
         assert line in template, line
     # A label is set only from the button's own label or the key's place in LABELS.
     for answer in ("draft", "practice"):
