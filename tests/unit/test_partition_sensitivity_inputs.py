@@ -297,8 +297,8 @@ PLAN = {"org": "qt", "cells": None, "metric": "logprob_per_token", "placebo": No
     [
         ({}, {"foreign_source": "aosp"}, "H1's cell against None, not against aosp"),
         (H2_PILOT, {"foreign_source": None}, "H2's cell against aosp, not against None"),
-        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is one cell"),
-        (H2_PILOT, {"cells": [2]}, "H2 is one cell"),
+        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is one cell, or two"),
+        (H2_PILOT, {"cells": [4]}, "H2 is one cell, or two"),
         (H2_PILOT, {"metric": "exact_match"}, "continuous metric"),
         (H2_PILOT, {"placebo": Path("placebo.json")}, "no placebo"),
         (H2_PILOT, {"projected": 29}, "19 planned C"),
@@ -315,7 +315,7 @@ def test_a_plan_is_refused_for_another_cell_or_inputs_it_does_not_read(
         partition_sensitivity.plan_cell(pilot, **args)
 
 
-def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_on_its_cpp_share(
+def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_or_two_on_its_cpp_share(
     tmp_path: Path,
 ) -> None:
     partition_sensitivity = _module()
@@ -339,6 +339,7 @@ def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_on_its_cpp_share(
         {"cpp_changes": 2, "changes": 3},
     )
     assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [1]})[0] == [1]
+    assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [2, 1]})[0] == [1, 2]
 
 
 def test_the_simulation_names_the_cell_it_simulates(tmp_path) -> None:
@@ -546,3 +547,106 @@ def test_the_sbatch_passes_a_test_read_and_takes_nothing_beside_it(
     if status == 0:
         suffix = "-test-spread" if args else ""
         assert run.stdout.strip() == f"{args}|{suffix}"
+
+
+def _stubbed_main(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+    """The script with its corpus pool, workers and trials stubbed; its own checks run as is."""
+    partition_sensitivity = _module()
+    pool = [((f"c{i}",), f"p{i % 2}") for i in range(4)]
+    monkeypatch.setattr(
+        partition_sensitivity,
+        "pools",
+        lambda *a: (pool, [{"p0": 0, "p1": 1}], 1, (0.0, 0.0), None),
+    )
+
+    class _Executor:
+        def __init__(self, *a: object, **k: object) -> None: ...
+
+        def __enter__(self) -> _Executor:
+            return self
+
+        def __exit__(self, *a: object) -> None: ...
+
+    monkeypatch.setattr(partition_sensitivity, "ProcessPoolExecutor", _Executor)
+    monkeypatch.setattr(
+        partition_sensitivity,
+        "calibrate",
+        lambda executor, pool, args, target, seen_at: {"sigma_run": target, "spread": target},
+    )
+    trial = {
+        "supported": {0.975: False, 0.95: False},
+        "absent": {0.975: True, 0.95: True},
+        "disagree": False,
+        "p": 0.5,
+    }
+    monkeypatch.setattr(partition_sensitivity, "_trials", lambda *a, count, **k: [trial] * count)
+    return partition_sensitivity
+
+
+def _run_main(
+    partition_sensitivity: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *extra: str
+) -> dict:
+    """`main()` on the committed likelihood inputs, its null alone, at 10 null trials."""
+    results = ROOT / "datasets/results"
+    out = tmp_path / "o.json"
+    argv = ["partition_sensitivity.py"]
+    argv += ["--placebo", str(results / "likelihood-placebo-wikimedia-rp1.0.json")]
+    argv += ["--corpus", "datasets/gerrit", "--org", "wikimedia"]
+    argv += ["--pilot", str(results / "partition-pilot-wikimedia-likelihood.json")]
+    argv += ["--projection", str(results / "project-windows-wikimedia-v3.json")]
+    argv += ["--admissible", str(results / "admissible-partitions-wikimedia.json")]
+    argv += ["--metric", "logprob_per_token", "--null-only", "--null-trials", "10"]
+    monkeypatch.chdir(ROOT)
+    monkeypatch.setattr(sys, "argv", [*argv, *extra, "--out", str(out)])
+    partition_sensitivity.main()
+    return json.loads(out.read_text())
+
+
+def test_main_simulates_every_spread_point_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.experiment.partitions import SPREAD_TARGETS
+
+    report = _run_main(_stubbed_main(monkeypatch), tmp_path, monkeypatch)
+    assert report["points_simulated"] == list(SPREAD_TARGETS)
+    assert list(report["by_target"]) == list(SPREAD_TARGETS)
+
+
+@pytest.mark.parametrize("chosen", [["sizing_bound_90"], ["pilot_upper_99", "pilot_lower_90"]])
+def test_main_simulates_only_the_spread_points_asked_for(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, chosen: list[str]
+) -> None:
+    """`--spread-target` keeps the named points alone, in the registry's order."""
+    from sphragis.experiment.partitions import SPREAD_TARGETS
+
+    extra = [a for label in chosen for a in ("--spread-target", label)]
+    report = _run_main(_stubbed_main(monkeypatch), tmp_path, monkeypatch, *extra)
+    expected = [label for label in SPREAD_TARGETS if label in chosen]
+    assert report["points_simulated"] == expected
+    assert list(report["by_target"]) == expected
+    # Every point is still recorded as the pilot's; only the chosen ones are simulated.
+    assert list(report["spread_targets"]) == list(SPREAD_TARGETS)
+
+
+def test_main_refuses_a_spread_target_beside_a_test_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A test read is simulated at its own spread; a pilot point beside it is refused."""
+    partition_sensitivity = _stubbed_main(monkeypatch)
+    read = tmp_path / "read.json"
+    read.write_text("{}")
+    spread = {"runs": 20, "changes": 812, "spread": 0.01, "bound": 0.002}
+    monkeypatch.setattr(partition_sensitivity, "read_for_spread", lambda *a, **k: spread)
+    # The same read without a pilot point is simulated, at its own spread alone.
+    report = _run_main(partition_sensitivity, tmp_path, monkeypatch, "--test-read", str(read))
+    assert report["points_simulated"] == ["run_spread"]
+    with pytest.raises(SystemExit, match="--spread-target is the pilot's"):
+        _run_main(
+            partition_sensitivity,
+            tmp_path,
+            monkeypatch,
+            "--test-read",
+            str(read),
+            "--spread-target",
+            "sizing_bound_90",
+        )

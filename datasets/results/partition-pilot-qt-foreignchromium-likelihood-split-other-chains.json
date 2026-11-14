@@ -1,0 +1,301 @@
+{
+  "hypothesis": "H2",
+  "foreign_source": "chromium",
+  "exploratory": false,
+  "run_files": [
+    "datasets/results/likelihood-partition-qt-p4-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p7-s2-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p11-s3-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p12-s4-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p13-s5-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p16-s6-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p18-s7-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p19-s8-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p20-s9-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p21-s10-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p25-s11-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p26-s12-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p27-s13-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p29-s14-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p32-s15-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p33-s16-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p35-s17-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p36-s18-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p37-s19-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p39-s20-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p41-s21-n1850-foreignchromium-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p44-s22-n1850-foreignchromium-rp1.0.json"
+  ],
+  "metric": "logprob_per_token:other",
+  "sesoi": 0.016142401360357633,
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "lora_rank": 32,
+  "admissible": "datasets/results/admissible-partitions-qt.json",
+  "k_source": "all runs",
+  "k_from": null,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "outcome_neutral_runs": [
+    {
+      "file": "datasets/results/likelihood-partition-qt-p4-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p7-s2-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p11-s3-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p12-s4-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p13-s5-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p16-s6-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p18-s7-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p19-s8-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p20-s9-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p21-s10-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p25-s11-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p26-s12-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p27-s13-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p29-s14-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p32-s15-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p33-s16-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p35-s17-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p36-s18-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p37-s19-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p39-s20-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p41-s21-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p44-s22-n1850-foreignchromium-rp1.0.json",
+      "recorded": false,
+      "holds": false
+    }
+  ],
+  "org": "qt",
+  "bootstrap_seed": 7,
+  "estimate": 0.005756653904400386,
+  "per_run": [
+    0.007608150159759602,
+    0.010522468434337726,
+    0.0012863950026657106,
+    0.0013332428356047088,
+    0.0018369957178656776,
+    0.005176570580006298,
+    0.015672646623638403,
+    0.005267403357383668,
+    0.0012862897922543831,
+    0.0010562443306663394,
+    0.011862119975132882,
+    0.0036428060362561354,
+    0.011070791431583002,
+    0.00013859056255365043,
+    -0.0020314149743141108,
+    -0.001675878920008922,
+    0.017700525857449675,
+    0.009991100840575987,
+    0.003351386199439574,
+    -0.00032554443698214197,
+    0.005445255973747579,
+    0.016430240517192787
+  ],
+  "runs": 22,
+  "changes": 223,
+  "reproducibility": {
+    "runs": 22,
+    "variance_of_mean": 1.6382405135825473e-06,
+    "critical_value": 3.391642782621208e-05,
+    "holds": true
+  },
+  "runs_computed": 22,
+  "runs_left_out": [],
+  "intervals": {
+    "0.975": {
+      "low": -0.0044812271390580125,
+      "high": 0.014671153385775688
+    },
+    "0.95": {
+      "low": -0.0031189321636266977,
+      "high": 0.013563151583529616
+    }
+  },
+  "verdicts": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "four_way": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "below": {
+    "0.975": false,
+    "0.95": false
+  },
+  "calibrated": false,
+  "within_sesoi": {
+    "0.975": true,
+    "0.95": true
+  },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.0959,
+  "p_bounded": 0.0057,
+  "bootstrap_se": 0.004260315613229699,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 800,
+  "dropped": 0,
+  "cell_examples": 425,
+  "change_averaged": {
+    "estimate": 0.0019551272056527067,
+    "intervals": {
+      "0.975": {
+        "low": -0.010983356704823082,
+        "high": 0.01283487396828397
+      },
+      "0.95": {
+        "low": -0.009167676166588618,
+        "high": 0.011480244913477988
+      }
+    },
+    "p_one_sided": 0.3425
+  },
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.006003439955460206,
+    "sd_upper": 0.00756088129557039,
+    "confidence": 0.9,
+    "formula": 1.6855232001032,
+    "runs": 10,
+    "clamped": "min"
+  },
+  "without": {},
+  "lexer_sure": null,
+  "cluster_unit": {
+    "unit": "chain",
+    "file": "datasets/results/relation-chains-qt.json",
+    "sha256": "c70927f47979fe748cc80b1cc35cece7a6c997238e199f529f196a43fa2a9296",
+    "changes": 403,
+    "chains": 363
+  },
+  "positive_control": {
+    "name": "positive_control_crossed:qt",
+    "passed": true,
+    "evidence": {
+      "estimate": 0.390409813063437,
+      "low": 0.35739777896575586,
+      "high": 0.42456586434232063,
+      "confidence": 0.95,
+      "runs": 22,
+      "metric": "logprob_per_token",
+      "examples": 800
+    }
+  },
+  "joint": null,
+  "on_s_prime": null,
+  "provenance": {
+    "generated_at": "2026-11-14T03:27:09.809948+00:00",
+    "git": {
+      "commit": "15ab1934f9ab89da10b6d3c54388df1d133cff13",
+      "branch": "feat/h2-sprime-sizing"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

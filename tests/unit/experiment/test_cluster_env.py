@@ -1622,7 +1622,7 @@ def test_an_h2_simulation_names_its_cell_and_runs_on_the_likelihood_metric(
     (tmp_path / "exact").mkdir()
     refused = _run_job("partition_sensitivity.sbatch", tmp_path / "exact", FOREIGN_SOURCE="aosp")
     assert refused.returncode != 0
-    assert "H2 is simulated on METRIC=logprob_per_token" in refused.stderr
+    assert "H2 is simulated on METRIC=logprob_per_token or its s′" in refused.stderr
     (tmp_path / "h2").mkdir()
     env = {"FOREIGN_SOURCE": "aosp", "METRIC": "logprob_per_token", "PILOT": "", "PLACEBO": ""}
     done = _run_job("partition_sensitivity.sbatch", tmp_path / "h2", **env)
@@ -1630,6 +1630,33 @@ def test_an_h2_simulation_names_its_cell_and_runs_on_the_likelihood_metric(
     call = (tmp_path / "h2" / "home" / "uv.calls").read_text()
     assert "-foreignaosp-likelihood.json" in call and "--foreign-source aosp" in call
     assert "-foreignaosp-logprob_per_token.json" in call
+
+
+def test_an_h2_simulation_on_s_prime_reads_its_own_pilot_at_one_spread_point(
+    tmp_path: Path,
+) -> None:
+    env = {
+        "FOREIGN_SOURCE": "chromium",
+        "METRIC": "logprob_per_token:other",
+        "CHAINS": "1",
+        "ORG": "qt",
+        "RUNS": "40",
+        "CALIBRATE": "1",
+        "SPREAD_TARGET": "sizing_bound_90",
+        "CELLS": "1:2",
+        "PILOT": "",
+        "PLACEBO": "",
+    }
+    done = _run_job("partition_sensitivity.sbatch", tmp_path, **env)
+    assert done.returncode == 0, done.stderr
+    call = (tmp_path / "home" / "uv.calls").read_text()
+    assert "partition-pilot-qt-foreignchromium-likelihood-split-other-chains.json" in call
+    assert "--spread-target sizing_bound_90" in call and "--foreign-source chromium" in call
+    assert "--cells 1 2" in call
+    assert (
+        "-foreignchromium-logprob_per_token-other-chains-k40-calibrated-sizing_bound_90.json"
+        in call
+    )
 
 
 def test_a_chain_simulation_draws_chains_from_its_chain_pilot_under_its_own_name(
