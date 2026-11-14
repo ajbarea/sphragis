@@ -138,7 +138,7 @@ parser.add_argument(
     "--cells",
     type=int,
     nargs="+",
-    help="H1 cells intersected (2 4 6 by default, 1 for a replication member); H2 is one",
+    help="H1 cells intersected (2 4 6 by default, 1 for a replication member); H2 is 1 or 2",
 )
 # Monte Carlo error of a power estimate at 1,000 trials: about 0.007 near 0.95, 0.004 near 0.983.
 # Trials share seeds across bisection steps, so power is compared on common random numbers.
