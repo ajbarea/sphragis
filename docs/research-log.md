@@ -11328,3 +11328,29 @@ inconclusive. Check 2 passes in every read, H2's included (its first 22 runs are
 the two read the same contrast); on the test window a failure would withdraw the organization. The
 change-averaged estimate lies below the pooled one in every cell: changes with more examples carry
 more of the pooled gain.
+
+### H2 on s′ at K = 40 calibrated: below δ, so s′ binds H2 too (2026-11-13)
+
+`# research(2026-11)`. AJ's B1 decision (2026-11-13, after an Opus and Fable 5.2 debate): register s′ as
+H2's co-primary, each cell at power 0.95^(1/2), if H2's s′ cell simulated at K = 40 detects below δ and
+its null holds or calibrates; otherwise s alone binds, with the simulated number as the reason.
+
+H2's development pilot on s′ (`partition-pilot-qt-foreignchromium-likelihood-split-other-chains.json`,
+the same 22 Chromium runs, chains and bootstrap seed 7 as the s pilot) reads +0.0058, inconclusive at
+both levels, as the s pilot's `on_s_prime` reading of 2026-11-11 records; per-run sd 0.0060, 0.0076 at
+its 90% upper bound. `partition_sensitivity.sbatch` with `FOREIGN_SOURCE=chromium CHAINS=1 RUNS=40
+CALIBRATE=1 CELLS=1:2 SPREAD_TARGET=sizing_bound_90 CPU_ONLY=1`, pinned at 9749611, simulated the
+registered spread point for s′ (TIGRIS 1002822) and s (1002823), 1,000 trials and 4,000 + 4,000 null
+trials, seed 43. Seeds depend on the trial index only, so a point simulated alone reads as it does
+beside the others: s at one cell reproduces +0.0109, the committed four-point run's figure. At the
+sizing bound, 97.5%, in nats per token:
+
+| cell | sigma_run | detects, 1 cell | detects, 2 cells | null FP | critical p | calibrated FP |
+|---|---|---|---|---|---|---|
+| H2 s | 0.0113 | 0.0109 | 0.0118 | 0.01325 | 0.0121 | 0.01125 |
+| H2 s′ | 0.0057 | 0.0065 | 0.0070 | 0.011 | 0.0148 | 0.0095 |
+
+Both two-cell detects are below δ (0.0161) and s′'s null holds nominal at 97.5% (at 95% it reads
+0.027, calibrated 0.01875), so option 1 applies: s′ binds H2 beside s (papers B1 PR). The gate code
+still reads H2 on s alone; it must bind s′ for H2 before the seal (follow-up issue). The four-point s′
+run (1002824) is a record and changes nothing here.

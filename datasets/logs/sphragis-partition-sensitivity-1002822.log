@@ -1,0 +1,6 @@
+sizing_bound_90: spread 0.0076 at 223 changes -> sigma_run 0.0057 (realised 0.0075)
+sizing_bound_90 (sigma_run 0.0057) at 0.975, 1 cell(s), power 0.9500: detects +0.0065; null FP 0.011 (calibrated p < 0.01480: 0.00950), bounded 0.968; reproducibility failure 0.000
+sizing_bound_90 (sigma_run 0.0057) at 0.975, 2 cell(s), power 0.9747: detects +0.0070; null FP 0.011 (calibrated p < 0.01480: 0.00950), bounded 0.983; reproducibility failure 0.000
+sizing_bound_90 (sigma_run 0.0057) at 0.95, 1 cell(s), power 0.9500: detects +0.0061; null FP 0.027 (calibrated p < 0.02410: 0.01875), bounded 0.967; reproducibility failure 0.000
+sizing_bound_90 (sigma_run 0.0057) at 0.95, 2 cell(s), power 0.9747: detects +0.0065; null FP 0.027 (calibrated p < 0.02410: 0.01875), bounded 0.982; reproducibility failure 0.000
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-other-chains-k40-calibrated-sizing_bound_90.json
