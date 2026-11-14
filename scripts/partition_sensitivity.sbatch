@@ -83,8 +83,9 @@ if [ -n "${TEST_READ:-}" ]; then
   # The rank-256 rerun's read (LORA_RANK=256) claims its own name beside the registered one's.
   tag_result_suffix LORA_RANK
 fi
-# CELLS="2 4 6": the H1 cell counts bounds are read at; the script's default otherwise.
-if [ -n "${CELLS:-}" ]; then read -r -a CELL_COUNTS <<< "$CELLS"; COVERAGE_ARGS+=(--cells "${CELL_COUNTS[@]}"); fi
+# CELLS="2 4 6" (or 2:4:6, which survives sbatch --export): the cell counts bounds are read at,
+# H1's, or H2's 1 and 2; the script's default otherwise.
+if [ -n "${CELLS:-}" ]; then read -r -a CELL_COUNTS <<< "${CELLS//:/ }"; COVERAGE_ARGS+=(--cells "${CELL_COUNTS[@]}"); fi
 # SPREAD_TARGET=<point>: that spread point alone, under a result name of its own; it reads as the
 # same point does in a run of all four (the seeds do not depend on the point).
 if [ -n "${SPREAD_TARGET:-}" ]; then

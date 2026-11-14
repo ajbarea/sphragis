@@ -1643,6 +1643,7 @@ def test_an_h2_simulation_on_s_prime_reads_its_own_pilot_at_one_spread_point(
         "RUNS": "40",
         "CALIBRATE": "1",
         "SPREAD_TARGET": "sizing_bound_90",
+        "CELLS": "1:2",
         "PILOT": "",
         "PLACEBO": "",
     }
@@ -1651,6 +1652,7 @@ def test_an_h2_simulation_on_s_prime_reads_its_own_pilot_at_one_spread_point(
     call = (tmp_path / "home" / "uv.calls").read_text()
     assert "partition-pilot-qt-foreignchromium-likelihood-split-other-chains.json" in call
     assert "--spread-target sizing_bound_90" in call and "--foreign-source chromium" in call
+    assert "--cells 1 2" in call
     assert (
         "-foreignchromium-logprob_per_token-other-chains-k40-calibrated-sizing_bound_90.json"
         in call

@@ -297,8 +297,8 @@ PLAN = {"org": "qt", "cells": None, "metric": "logprob_per_token", "placebo": No
     [
         ({}, {"foreign_source": "aosp"}, "H1's cell against None, not against aosp"),
         (H2_PILOT, {"foreign_source": None}, "H2's cell against aosp, not against None"),
-        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is one cell"),
-        (H2_PILOT, {"cells": [2]}, "H2 is one cell"),
+        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is one cell, or two"),
+        (H2_PILOT, {"cells": [4]}, "H2 is one cell, or two"),
         (H2_PILOT, {"metric": "exact_match"}, "continuous metric"),
         (H2_PILOT, {"placebo": Path("placebo.json")}, "no placebo"),
         (H2_PILOT, {"projected": 29}, "19 planned C"),
@@ -339,6 +339,7 @@ def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_on_its_cpp_share(
         {"cpp_changes": 2, "changes": 3},
     )
     assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [1]})[0] == [1]
+    assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [2, 1]})[0] == [1, 2]
 
 
 def test_the_simulation_names_the_cell_it_simulates(tmp_path) -> None:
