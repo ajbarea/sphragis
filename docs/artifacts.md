@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 863 artifacts under
+repository. This page is generated from those scripts: 864 artifacts under
 75 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -683,6 +683,7 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | `partition-pilot-openstack-stopping.json` |
 | `partition-pilot-openstack.json` |
 | `partition-pilot-qt-foreignchromium-likelihood-chains.json` |
+| `partition-pilot-qt-foreignchromium-likelihood-split-other-chains.json` |
 | `partition-pilot-qt-foreignchromium-likelihood.json` |
 | `partition-pilot-qt-foreignfuchsia-likelihood-chains.json` |
 | `partition-pilot-qt-foreignfuchsia-likelihood.json` |

@@ -65,6 +65,7 @@ from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.cells import (
     REGISTERED_SPREAD_TARGET,
+    SPREAD_TARGETS,
     cell_of,
     cluster_of,
     same_calibration,
@@ -197,6 +198,15 @@ parser.add_argument(
     "--test-read",
     type=Path,
     help="a partition_pilot.py test read: simulate its cell's null at the read's own spread",
+)
+# One or more of the pilot's spread points alone (all four by default). Trial and calibration
+# seeds depend on the trial index alone, never on the point, so a point simulated alone reads as
+# it does beside the others, and the registered point can be read without the other three.
+parser.add_argument(
+    "--spread-target",
+    choices=SPREAD_TARGETS,
+    action="append",
+    help="simulate only this spread point (repeatable); every point by default",
 )
 parser.add_argument("--out", type=Path, required=True)
 
@@ -802,9 +812,8 @@ def main() -> None:
         args.calibrate = True
     # A critical value is calibrated only where registered: H2's, at its registered K, and an H1
     # cell's on the co-primary score, should its null miss nominal at the cell's K (research
-    # log, 2026-10-30); the whole score's H1 cells read their interval.
-    if hypothesis == "H2" and args.metric == COPRIMARY_METRIC:
-        raise SystemExit("the co-primary score is H1's; H2 is read on the whole score")
+    # log, 2026-10-30); the whole score's H1 cells read their interval. H2 is simulated on s′ too,
+    # at its K and calibrated as on s, to size s′ as H2's co-primary (research log, 2026-11-13).
     # At a test read's spread every cell is calibrated on a miss (the spread rule).
     if (
         args.calibrate
@@ -827,6 +836,10 @@ def main() -> None:
     # read's run is calibrated to that read's spread alone, the pilot's points kept as its record.
     targets = spread_targets(pilot)
     points = targets if test_read is None else {TEST_SPREAD_TARGET: test_read["spread"]}
+    if args.spread_target:
+        if test_read is not None:
+            raise SystemExit("--spread-target is the pilot's; a test read is simulated at its own")
+        points = {label: targets[label] for label in SPREAD_TARGETS if label in args.spread_target}
     continuous = args.metric != "exact_match"
     if args.redraw is None:
         args.redraw = 0.0 if continuous else BINARY_REDRAW
@@ -918,6 +931,7 @@ def main() -> None:
         "partitions_pooled": len(partitions),
         "partition_seeds_tried": tried,
         "spread_targets": targets,
+        "points_simulated": list(points),
         "calibration_changes": pilot["changes"] if test_read is None else test_read["changes"],
         "test_read": test_read,
         "calibration_trials": args.calibration_trials,

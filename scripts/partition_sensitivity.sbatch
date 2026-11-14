@@ -35,8 +35,9 @@ METRIC="${METRIC:-exact_match}"
 FOREIGN_TAG="${FOREIGN_SOURCE:+-foreign$FOREIGN_SOURCE}"
 RESULT_SUFFIX="$RESULT_SUFFIX$FOREIGN_TAG"
 FOREIGN_ARGS=(${FOREIGN_SOURCE:+--foreign-source "$FOREIGN_SOURCE"})
-if [ -n "${FOREIGN_SOURCE:-}" ] && [ "$METRIC" != logprob_per_token ]; then
-  echo "FOREIGN_SOURCE: H2 is simulated on METRIC=logprob_per_token, not $METRIC" >&2; exit 1
+# H2 is simulated on the whole score and on s′ (research log, 2026-11-13), never on exact match.
+if [ -n "${FOREIGN_SOURCE:-}" ] && [ "$METRIC" = exact_match ]; then
+  echo "FOREIGN_SOURCE: H2 is simulated on METRIC=logprob_per_token or its s′, not $METRIC" >&2; exit 1
 fi
 case "$METRIC" in
   exact_match) PILOT_TAG="" ;;
@@ -84,6 +85,11 @@ if [ -n "${TEST_READ:-}" ]; then
 fi
 # CELLS="2 4 6": the H1 cell counts bounds are read at; the script's default otherwise.
 if [ -n "${CELLS:-}" ]; then read -r -a CELL_COUNTS <<< "$CELLS"; COVERAGE_ARGS+=(--cells "${CELL_COUNTS[@]}"); fi
+# SPREAD_TARGET=<point>: that spread point alone, under a result name of its own; it reads as the
+# same point does in a run of all four (the seeds do not depend on the point).
+if [ -n "${SPREAD_TARGET:-}" ]; then
+  COVERAGE_ARGS+=(--spread-target "$SPREAD_TARGET"); RESULT_SUFFIX="$RESULT_SUFFIX-$SPREAD_TARGET"
+fi
 # SMOKE=1: a few trials end to end before the full run, under a result name of its own.
 case "${SMOKE:-0}" in
   1) SMOKE_ARGS=(--trials 20 --null-trials 40 --calibration-trials 4 --steps 3); RESULT_SUFFIX="$RESULT_SUFFIX-smoke" ;;
