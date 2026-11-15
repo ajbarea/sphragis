@@ -297,8 +297,8 @@ PLAN = {"org": "qt", "cells": None, "metric": "logprob_per_token", "placebo": No
     [
         ({}, {"foreign_source": "aosp"}, "H1's cell against None, not against aosp"),
         (H2_PILOT, {"foreign_source": None}, "H2's cell against aosp, not against None"),
-        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is one cell, or two"),
-        (H2_PILOT, {"cells": [4]}, "H2 is one cell, or two"),
+        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is read at 1 or 2 cells"),
+        (H2_PILOT, {"cells": [4]}, "H2 is read at 1 or 2 cells"),
         (H2_PILOT, {"metric": "exact_match"}, "continuous metric"),
         (H2_PILOT, {"placebo": Path("placebo.json")}, "no placebo"),
         (H2_PILOT, {"projected": 29}, "19 planned C"),
@@ -332,9 +332,10 @@ def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_or_two_on_its_cpp_sha
     assert member[0] == [1]
     h2 = {**H2_PILOT, "run_files": run}
     plan = {**PLAN, "foreign_source": "aosp", "projected": 300.0}
-    # Two of the pilot's three changes carry a C++ example: 200 of the 300 projected.
+    # Two of the pilot's three changes carry a C++ example: 200 of the 300 projected; by default
+    # at one cell and at H2's registered two (s and s′).
     assert partition_sensitivity.plan_cell(h2, **plan) == (
-        [1],
+        [1, 2],
         200,
         {"cpp_changes": 2, "changes": 3},
     )

@@ -138,7 +138,7 @@ parser.add_argument(
     "--cells",
     type=int,
     nargs="+",
-    help="H1 cells intersected (2 4 6 by default, 1 for a replication member); H2 is 1 or 2",
+    help="cells intersected: H1's (2 4 6 by default, 1 for a replication member), H2's (1 2)",
 )
 # Monte Carlo error of a power estimate at 1,000 trials: about 0.007 near 0.95, 0.004 near 0.983.
 # Trials share seeds across bisection steps, so power is compared on common random numbers.
@@ -309,11 +309,11 @@ def plan_cell(
     """The cell counts a simulation's bounds are read at and the test changes it plans, for the
     pilot's cell, with the C++ share an H2 plan was scaled by.
 
-    H1's bounds are read at each count of cells in `cells`, on the projected changes. H2 is one
-    confirmatory cell (item 1 of the H2 plan), or two with s′ as its co-primary, simulated on a
-    continuous metric from its pilot's runs without a placebo, and reads a window's C++ examples
-    only, so it plans the projected changes in the share of the pilot's changes that carry one.
-    Both round down.
+    H1's bounds are read at each count of cells in `cells`, on the projected changes. H2 is two
+    confirmatory cells, s and s′ (research log, 2026-11-13), read at 1 and 2 cells by default as
+    H1 is at every count up to its registered six; it is simulated on a continuous metric from its
+    pilot's runs without a placebo, and reads a window's C++ examples only, so it plans the
+    projected changes in the share of the pilot's changes that carry one. Both round down.
     """
     hypothesis, source = cell_of(pilot)
     if source != foreign_source:
@@ -327,10 +327,11 @@ def plan_cell(
         if min(cells) < 1:
             raise ValueError("--cells counts H1 cells, at least one")
         return cells, int(projected), None
-    # H2 is one cell on s, or two with s′ beside it as its co-primary (research log, 2026-11-13).
-    cells = cells or [1]
+    # H2 is two cells, s and s′ beside it as its co-primary (research log, 2026-11-13); one cell
+    # reads it on a single score, as the registration did before.
+    cells = cells or [1, 2]
     if not set(cells) <= {1, 2}:
-        raise ValueError(f"H2 is one cell, or two with s′; --cells {cells} does not apply")
+        raise ValueError(f"H2 is read at 1 or 2 cells (s and s′); --cells {cells} does not apply")
     if metric == "exact_match" or placebo is not None:
         raise ValueError("H2 is simulated on a continuous metric from its pilot's runs, no placebo")
     cpp, changes = cpp_change_share(pilot, org)
