@@ -87,7 +87,10 @@ score alone". The GitHub family reads the whole score only.
 
 **H2 on both scores (registered 2026-11-13).** H2's cell is read on the same two scores, each a
 cell, and H2 passes only when both do, each at its Holm level: an intersection-union test, as H1's
-is, so each H2 cell is sized at power 0.95^(1/2). The non-identifier cell is the same cell scored
+is, so each H2 cell is sized at power 0.95^(1/2). A cell left exploratory, by a small window or a
+refused spread calibration, leaves its hypothesis under the general rule (Reading the test
+window; The test window's per-run spread), so H2 reads on s alone when its s′ cell is
+exploratory. The non-identifier cell is the same cell scored
 again, at H2's K = 40 and over the same runs and changes as the whole score's
 (`decomposition.coprimary_read` of `registered_read(org, hypothesis="H2")`), with its own K source
 and its own critical p calibrated from its own simulated null (H2's K, below). It was registered
@@ -124,8 +127,9 @@ Chromium is not admitted (no split qualifies) and supplies H2's foreign pool. H1
 intersection-union over its cells, sized as Power states; with three organizations a
 between-organization variance is not estimable with useful precision, so heterogeneity is read
 beside the rule, not in it (below). With the co-primary scores (below) H1 has two cells per
-organization, so every H1 cell's simulation is read at six cells, and H2's two cells, s and s′,
-are each simulated at two cells from their own development runs before the seal.
+organization, so every H1 cell's simulation is read at six cells, and H2's two cells per pair
+direction, s and s′, are each simulated at two cells from their own development runs before the
+seal (and read at four, should Qt and Chromium both be admitted and the pair read both ways).
 
 ### GitHub organizations: a registered replication on a second platform (2026-10-04)
 
@@ -329,8 +333,7 @@ hypothesis the gate reads, on the same draws, at the same levels:
 - **Reads as names.** Per cell and level, an s cell supported where its s′ cell at the same level
   is not reads as carried by names: convention or vocabulary, which no score here separates
   (Stage 1 report, "Verdicts and Readings"; `confirmatory_gate`'s `names` for H1 and `h2_names`
-  for H2). For H2 the s′ side is its confirmatory s′ cell, read at its own calibrated critical p;
-  the uncalibrated s′ reading an H2 read of s carries beside it (`on_s_prime`) binds nothing.
+  for H2). For H2 the s′ side is its confirmatory s′ cell, read at its own calibrated critical p.
 - **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
   and GitHub, each weighted by its bootstrap standard error: REML for the between-organization
   variance, the modified Hartung-Knapp-Sidik-Jonkman interval (scale held at one or above; Röver,
@@ -480,8 +483,8 @@ the same rule on its own pilot and simulation at K = 40: its K source
 --hypothesis H2` on the test window, on each score, at `registered_read(org, hypothesis="H2")` and
 its `coprimary_read`) and the gate that reads them beside H1 under Holm (`confirmatory_gate`) are
 built. As one cell, its detectable effects in that calibrated simulation were +0.0109 and +0.0103
-nats per token at the two levels (research log, 2026-11-02); at H2's two cells, on the 97.5%
-interval, s detects +0.0118 and s′ +0.0070 (research log, 2026-11-13), both below δ.
+nats per token at the two levels (research log, 2026-11-02); at H2's two cells per pair direction,
+on the 97.5% interval, s detects +0.0118 and s′ +0.0070 (research log, 2026-11-13), both below δ.
 
 ### The test window's per-run spread: simulated above the sizing bound
 
@@ -502,7 +505,7 @@ and the GitHub family's too, since the family is read with the Gerrit cells' rul
 ### Stated power: sensitivity, not power at an observed effect
 
 H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1/6) = 0.9915, so all six
-pass together at 0.95 or more (the product understates it, Power above), and H2's two cells (s and s′) each at 0.95^(1/2). Each cell is simulated at that power, its
+pass together at 0.95 or more (the product understates it, Power above), and H2's cells, two per pair direction (s and s′), each at 0.95^(1/k) over its k cells: 0.95^(1/2) against Chromium's pool. Each cell is simulated at that power, its
 projected test size and its registered K, read under relation chains at the 90% upper bound of
 its own development pilot's per-run spread: s at six cells (`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`),
 s′ at its s cell's K

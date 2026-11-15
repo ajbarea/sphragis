@@ -11360,10 +11360,13 @@ run (1002824) is a record and changes nothing here.
 `# research(2026-11)`. Issue #274, after the Stage 1 report's B1 change (papers 2f77b02: "each on s
 and on s′"; H2's two cells at 0.95^(1/2)). `confirmatory_gate` now reads H2's s′ cell beside its s
 cell, from its own test read (`partition_pilot.py --hypothesis H2 --metric logprob_per_token:other`,
-registered by `coprimary_read(registered_read("qt", hypothesis="H2"))`, two cells), and H2 passes
-only when both cells pass at its Holm level. An s cell supported where its s′ cell is not reads as
-names for H2 as for H1 (`h2_names`); the uncalibrated `on_s_prime` reading the s read carries no longer
-enters the gate, since the report no longer registers "H2 on s′ at its s level".
+registered by `coprimary_read(registered_read("qt", hypothesis="H2"))`, two cells per pair direction:
+two against Chromium's pool, four were Qt and Chromium both admitted), and H2 passes only when every
+cell passes at its Holm level. An s cell supported where its s′ cell is not reads as names for H2 as
+for H1 (`h2_names`). The report no longer registers "H2 on s′ at its s level", so H2's s read no
+longer computes that uncalibrated reading (`on_s_prime`) and the gate carries none; the development
+pilots read before keep it as a record. `partition_sensitivity.py` reads H2's bounds at 1, 2 and 4
+cells.
 
 H2's s′ K source is the 2026-11-13 s′ simulation at the sizing bound read at K = 40
 (`k_coverage.py --registered-runs 40` on `partition-pilot-qt-foreignchromium-likelihood-split-other-chains.json`

@@ -17,7 +17,6 @@ from sphragis.experiment.cells import (
     REGISTERED_SENSITIVITIES,
     require_test_read,
 )
-from sphragis.experiment.decomposition import COPRIMARY_METRIC
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
 from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, spread_targets
@@ -1553,7 +1552,7 @@ def test_h2_reads_its_s_prime_test_window_at_the_registration(
     assert report["sensitivity"]["cells"] == registered["cells"] == 2
     require_test_read(report, org="qt", expected=registered)
     # Its joint reading is the s read's, which the s' read does not repeat.
-    assert report["joint"] is None and report["on_s_prime"] is None
+    assert report["joint"] is None and "on_s_prime" not in report
     # Read against the s registration, the s' read is refused.
     with pytest.raises(ValueError, match="the read is on logprob_per_token:other"):
         require_test_read(
@@ -1621,7 +1620,7 @@ def test_a_test_read_whose_crossed_check_2_fails_writes_the_withdrawal_and_stops
     assert withdrawing_failures(battery, org="apache") == ["positive_control_crossed:apache"]
 
 
-def test_an_h2_read_on_the_registered_score_carries_its_joint_and_s_prime_readings(
+def test_an_h2_read_on_the_registered_score_carries_its_joint_reading_and_no_s_prime_one(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
@@ -1629,27 +1628,18 @@ def test_an_h2_read_on_the_registered_score_carries_its_joint_and_s_prime_readin
     out = tmp_path / "out.json"
     _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
     report = json.loads(out.read_text())
-    joint, secondary = report["joint"], report["on_s_prime"]
+    joint = report["joint"]
     assert joint["runs"] == report["runs"] == len(ADMISSIBLE)
     assert joint["population"] == "cpp" and joint["metric"] == REGISTERED_METRIC
     # On C++ the own adapter never matches and the sibling always does, the foreign arm never.
     assert joint["h1_on_cpp"]["estimate"] == pytest.approx(-1.0)
     assert report["estimate"] == pytest.approx(1.0)
     assert joint["summed"]["estimate"] == pytest.approx(0.0)
-    assert secondary["metric"] == COPRIMARY_METRIC and secondary["runs"] == report["runs"]
-    assert set(secondary["verdicts"]) == set(report["verdicts"])
+    # H2 on s' at its s levels is no longer registered (papers 2f77b02): its s' cell is its own
+    # test read, so the s read carries no uncalibrated s' reading.
+    assert "on_s_prime" not in report
     # Check 2 runs on H2's read too, each half's own adapter against the base model.
     assert report["positive_control"]["name"] == "positive_control_crossed:qt"
-    # Without the s' score in its runs, a development read leaves it out.
-    for path in argv:
-        if path.endswith(".json") and "run-" in path:
-            run = json.loads(Path(path).read_text())
-            for rows in run["results"].values():
-                for row in rows:
-                    del row[COPRIMARY_METRIC]
-            Path(path).write_text(json.dumps(run))
-    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
-    assert json.loads(out.read_text())["on_s_prime"] is None
 
 
 def _rank(argv: list[str], ranks: dict[int, int]) -> None:

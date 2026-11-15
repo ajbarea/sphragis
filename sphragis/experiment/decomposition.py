@@ -780,14 +780,9 @@ def _read_cells(
             # The registered sensitivities the report read (partition_pilot.py --without).
             "without": readings,
             # Reported beside the verdicts, binding none (Stage 1 report): the change-averaged
-            # estimate, the read's check 2, and on an H2 read of s its joint reading (and
-            # `partition_pilot.py`'s uncalibrated s' reading, where the read carries one).
+            # estimate, the read's check 2, and on an H2 read of s its joint reading.
             "change_averaged": report.get("change_averaged"),
-            **{
-                key: report.get(key)
-                for key in ("positive_control", "joint", "on_s_prime")
-                if key in report
-            },
+            **{key: report.get(key) for key in ("positive_control", "joint") if key in report},
         }
     return cells, detectable
 
@@ -1178,12 +1173,12 @@ def confirmatory_gate(
 
 
 def _names(
-    on_s: Mapping[str, Mapping[str, Any]], on_s_prime: Mapping[str, Mapping[str, Any]]
+    on_s: Mapping[str, Mapping[str, Any]], on_other: Mapping[str, Mapping[str, Any]]
 ) -> dict[str, dict[float, bool]]:
     """Per organization and level: its s cell supported where its s' cell is not."""
     return {
         org: {
-            c: cell["verdicts"][c] == "supported" and on_s_prime[org]["verdicts"][c] != "supported"
+            c: cell["verdicts"][c] == "supported" and on_other[org]["verdicts"][c] != "supported"
             for c in cell["verdicts"]
         }
         for org, cell in on_s.items()

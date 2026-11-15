@@ -9,25 +9,27 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **Issue #274, the gate binds H2 on s and s′ (papers 2f77b02, B1): branch `gate/h2-sprime-274`,
-  PR open, review next.** ✅ `registered_read(org, "H2")` is two cells; `confirmatory_gate` takes
-  `h2_coprimary` (+ simulations, powers, spreads), the same runs as the s read, and H2 passes only
-  when both cells do at its Holm level; the s′ cell reads its own K source's critical p.
-  `h2_names` replaces `vocabulary`; the gate no longer requires `on_s_prime`. ✅
-  `partition_pilot.py --hypothesis H2 --metric logprob_per_token:other` is a registered test read.
-  ✅ `partition_sensitivity.py` sizes H2 at 1 and 2 cells by default. ✅ H2's s′ K source
+  PR #276 open, verify round next.** ✅ `registered_read(org, "H2")` is two cells per pair
+  direction (four with Qt and Chromium both admitted); `confirmatory_gate` takes `h2_coprimary`
+  (+ simulations, powers, spreads), the same runs as the s read, and H2 passes only when every
+  cell does at its Holm level; the s′ cell reads its own K source's critical p. `h2_names`
+  replaces `vocabulary`. ✅ `partition_pilot.py --hypothesis H2 --metric
+  logprob_per_token:other` is a registered test read. ✅ H2's s′ K source
   `k-coverage-qt-foreignchromium-likelihood-split-other-chains.json` (research log, 2026-11-14).
   ✅ registered-decisions.md, protocol.md and scripts.md mirror the paper; harvest claims for the
   new figures. Reviews: Copilot and agy (Opus 4.6) clean; independent Opus round 1 (PR comment,
-  2026-11-15): no blocking, two should-fix. 📋 Next, in a fresh session: S1, support the
-  registered pair design (`protocol.md`: Qt against Chromium and back when both are admitted), so
-  `partition_sensitivity.plan_cell` accepts 4 H2 cells (`decomposition.py:405` gives 2 per pair
-  direction) and the docs say "two cells per H2 direction"; S2, drop the uncalibrated `on_s_prime`
-  from `partition_pilot.py:631-655` and its copy at `decomposition.py:788`, and match the research
-  log's wording. Then the nits on the PR (point `protocol.md:79` and `registered-decisions.md:89`
-  at the exploratory rule; state the 95% two-cell detects), a fresh Opus verify round, then merge
-  before the seal (MSR final build Thu/Fri 11-19/20). Open, not in this
-  issue: papers 90-conditional.tex labels a reversed effect ("labelled reversed where the cell,
-  sign flipped, would be supported"); the gate has no such label yet. Verify: `uv run pytest
+  2026-11-15): no blocking, two should-fix, four nits. ✅ Round 1 fixed: S1,
+  `partition_sensitivity.plan_cell` reads H2 at 1, 2 and 4 cells (`H2_CELL_COUNTS`), docs say
+  "two cells per pair direction"; S2, `partition_pilot.py` no longer computes the uncalibrated
+  `on_s_prime` and the gate no longer carries it (committed development pilots keep it as a
+  record); N1, protocol.md and registered-decisions.md point to the exploratory rule (H2 reads on
+  s alone when its s′ cell is exploratory); N2, protocol.md reflowed. Left on the PR as nits: the
+  95% two-cell detects are not stated or harvested; the gate checks `k_from`'s metric and critical
+  p, not that it came from the s′ null at K = `H2_RUNS` (H1's co-primary has the same gap). 📋
+  Next, in a fresh session: a fresh Opus verify round on the round-1 fixes, then merge before the
+  seal (MSR final build Thu/Fri 11-19/20). Open, not in this issue: papers 90-conditional.tex
+  labels a reversed effect ("labelled reversed where the cell, sign flipped, would be
+  supported"); the gate has no such label yet. Verify: `uv run pytest
   tests/unit/experiment/test_decomposition.py tests/unit/test_partition_pilot.py
   tests/unit/test_partition_sensitivity_inputs.py`; `harvest.py --check` after commit.
 

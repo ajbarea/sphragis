@@ -44,11 +44,11 @@ d_org(O)  = LP(O_b) - LP(P_x)      H2 (organization beyond its projects): d_org(
 
 Each hypothesis is tested on `LP` and on its non-identifier part, the same score over the
 reference's tokens that are not names. Each contrast is the mean of its two halves' contrasts
-within a run, then the mean over the organization's K runs, each on its own admissible split. H1 is tested for every admitted
-organization. H2 is confirmatory for Qt against Chromium and Chromium against Qt when both are
-admitted, the one pair that writes the same language, so the organizational boundary is not also
-a language boundary. Every other organization's `d_org` is reported as exploratory. The cells are
-defined by `design` in
+within a run, then the mean over the organization's K runs, each on its own admissible split. H1 is
+tested for every admitted organization. H2 is confirmatory for Qt against Chromium and Chromium
+against Qt when both are admitted, the one pair that writes the same language, so the
+organizational boundary is not also a language boundary. Every other organization's `d_org` is
+reported as exploratory. The cells are defined by `design` in
 [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py).
 
 Both outcomes are informative and neither is argued for. The report fixes what every
@@ -75,19 +75,21 @@ protects once a house style can be learned.
 The pass rule is fixed in advance, in code, in
 [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py).
 
-**H1 passes only when every admitted organization's cell is supported, on both co-primary
-scores, and H2 only when its cell is, on both.** RQ1 claims that organizations have a learnable
-house style, which is a generality claim, and a rule passing on one organization does not support
-it; the second score counts only the reference's non-identifier tokens, so a gain in vocabulary
-alone cannot pass either hypothesis. H1 and H2 share one family-wise level under Holm, read on
-97.5% and 95% intervals; H2, at K = 40, reads each score's critical value calibrated from that
-score's own simulated null. A cell is supported when its lower bound is
-strictly above zero, bounded when its upper bound is below the SESOI δ (a one-sided equivalence
-test, read once the cell's sensitivity simulation is registered), and inconclusive otherwise;
-beside the verdict each cell reports which of the four outcomes of the two tests it shows,
-including above zero but below δ. The interval is
-the crossed run-by-change bootstrap over K admissible partitions, and the estimand is pooled.
-Each of those was chosen before the run that would have been decided by it, and each is
+**H1 passes only when every admitted organization's cell is supported, on both co-primary scores,
+and H2 only when its cells are, on both scores in each pair direction.** RQ1 claims that
+organizations have a learnable house style, which is a generality claim, and a rule passing on one
+organization does not support it; the second score counts only the reference's non-identifier
+tokens, so a gain in vocabulary alone cannot pass either hypothesis. H1 and H2 share one
+family-wise level under Holm, read on 97.5% and 95% intervals; H2, at K = 40, reads each score's
+critical value calibrated from that score's own simulated null. A cell is supported when its lower
+bound is strictly above zero, bounded when its upper bound is below the SESOI δ (a one-sided
+equivalence test, read once the cell's sensitivity simulation is registered), and inconclusive
+otherwise; beside the verdict each cell reports which of the four outcomes of the two tests it
+shows, including above zero but below δ. A cell read below its projected size that cannot detect δ,
+or whose spread calibration is refused, is exploratory and leaves its hypothesis, so H2 reads on s
+alone when its s′ cell is exploratory ([Registered decisions](registered-decisions.md)). The
+interval is the crossed run-by-change bootstrap over K admissible partitions, and the estimand is
+pooled. Each of those was chosen before the run that would have been decided by it, and each is
 recorded with the evidence that chose it on [Registered decisions](registered-decisions.md).
 
 Before the gate is read at all, the [outcome-neutral tests](outcome-neutral.md) have to pass.

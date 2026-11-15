@@ -3012,19 +3012,13 @@ def _h2_pair(low: float, high: float, p: float, **kwargs: Any) -> tuple[dict, di
     report, sim = _two_levels("qt", low, high, p, **kwargs)
     cell = {"hypothesis": "H2", "foreign_source": "chromium"}
     report |= cell
-    # Beside the cell, binding nothing: the joint reading over its K runs and H2 on s'.
+    # Beside the cell, binding nothing: the joint reading over its K runs.
     report["joint"] = {
         "runs": report["runs"],
         "metric": "logprob_per_token",
         "population": "cpp",
         "summed": {"estimate": 0.04, "low": 0.02, "high": 0.06, "confidence": 0.95},
         "h2": {"foreign": "chromium", "role": "confirmatory"},
-    }
-    report["on_s_prime"] = {
-        "metric": COPRIMARY_METRIC,
-        "runs": report["runs"],
-        "verdicts": {"0.975": "inconclusive", "0.95": "supported"},
-        "intervals": {"0.975": {"low": -0.001, "high": 0.03}, "0.95": {"low": 0.001, "high": 0.03}},
     }
     report["k_from"] |= {"cell": ["H2", "chromium"], "calibrated": True, "critical_p": _H2_CRITICAL}
     report["sensitivity"] |= {"cell": ["H2", "chromium"], "cells": 2, "calibrated": True}
@@ -3046,8 +3040,7 @@ def _h2_prime(report: dict, sim: dict) -> tuple[dict, dict]:
     """H2's s' read twinned from an s read `report` and its simulation `sim` (`_h2_pair`): the same
     runs, changes and numbers, its K source, bounds and critical p its own s' pilot's."""
     prime, prime_sim = _on_other(report), _on_other(sim)
-    for key in ("joint", "on_s_prime"):
-        prime.pop(key, None)
+    prime.pop("joint", None)
     prime["k_from"]["critical_p"] = _H2_PRIME_CRITICAL
     prime_sim["by_target"]["sizing_bound_90"]["critical_p"] = _H2_PRIME_CRITICAL
     return prime, prime_sim
@@ -3520,6 +3513,23 @@ def test_an_h2_s_cell_supported_where_its_s_prime_cell_is_not_reads_as_names(adm
     assert "change_averaged" in out["cells"]["openstack"]
 
 
+def test_an_h2_s_reads_uncalibrated_s_prime_reading_is_not_carried(admitted) -> None:
+    """The Stage 1 report (papers 2f77b02) no longer registers H2 on s' at its s levels: an s read
+    written before it was dropped (the development pilots carry `on_s_prime`) leaves it out of the
+    gate, where it could read supported beside an s' cell that is not."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    h2_report["on_s_prime"] = {
+        "metric": COPRIMARY_METRIC,
+        "runs": h2_report["runs"],
+        "verdicts": {"0.975": "supported", "0.95": "supported"},
+    }
+    out = _full_with(h2_report, h2_sim, _h2_prime(*_h2_pair(*_INCONCLUSIVE)))
+    qt = out["h2_cells"]["qt"]
+    assert "on_s_prime" not in qt and "joint" in qt
+    assert out["verdicts"]["H2"] == "inconclusive"
+
+
 _INCONCLUSIVE = (-0.004, 0.03, 0.3)
 
 
@@ -3532,8 +3542,18 @@ def test_h2_is_registered_as_two_cells_one_per_score(admitted) -> None:
     assert decomposition.coprimary_read(read) == read | {"metric": COPRIMARY_METRIC}
 
 
+def test_h2_with_qt_and_chromium_both_admitted_is_two_cells_per_pair_direction(admitted) -> None:
+    """Protocol: H2 is confirmatory for Qt against Chromium and Chromium against Qt when both are
+    admitted, each direction on s and s', so each of its four cells is sized at four."""
+    admitted("openstack", "qt", "chromium")
+    for org, foreign in (("qt", "chromium"), ("chromium", "qt")):
+        read = registered_read(org, hypothesis="H2")
+        assert read["cells"] == 4 and read["cell"] == ["H2", foreign]
+        assert decomposition.coprimary_read(read)["cells"] == 4
+
+
 @pytest.mark.parametrize(
-    ("on_s", "on_s_prime", "verdict"),
+    ("on_s", "on_other", "verdict"),
     [
         (_PASS, _PASS, "pass"),
         (_PASS, _INCONCLUSIVE, "inconclusive"),
@@ -3542,13 +3562,13 @@ def test_h2_is_registered_as_two_cells_one_per_score(admitted) -> None:
     ],
 )
 def test_h2_passes_only_when_its_s_and_s_prime_cells_both_do(
-    admitted, on_s: tuple, on_s_prime: tuple, verdict: str
+    admitted, on_s: tuple, on_other: tuple, verdict: str
 ) -> None:
     """Stage 1 report, "Gate": a hypothesis passes only when every confirmatory cell does; H2's
     are its s and s' cells, each at its Holm level."""
     admitted(*_THREE)
     h2_report, h2_sim = _h2_pair(*on_s)
-    out = _full_with(h2_report, h2_sim, _h2_prime(*_h2_pair(*on_s_prime)))
+    out = _full_with(h2_report, h2_sim, _h2_prime(*_h2_pair(*on_other)))
     assert out["verdicts"] == {"H1": "pass", "H2": verdict}
     assert out["detectable"]["H2"] == {"qt": {0.975: 0.03, 0.95: 0.03}}
     assert out["detectable"][f"H2:{COPRIMARY_METRIC}"] == {"qt": {0.975: 0.03, 0.95: 0.03}}

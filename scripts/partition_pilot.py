@@ -625,33 +625,11 @@ def main() -> None:
         **contrast,
     )
     # Beside H2's registered cell on s, binding no verdict: H1 and H2 on the same C++ examples and
-    # draws over H2's K runs (Stage 1 report, "Verdicts and Readings"), and H2 on s' at its s
-    # levels with no bound or calibrated p. The s' cell the gate binds is its own test read
-    # (`--metric logprob_per_token:other`), at its own K source's critical p.
-    joint = on_s_prime = None
+    # draws over H2's K runs (Stage 1 report, "Verdicts and Readings"). H2's s' cell, which the
+    # gate binds, is its own test read (`--metric logprob_per_token:other`), at its own K source's
+    # critical p.
+    joint = None
     if h2 and not args.exploratory and args.metric == REGISTERED_METRIC:
-        if not carries(runs[:runs_fixed], COPRIMARY_METRIC):
-            if window == "test":
-                raise SystemExit(f"not read: H2's runs carry no {COPRIMARY_METRIC} for its s' read")
-        else:
-            secondary = h1_over_partitions(
-                runs,
-                org=args.org,
-                runs_fixed=runs_fixed,
-                levels=levels,
-                bounds=None,
-                bootstrap_seed=args.bootstrap_seed,
-                resamples=args.resamples,
-                metric=COPRIMARY_METRIC,
-                sesoi=metric_sesoi(COPRIMARY_METRIC) or SESOI,
-                change_averaged=False,
-                **contrast,
-            )
-            on_s_prime = {
-                "metric": COPRIMARY_METRIC,
-                "runs": secondary["runs"],
-                **{k: secondary[k] for k in ("estimate", "intervals", "verdicts", "p_one_sided")},
-            }
         joint = joint_over_partitions(
             runs,
             org=args.org,
@@ -756,7 +734,6 @@ def main() -> None:
         "provenance",
         "positive_control",
         "joint",
-        "on_s_prime",
     }
     if head & set(cell):
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
@@ -784,7 +761,6 @@ def main() -> None:
         "cluster_unit": cluster_unit,
         "positive_control": positive_control,
         "joint": joint,
-        "on_s_prime": on_s_prime,
         "provenance": provenance_header(),
     }
     if window == "test":

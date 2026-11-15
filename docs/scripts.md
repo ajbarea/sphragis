@@ -29,8 +29,8 @@ on the source's pool (`FOREIGN_SOURCE`, `FOREIGN_POOL`), and generates every arm
 `likelihood_score.sbatch` with `FOREIGN_SOURCE` scores it; and `partition_pilot.py --hypothesis H2
 --foreign-source <source>` reads the development cell (sibling against matched foreign, on C++
 examples). Steps 5 and 6 then run on that pilot: `partition_sensitivity.sbatch` with
-`FOREIGN_SOURCE=<source> METRIC=logprob_per_token` simulates the cell at one and two cells (H2 is
-read on s and s′), on its C++ examples and the projected changes in their share, and `k_coverage.py` on the H2 pilot writes a K
+`FOREIGN_SOURCE=<source> METRIC=logprob_per_token` simulates the cell at one, two and four cells
+(H2 is read on s and s′, two cells per pair direction), on its C++ examples and the projected changes in their share, and `k_coverage.py` on the H2 pilot writes a K
 coverage artifact that names the cell, so it sizes H2's K alone. No grid K held H2's null (research
 log, 2026-10-29), so H2's K is registered at 40: `partition_sensitivity.sbatch` with `RUNS=40
 CALIBRATE=1` simulates it with a critical p calibrated from its null, and `k_coverage.py
