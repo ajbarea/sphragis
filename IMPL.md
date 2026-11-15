@@ -8,6 +8,21 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **Issue #274, the gate binds H2 on s and s′ (papers 2f77b02, B1): branch `gate/h2-sprime-274`,
+  PR open, review next.** ✅ `registered_read(org, "H2")` is two cells; `confirmatory_gate` takes
+  `h2_coprimary` (+ simulations, powers, spreads), the same runs as the s read, and H2 passes only
+  when both cells do at its Holm level; the s′ cell reads its own K source's critical p.
+  `h2_names` replaces `vocabulary`; the gate no longer requires `on_s_prime`. ✅
+  `partition_pilot.py --hypothesis H2 --metric logprob_per_token:other` is a registered test read.
+  ✅ `partition_sensitivity.py` sizes H2 at 1 and 2 cells by default. ✅ H2's s′ K source
+  `k-coverage-qt-foreignchromium-likelihood-split-other-chains.json` (research log, 2026-11-14).
+  ✅ registered-decisions.md, protocol.md and scripts.md mirror the paper; harvest claims for the
+  new figures. Next: independent review (elenchus), then merge before the seal. Open, not in this
+  issue: papers 90-conditional.tex labels a reversed effect ("labelled reversed where the cell,
+  sign flipped, would be supported"); the gate has no such label yet. Verify: `uv run pytest
+  tests/unit/experiment/test_decomposition.py tests/unit/test_partition_pilot.py
+  tests/unit/test_partition_sensitivity_inputs.py`; `harvest.py --check` after commit.
+
 - **Issue #253, the code mirrors the Stage 1 report's registered rules (papers 1b6e349): done.** ✅
   #261 (b7e5dd1): the calibrated bounded side (`p_bounded`), a failed check withdraws its
   organization on its recorded battery (`neutral.withdrawing_failures`), the small-window rule
