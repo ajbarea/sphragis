@@ -685,7 +685,7 @@ def test_a_test_read_refuses_a_choice_that_differs_from_the_registration(
 
 
 def _on_coprimary(argv: list[str]) -> list[str]:
-    """A registered test read's arguments moved to H1's co-primary score: every run row scores it,
+    """A registered test read's arguments moved to the co-primary score: every run row scores it,
     and its bounds and K source are made on it; its check 5 stays the cell's, on the registered
     score, which is the only planted run a scorer writes."""
     from sphragis.experiment.decomposition import COPRIMARY_METRIC
@@ -1507,7 +1507,8 @@ def test_h2_reads_its_test_window_at_the_registration(
     assert registered["levels"] == [0.975, 0.95] and registered["cell"] == ["H2", "aosp"]
     assert (report["hypothesis"], report["foreign_source"]) == ("H2", "aosp")
     assert report["k_from"]["cell"] == ["H2", "aosp"]
-    assert report["sensitivity"]["cell"] == ["H2", "aosp"] and report["sensitivity"]["cells"] == 1
+    # H2's two cells, s and s', each sized at 0.95^(1/2) (Stage 1 report, "Sample size").
+    assert report["sensitivity"]["cell"] == ["H2", "aosp"] and report["sensitivity"]["cells"] == 2
     assert report["per_run"] == pytest.approx([1.0] * len(ADMISSIBLE))
     assert set(report["without"]) == set(REGISTERED_SENSITIVITIES)
     # Read on H2's contrast: dropping nothing leaves the cell's own estimate.
@@ -1534,18 +1535,30 @@ def test_an_h2_test_read_refuses_bounds_or_a_k_made_for_h1(
         _main(monkeypatch, argv)
 
 
-def test_h2_is_read_on_the_whole_score_on_the_test_window(
+def test_h2_reads_its_s_prime_test_window_at_the_registration(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """H2's s' reading at its s level is a registered secondary analysis: read on development
-    runs, never as a test read."""
+    """H2 binds s' beside s (Stage 1 report, "Research Question and Hypotheses": "each on s and on
+    s'"): its s' cell is a registered test read, H2's read on the co-primary score."""
     from sphragis.experiment.decomposition import COPRIMARY_METRIC
 
     monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
-    argv = _on_coprimary(_h2_test_argv(tmp_path))
-    assert argv[argv.index("--metric") + 1] == COPRIMARY_METRIC
-    with pytest.raises(SystemExit, match="its s' reading at its s level is secondary"):
-        _main(monkeypatch, argv)
+    _main(monkeypatch, _on_coprimary(_h2_test_argv(tmp_path)))
+    report = json.loads((tmp_path / "o.json").read_text())
+    registered = decomposition.coprimary_read(decomposition.registered_read("qt", hypothesis="H2"))
+    assert report["metric"] == registered["metric"] == COPRIMARY_METRIC
+    assert report["levels"] == registered["levels"] == [0.975, 0.95]
+    assert (report["hypothesis"], report["foreign_source"]) == ("H2", "aosp")
+    assert report["k_from"]["metric"] == report["sensitivity"]["metric"] == COPRIMARY_METRIC
+    assert report["sensitivity"]["cells"] == registered["cells"] == 2
+    require_test_read(report, org="qt", expected=registered)
+    # Its joint reading is the s read's, which the s' read does not repeat.
+    assert report["joint"] is None and report["on_s_prime"] is None
+    # Read against the s registration, the s' read is refused.
+    with pytest.raises(ValueError, match="the read is on logprob_per_token:other"):
+        require_test_read(
+            report, org="qt", expected=decomposition.registered_read("qt", hypothesis="H2")
+        )
 
 
 def _set_base(argv: list[str], metric: str, value: float) -> None:
