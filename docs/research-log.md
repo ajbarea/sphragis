@@ -11354,3 +11354,22 @@ Both two-cell detects are below δ (0.0161) and s′'s null holds nominal at 97.
 0.027, calibrated 0.01875), so option 1 applies: s′ binds H2 beside s (papers B1 PR). The gate code
 still reads H2 on s alone; it must bind s′ for H2 before the seal (follow-up issue). The four-point s′
 run (1002824) is a record and changes nothing here.
+
+### The gate binds H2 on s and s′; H2's s′ K source at K = 40 (2026-11-14)
+
+`# research(2026-11)`. Issue #274, after the Stage 1 report's B1 change (papers 2f77b02: "each on s
+and on s′"; H2's two cells at 0.95^(1/2)). `confirmatory_gate` now reads H2's s′ cell beside its s
+cell, from its own test read (`partition_pilot.py --hypothesis H2 --metric logprob_per_token:other`,
+registered by `coprimary_read(registered_read("qt", hypothesis="H2"))`, two cells), and H2 passes
+only when both cells pass at its Holm level. An s cell supported where its s′ cell is not reads as
+names for H2 as for H1 (`h2_names`); the uncalibrated `on_s_prime` reading the s read carries no longer
+enters the gate, since the report no longer registers "H2 on s′ at its s level".
+
+H2's s′ K source is the 2026-11-13 s′ simulation at the sizing bound read at K = 40
+(`k_coverage.py --registered-runs 40` on `partition-pilot-qt-foreignchromium-likelihood-split-other-chains.json`
+and `partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-other-chains-k40-calibrated-sizing_bound_90.json`;
+no new simulation): `k-coverage-qt-foreignchromium-likelihood-split-other-chains.json`. Its null holds
+at 97.5% and misses at 95%, so its critical p is calibrated, 0.0148 and 0.0241 at the two levels
+(the 97.5% one above α, so the interval decides there), with calibrated rates 0.0095 and 0.01875 on
+the second null half. H2's s K source keeps 0.0121 and 0.0255. The s′ cell reads its own; a test read
+of s′ refuses a K source made on s.

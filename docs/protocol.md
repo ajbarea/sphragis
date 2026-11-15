@@ -42,8 +42,9 @@ d_proj(O) = LP(O_a) - LP(O_b)      H1 (half-split):                       d_proj
 d_org(O)  = LP(O_b) - LP(P_x)      H2 (organization beyond its projects): d_org(O)  > 0
 ```
 
-Each contrast is the mean of its two halves' contrasts within a run, then the mean over the
-organization's K runs, each on its own admissible split. H1 is tested for every admitted
+Each hypothesis is tested on `LP` and on its non-identifier part, the same score over the
+reference's tokens that are not names. Each contrast is the mean of its two halves' contrasts
+within a run, then the mean over the organization's K runs, each on its own admissible split. H1 is tested for every admitted
 organization. H2 is confirmatory for Qt against Chromium and Chromium against Qt when both are
 admitted, the one pair that writes the same language, so the organizational boundary is not also
 a language boundary. Every other organization's `d_org` is reported as exploratory. The cells are
@@ -75,11 +76,12 @@ The pass rule is fixed in advance, in code, in
 [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py).
 
 **H1 passes only when every admitted organization's cell is supported, on both co-primary
-scores.** RQ1 claims that organizations have a learnable house style, which is a generality
-claim, and a rule passing on one organization does not support it; the second score counts only
-the reference's non-identifier tokens, so a gain in vocabulary alone cannot pass. H1 and H2 share
-one family-wise level under Holm, read on 97.5% and 95% intervals; H2, at K = 40, reads its
-critical value calibrated from its simulated null. A cell is supported when its lower bound is
+scores, and H2 only when its cell is, on both.** RQ1 claims that organizations have a learnable
+house style, which is a generality claim, and a rule passing on one organization does not support
+it; the second score counts only the reference's non-identifier tokens, so a gain in vocabulary
+alone cannot pass either hypothesis. H1 and H2 share one family-wise level under Holm, read on
+97.5% and 95% intervals; H2, at K = 40, reads each score's critical value calibrated from that
+score's own simulated null. A cell is supported when its lower bound is
 strictly above zero, bounded when its upper bound is below the SESOI δ (a one-sided equivalence
 test, read once the cell's sensitivity simulation is registered), and inconclusive otherwise;
 beside the verdict each cell reports which of the four outcomes of the two tests it shows,

@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 866 artifacts under
+repository. This page is generated from those scripts: 867 artifacts under
 75 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -416,6 +416,7 @@ An organization's K under the coverage rule, as the K source a test read takes (
 | `k-coverage-openstack-likelihood-split-other-chains.json` |
 | `k-coverage-openstack-likelihood.json` |
 | `k-coverage-qt-foreignchromium-likelihood-chains.json` |
+| `k-coverage-qt-foreignchromium-likelihood-split-other-chains.json` |
 | `k-coverage-qt-likelihood-chains.json` |
 | `k-coverage-qt-likelihood-split-other-chains.json` |
 | `k-coverage-qt-likelihood.json` |
