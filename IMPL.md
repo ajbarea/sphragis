@@ -17,7 +17,15 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   ✅ `partition_sensitivity.py` sizes H2 at 1 and 2 cells by default. ✅ H2's s′ K source
   `k-coverage-qt-foreignchromium-likelihood-split-other-chains.json` (research log, 2026-11-14).
   ✅ registered-decisions.md, protocol.md and scripts.md mirror the paper; harvest claims for the
-  new figures. Next: independent review (elenchus), then merge before the seal. Open, not in this
+  new figures. Reviews: Copilot and agy (Opus 4.6) clean; independent Opus round 1 (PR comment,
+  2026-11-15): no blocking, two should-fix. 📋 Next, in a fresh session: S1, support the
+  registered pair design (`protocol.md`: Qt against Chromium and back when both are admitted), so
+  `partition_sensitivity.plan_cell` accepts 4 H2 cells (`decomposition.py:405` gives 2 per pair
+  direction) and the docs say "two cells per H2 direction"; S2, drop the uncalibrated `on_s_prime`
+  from `partition_pilot.py:631-655` and its copy at `decomposition.py:788`, and match the research
+  log's wording. Then the nits on the PR (point `protocol.md:79` and `registered-decisions.md:89`
+  at the exploratory rule; state the 95% two-cell detects), a fresh Opus verify round, then merge
+  before the seal (MSR final build Thu/Fri 11-19/20). Open, not in this
   issue: papers 90-conditional.tex labels a reversed effect ("labelled reversed where the cell,
   sign flipped, would be supported"); the gate has no such label yet. Verify: `uv run pytest
   tests/unit/experiment/test_decomposition.py tests/unit/test_partition_pilot.py
