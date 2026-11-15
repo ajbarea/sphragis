@@ -69,12 +69,12 @@ SESOI = 0.01
 LIKELIHOOD_SESOI = Path(__file__).resolve().parents[2] / "datasets/results/likelihood-sesoi.json"
 
 
-#: H1's co-primary score: the reference's per-token log-probability summed over its
-#: non-identifier tokens alone (`tokens`), so a gain in vocabulary cannot pass H1 by itself
-#: (research log, 2026-10-30).
+#: The co-primary score: the reference's per-token log-probability summed over its
+#: non-identifier tokens alone (`tokens`), so a gain in vocabulary cannot pass a hypothesis by
+#: itself (research log, 2026-10-30; H2's too since 2026-11-13).
 COPRIMARY_METRIC = "logprob_per_token:other"
 
-#: The scores every H1 organization is read on, the registered one first.
+#: The scores every H1 organization and H2 cell is read on, the registered one first.
 COPRIMARY_SCORES = ("logprob_per_token", COPRIMARY_METRIC)
 
 
@@ -83,7 +83,7 @@ def metric_sesoi(metric: str) -> float | None:
 
     Exact match's is the cost-benefit constant; the per-token log-probability's is carried from it
     at the registered exchange rate, and its artifact must exist. The non-identifier part of that
-    score, H1's co-primary, takes the same SESOI: the parts are in the whole score's nats per
+    score, the co-primary, takes the same SESOI: the parts are in the whole score's nats per
     token, and the planted quote-style convention the rate was carried at sits in string
     delimiters, which `tokens` classes as other (research log, 2026-10-30). Total
     log-probability, a sensitivity, and the other parts have none.
@@ -388,15 +388,22 @@ def registered_read(org: str, *, hypothesis: str = "H1") -> dict[str, Any]:
 
 
 def _h2_read(spec: Mapping[str, Any], org: str) -> dict[str, Any]:
-    """The registered read of `org`'s confirmatory H2 cell: the design's Holm levels, sized for
-    H2's intersection over its cells, on the registered score alone ("H2 on s' at its s level" is
-    secondary), resampling relation chains."""
+    """The registered read of `org`'s confirmatory H2 cell on the registered score: the design's
+    Holm levels, resampling relation chains.
+
+    H2, like H1, is read on both co-primary scores and passes only when every cell on both does,
+    so its tests number twice its cells and each is sized at that count (Stage 1 report, "Sample
+    size": H2's two at 0.95^(1/2); research log, 2026-11-13). Its read on `COPRIMARY_METRIC` is
+    `coprimary_read` of this one.
+    """
     sources = [source for evaluated, source in spec["H2"] if evaluated == org]
     if not sources:
         raise ValueError(f"{org} has no confirmatory H2 cell in the registered design")
     return {
         **_read_at(
-            holm_levels(len(confirmatory(spec))), cells=len(spec["H2"]), cluster_unit="chain"
+            holm_levels(len(confirmatory(spec))),
+            cells=len(COPRIMARY_SCORES) * len(spec["H2"]),
+            cluster_unit="chain",
         ),
         "cell": ["H2", sources[0]],
     }
@@ -451,11 +458,12 @@ def _gerrit_read(spec: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def coprimary_read(expected: Mapping[str, Any]) -> dict[str, Any]:
-    """`expected`, a Gerrit H1 cell's registered read, on `COPRIMARY_METRIC`.
+    """`expected`, a Gerrit H1 or H2 cell's registered read, on `COPRIMARY_METRIC`.
 
     The co-primary is the same cell scored again: its K source is the coverage rule read at the
-    cell's K on its own pilot (`k_coverage.py --registered-runs`), its bounds its own simulation's,
-    and its check 5 the cell's, which tests the apparatus once (research log, 2026-10-30).
+    cell's K on its own pilot (`k_coverage.py --registered-runs`), so H2's carries the critical p
+    calibrated from its own null at `H2_RUNS`; its bounds are its own simulation's, and its check 5
+    the cell's, which tests the apparatus once (research log, 2026-10-30, 2026-11-13).
     """
     return {**expected, "metric": COPRIMARY_METRIC}
 
@@ -600,8 +608,8 @@ def require_registered_analyses(
     on every read, outcome-neutral check 2 on the registered score, passed on the crossed 95%
     interval over the read's own runs, since every check runs before a confirmatory comparison
     is read ("Outcome-Neutral Tests"); on H2's read of the registered score, its joint reading
-    with H1 on the same C++ examples and draws over its K runs, and its s' reading at its s
-    levels ("Verdicts and Readings"; Analysis, "Secondary and exploratory analyses")."""
+    with H1 on the same C++ examples and draws over its K runs ("Verdicts and Readings"). H2 on s'
+    is its own confirmatory cell, read by `confirmatory_gate` beside this one."""
     runs = report.get("runs")
     check = report.get("positive_control")
     if not isinstance(check, Mapping):
@@ -637,28 +645,6 @@ def require_registered_analyses(
         and summed["low"] <= summed["high"]
     ):
         raise ValueError(f"{org}: the H2 read carries no joint reading with H1 over its K runs")
-    secondary = report.get("on_s_prime")
-    if not (isinstance(secondary, Mapping) and secondary.get("metric") == COPRIMARY_METRIC):
-        raise ValueError(f"{org}: the H2 read carries no s' reading")
-    if secondary.get("runs") != runs:
-        raise ValueError(f"{org}: its s' reading is not over its {runs} runs")
-    try:
-        verdicts = by_level(secondary.get("verdicts"))
-    except ValueError as error:
-        raise ValueError(f"{org}: its s' reading: {error}") from error
-    if set(verdicts) != {level_key(c) for c in expected["levels"]}:
-        raise ValueError(f"{org}: its s' reading is not at its s levels {expected['levels']}")
-    if not set(verdicts.values()) <= {"supported", "inconclusive"}:
-        raise ValueError(f"{org}: its s' verdicts {sorted(verdicts.values())} are not readings")
-    # With no bound or calibrated p, supported means a lower bound above zero (`read_intervals`).
-    try:
-        lows = {c: i["low"] for c, i in by_level(secondary.get("intervals")).items()}
-    except (KeyError, TypeError, ValueError) as error:
-        raise ValueError(f"{org}: its s' intervals: {error}") from error
-    if set(lows) != set(verdicts) or any(
-        not is_real(lows[c]) or (verdicts[c] == "supported") != (lows[c] > 0.0) for c in verdicts
-    ):
-        raise ValueError(f"{org}: its s' verdicts do not follow from its intervals")
 
 
 def _registered_bounds(
@@ -794,7 +780,8 @@ def _read_cells(
             # The registered sensitivities the report read (partition_pilot.py --without).
             "without": readings,
             # Reported beside the verdicts, binding none (Stage 1 report): the change-averaged
-            # estimate, the read's check 2, and on an H2 read its joint and s' readings.
+            # estimate, the read's check 2, and on an H2 read of s its joint reading (and
+            # `partition_pilot.py`'s uncalibrated s' reading, where the read carries one).
             "change_averaged": report.get("change_averaged"),
             **{
                 key: report.get(key)
@@ -911,12 +898,16 @@ def confirmatory_gate(
     coprimary_simulations: Mapping[str, Mapping[str, Any]],
     h2: Mapping[str, Mapping[str, Any]] | None = None,
     h2_simulations: Mapping[str, Mapping[str, Any]] | None = None,
+    h2_coprimary: Mapping[str, Mapping[str, Any]] | None = None,
+    h2_coprimary_simulations: Mapping[str, Mapping[str, Any]] | None = None,
     powers: Mapping[str, Mapping[str, Any]] | None = None,
     coprimary_powers: Mapping[str, Mapping[str, Any]] | None = None,
     h2_powers: Mapping[str, Mapping[str, Any]] | None = None,
+    h2_coprimary_powers: Mapping[str, Mapping[str, Any]] | None = None,
     spreads: Mapping[str, Mapping[str, Any]] | None = None,
     coprimary_spreads: Mapping[str, Mapping[str, Any]] | None = None,
     h2_spreads: Mapping[str, Mapping[str, Any]] | None = None,
+    h2_coprimary_spreads: Mapping[str, Mapping[str, Any]] | None = None,
     withdrawn: Mapping[str, Any] | None = None,
     lora_rank: int = REGISTERED_RANK,
 ) -> dict[str, Any]:
@@ -931,24 +922,27 @@ def confirmatory_gate(
     organization's `partition_pilot.py` test-window report on the registered score and `coprimary`
     its report on `COPRIMARY_METRIC`, the same runs and changes; `h2` holds each confirmatory H2
     cell's report (`partition_pilot.py --hypothesis H2`), keyed by its evaluated organization,
-    exactly when the design has one. Each comes with its simulation, and every report is checked by
-    `require_readable` and by `require_test_read` against the registered read, which withdrawal
-    does not change, and its bounds read from its simulation. Each hypothesis is the
-    intersection-union over its cells (H1: every organization on both scores, research log
-    2026-10-30), read by `holm_steps` at the Holm levels of the hypotheses that remain tested.
+    exactly when the design has one, and `h2_coprimary` its report on `COPRIMARY_METRIC`, the same
+    runs and changes, its K source and its critical p calibrated at `H2_RUNS` its own. Each comes
+    with its simulation, and every report is checked by `require_readable` and by
+    `require_test_read` against the registered read, which withdrawal does not change, and its
+    bounds read from its simulation. Each hypothesis is the intersection-union over its cells (H1:
+    every organization on both scores, research log 2026-10-30; H2: its cell on both scores,
+    2026-11-13), read by `holm_steps` at the Holm levels of the hypotheses that remain tested.
 
     A cell is exploratory, reported and left out of its hypothesis, when it was read below its
     projected size and its detectable effect there exceeds δ (`small_window`, from `powers`), or
     when its per-run test spread exceeds its sizing bound and the calibration at that spread was
     refused (`partitions.spread_reading`, from `spreads`); above the bound and calibrated, it is
     read at the critical p calibrated there. Either is read only at the levels its family reads
-    (`_mark_exploratory`). A hypothesis with every cell exploratory is not tested; an H1 score with
-    none left is named in the reading.
+    (`_mark_exploratory`). A hypothesis with every cell exploratory is not tested; an H1 score,
+    or an H2 score, with none left is named in the reading.
 
     Beside the verdicts, binding none: each H1 score's own reading, each cell's `FOUR_WAY`
-    outcome, the readings across organizations (`_across`: without a cell whose spread
-    calibration is refused at the level read, and None with none left), and each cell's realised
-    test size against its simulation's projection ("Fetch horizon", registered-decisions.md).
+    outcome, each s cell supported where its s' cell is not (`names`, `h2_names`), the readings
+    across organizations (`_across`: without a cell whose spread calibration is refused at the
+    level read, and None with none left), and each cell's realised test size against its
+    simulation's projection ("Fetch horizon", registered-decisions.md).
 
     `lora_rank` `RERUN_RANK` reads the grid's rerun at 256 the same way, every report of it at
     that rank; its verdicts are supplementary and change no registered one (`rank_reading`).
@@ -968,13 +962,30 @@ def confirmatory_gate(
         ("co-primary simulations", coprimary_simulations),
     ):
         _require_exactly(given, orgs, what=what)
+    h2_given = (
+        h2,
+        h2_simulations,
+        h2_coprimary,
+        h2_coprimary_simulations,
+        h2_powers,
+        h2_coprimary_powers,
+        h2_spreads,
+        h2_coprimary_spreads,
+    )
     if h2_orgs:
-        for what, given in (("H2 reports", h2), ("H2 simulations", h2_simulations)):
+        for what, given in (
+            ("H2 reports", h2),
+            ("H2 simulations", h2_simulations),
+            ("H2 co-primary reports", h2_coprimary),
+            ("H2 co-primary simulations", h2_coprimary_simulations),
+        ):
             _require_exactly(given, h2_orgs, what=what)
-    elif h2 or h2_simulations or h2_powers or h2_spreads:
+    elif any(h2_given):
         raise ValueError("H2 reads given, and the design has no confirmatory H2 cell")
     for org in orgs:
         _same_runs(reports[org], coprimary[org], org)
+    for org in h2_orgs:
+        _same_runs((h2 or {})[org], (h2_coprimary or {})[org], org)
     # Every report was read at the registration's levels and cell count; the verdicts at the Holm
     # levels of what remains tested, a subset of them.
     expected = _gerrit_read(registered)
@@ -990,27 +1001,57 @@ def confirmatory_gate(
         _sesoi_of(COPRIMARY_METRIC),
         coprimary_spreads,
     )
-    extra = sorted(set(h2_spreads or {}) - set(h2_orgs))
+    extra = sorted((set(h2_spreads or {}) | set(h2_coprimary_spreads or {})) - set(h2_orgs))
     if extra:
         raise ValueError(f"H2 spread simulations for {extra}, which have no H2 cell")
     h2_cells: dict[str, dict[str, Any]] = {}
     h2_detectable: dict[str, dict[float, float]] = {}
+    h2_other_cells: dict[str, dict[str, Any]] = {}
+    h2_other_detectable: dict[str, dict[float, float]] = {}
     for org in h2_orgs:
-        read, bounds = _read_cells(
-            {org: (h2 or {})[org]},
-            {org: (h2_simulations or {})[org]},
-            h2_powers,
-            _h2_read(registered, org) | {"lora_rank": lora_rank},
-            sesoi,
-            {o: sim for o, sim in (h2_spreads or {}).items() if o == org},
-        )
-        h2_cells |= read
-        h2_detectable |= bounds
+        on_s = _h2_read(registered, org) | {"lora_rank": lora_rank}
+        # Each H2 score's cell read as an H1 cell is: its own report, simulation, power at size,
+        # spread simulation and SESOI, the s' cell at its own K source's critical p.
+        for (
+            given,
+            given_sims,
+            given_powers,
+            given_spreads,
+            read_as,
+            cell_sesoi,
+            out,
+            bounds_out,
+        ) in (
+            (h2, h2_simulations, h2_powers, h2_spreads, on_s, sesoi, h2_cells, h2_detectable),
+            (
+                h2_coprimary,
+                h2_coprimary_simulations,
+                h2_coprimary_powers,
+                h2_coprimary_spreads,
+                coprimary_read(on_s),
+                _sesoi_of(COPRIMARY_METRIC),
+                h2_other_cells,
+                h2_other_detectable,
+            ),
+        ):
+            read, bounds = _read_cells(
+                {org: (given or {})[org]},
+                {org: (given_sims or {})[org]},
+                given_powers,
+                read_as,
+                cell_sesoi,
+                {o: sim for o, sim in (given_spreads or {}).items() if o == org},
+            )
+            out |= read
+            bounds_out |= bounds
     every = {
         "H1": {**cells, **{f"{org}:{COPRIMARY_METRIC}": c for org, c in other_cells.items()}},
-        "H2": h2_cells,
+        "H2": {
+            **h2_cells,
+            **{f"{org}:{COPRIMARY_METRIC}": c for org, c in h2_other_cells.items()},
+        },
     }
-    # Each cell's SESOI: its score's (H2 and the whole score's H1 cells share the registered one).
+    # Each cell's SESOI: its score's (the whole score's cells share the registered one).
     sesois = {
         f"{name}:{cell}": _sesoi_of(
             COPRIMARY_METRIC if cell.endswith(COPRIMARY_METRIC) else expected["metric"]
@@ -1077,11 +1118,22 @@ def confirmatory_gate(
             said = "within-half on the whole score alone"
         elif too_small.get("H1"):
             said = "within-half, below the SESOI in every cell"
-    # H1 is registered on both scores and s' qualifies s (Table III legend): a score with no
-    # confirmatory cell left is said, never dropped silently.
+    # Both hypotheses are registered on both scores: a score with no confirmatory cell left is
+    # said, never dropped silently.
     untested = [m for m, read in scores.items() if read == "not tested"]
     if verdicts["H1"] != "not tested" and untested:
         said += f"; {', '.join(untested)} not tested (every cell exploratory)"
+    if h2_verdict is not None:
+        h2_untested = [
+            metric
+            for metric, by_org in (
+                (expected["metric"], h2_cells),
+                (COPRIMARY_METRIC, h2_other_cells),
+            )
+            if all(c["exploratory"] is not None for c in by_org.values())
+        ]
+        if h2_untested:
+            said += f"; H2 on {', '.join(h2_untested)} not tested (its cell exploratory)"
     return _marked_by_rank(
         {
             "lora_rank": lora_rank,
@@ -1092,27 +1144,11 @@ def confirmatory_gate(
             "reading": said,
             "mixed": mixed,
             "vocabulary_only": vocabulary_only,
-            # Per H1 cell and level, binding no verdict: an s cell supported where its s' reading at
-            # the same level is not reads as names (Stage 1 report, "Verdicts and Readings").
-            "names": {
-                org: {
-                    c: cells[org]["verdicts"][c] == "supported"
-                    and other_cells[org]["verdicts"][c] != "supported"
-                    for c in cells[org]["verdicts"]
-                }
-                for org in cells
-            },
-            # Per H2 cell and level, binding no verdict: its s cell supported where its s' reading
-            # at the same level is not reads as Qt's vocabulary (Stage 1 report, "Verdicts and
-            # Readings").
-            "vocabulary": {
-                org: {
-                    c: cell["verdicts"][c] == "supported"
-                    and by_level(cell["on_s_prime"]["verdicts"])[level_key(c)] != "supported"
-                    for c in cell["verdicts"]
-                }
-                for org, cell in h2_cells.items()
-            },
+            # Per cell and level, binding no verdict: an s cell supported where its s' cell at the
+            # same level is not reads as carried by names, convention or vocabulary,
+            # undistinguished (Stage 1 report, "Verdicts and Readings"); H1's, then H2's.
+            "names": _names(cells, other_cells),
+            "h2_names": _names(h2_cells, h2_other_cells),
             "too_small": too_small,
             "scores": scores,
             "below_sesoi": below_sesoi(tested, passed_at, sesoi=sesoi),
@@ -1120,6 +1156,7 @@ def confirmatory_gate(
             "cells": cells,
             "coprimary_cells": other_cells,
             "h2_cells": h2_cells,
+            "h2_coprimary_cells": h2_other_cells,
             "metric": expected["metric"],
             "coprimary_metric": COPRIMARY_METRIC,
             "sesoi": sesoi,
@@ -1127,15 +1164,30 @@ def confirmatory_gate(
                 "H1": detectable,
                 f"H1:{COPRIMARY_METRIC}": other_detectable,
                 "H2": h2_detectable,
+                f"H2:{COPRIMARY_METRIC}": h2_other_detectable,
             },
             "holm_levels": levels,
             "below_projection": _below_projection(cells, powers),
             "coprimary_below_projection": _below_projection(other_cells, coprimary_powers),
             "h2_below_projection": _below_projection(h2_cells, h2_powers),
+            "h2_coprimary_below_projection": _below_projection(h2_other_cells, h2_coprimary_powers),
             "across": _across(reports, cells, levels[0]),
             "coprimary_across": _across(coprimary, other_cells, levels[0]),
         }
     )
+
+
+def _names(
+    on_s: Mapping[str, Mapping[str, Any]], on_s_prime: Mapping[str, Mapping[str, Any]]
+) -> dict[str, dict[float, bool]]:
+    """Per organization and level: its s cell supported where its s' cell is not."""
+    return {
+        org: {
+            c: cell["verdicts"][c] == "supported" and on_s_prime[org]["verdicts"][c] != "supported"
+            for c in cell["verdicts"]
+        }
+        for org, cell in on_s.items()
+    }
 
 
 def _withdrawals(
@@ -1206,7 +1258,11 @@ def rank_reading(registered: Mapping[str, Any], rerun: Mapping[str, Any]) -> dic
     replication = "members" in registered
     if replication != ("members" in inner):
         raise ValueError("a replication gate's output is read beside a replication gate's alone")
-    groups = ("cells",) if replication else ("cells", "coprimary_cells", "h2_cells")
+    groups = (
+        ("cells",)
+        if replication
+        else ("cells", "coprimary_cells", "h2_cells", "h2_coprimary_cells")
+    )
     readings: dict[str, dict[str, dict[float, str | None]]] = {}
     one_rank: dict[str, list[str]] = {}
     exploratory: dict[str, dict[str, dict[int, str]]] = {}

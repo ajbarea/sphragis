@@ -444,7 +444,7 @@ def sensitivity_bounds(
     cell: Cell = ("H1", None),
 ) -> dict[float, float]:
     """Each Holm level's registered bound: the detectable effect the simulation found at `target`
-    for `cell`, an H1 cell sized for a hypothesis intersecting `cells` cells or H2's one cell.
+    for `cell`, sized for a hypothesis intersecting `cells` cells (H1's up to six, H2's two).
 
     `target` names a point on the pilot's run spread (`partition_sensitivity.py`'s
     `spread_targets`), so the bound says which spread it assumes; `cells` sets the per-cell power
@@ -464,7 +464,7 @@ def sensitivity_bounds(
         by_cells = levels_in[level_key(c)]["by_cells"]
         if str(cells) not in by_cells:
             raise ValueError(
-                f"no bound for {cells} H1 cell(s); the artifact has {sorted(by_cells)}"
+                f"no bound for {cells} {cell[0]} cell(s); the artifact has {sorted(by_cells)}"
             )
         bounds[c] = by_cells[str(cells)]["minimum_detectable_effect"]
     return bounds
