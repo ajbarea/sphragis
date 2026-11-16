@@ -451,44 +451,45 @@ a K made in the other unit; research log, 2026-10-22).
 The co-primary score (Pass rule) is the same cell scored again, so it is read at the cell's K and
 after the cell's check 5 (`decomposition.coprimary_read`). Its K source reads its own pilot's
 simulated null at that K (`k_coverage.py --registered-runs`); should the null exceed nominal at
-either level, its critical value is calibrated from it as H2's is (below), and the H1 gate reads
-the cell with it. Every H1 cell's K is thus the one the coverage rule gave its whole score. This
-rule is the implementation's of the co-primary decision, registered with it (2026-10-30). A test
-read on the co-primary score refuses a K source that does not record the rule read at its own K
-(`registered_runs`), so a K the grid found for that score cannot stand in (`cells.require_test_read`).
+either level, its critical value is calibrated from it as H2's is (below), and the H1 gate reads the
+cell with it. Every H1 cell's K is thus the one the coverage rule gave its whole score. This rule is
+the implementation's of the co-primary decision, registered with it (2026-10-30). A test read on the
+co-primary score refuses a K source that does not record the rule read at its own K
+(`registered_runs`), so a K the grid found for that score cannot stand in
+(`cells.require_test_read`).
 
 ### H2's K = 40, each cell's critical value calibrated from its own simulated null (registered 2026-10-30)
 
 On H2's development runs no K in the grid holds the simulated null at both levels (research log,
 2026-10-29), a case the coverage rule did not name. "Kept within 10 to 40" is read as a clamp at 40,
-as the reproducibility K is clamped at 10: **H2's K is 40** (`decomposition.H2_RUNS`). This
-reading was chosen after the grid was read and is declared as a deviation from the rule's letter.
-At K = 40 the null's one-sided rate is 0.01325 against 0.0125 at the stricter level, under half
-its Monte Carlo standard error at 4,000 null studies, sqrt(p(1 - p) / n) (Morris, White and
-Crowther 2019, Table 6), and 0.0245 against 0.025 at 95%; every K from 15 is inside Bradley's
-liberal band, 0.5α to 1.5α (Bradley 1978). That band describes a test as robust; the coverage rule
-asks for nominal, so the band shows the excess is small and selects no K. The excess is not
-accepted: an H2 cell reads supported when its interval does and its one-sided bootstrap p-value is
-below its own simulated null's α-quantile at the sizing bound, so the calibration can only tighten the
-test (Loh 1987, a nominal level calibrated by its estimated coverage; `partition_sensitivity.py
---calibrate`). The critical p reads at most α on the null studies it was set on by construction,
-so a second, independent set of 4,000 null studies measures the calibrated rate, itself carrying
-Monte Carlo error. The K source records that rate and refuses the simulation if it exceeds
-Bradley's liberal bound, 1.5α, at either level (`partitions.BRADLEY_LIBERAL`), since the
-calibration would then not carry over; the gate refuses bounds powered at another critical p
-than the one its K applies. Its K source is that simulation read at K = 40 (`k_coverage.py
---registered-runs`), which carries the critical p; a test read of H2 on either score is refused at
-any other K, or with a K source that does not record the rule read at K = 40
-(`cells.require_test_read`, held by `partition_pilot.py` and the gate alike). H2's s′ cell, registered later (Pass rule), takes
-the same rule on its own pilot and simulation at K = 40: its K source
+as the reproducibility K is clamped at 10: **H2's K is 40** (`decomposition.H2_RUNS`). This reading
+was chosen after the grid was read and is declared as a deviation from the rule's letter. At K = 40
+the null's one-sided rate is 0.01325 against 0.0125 at the stricter level, under half its Monte
+Carlo standard error at 4,000 null studies, sqrt(p(1 - p) / n) (Morris, White and Crowther 2019,
+Table 6), and 0.0245 against 0.025 at 95%; every K from 15 is inside Bradley's liberal band, 0.5α to
+1.5α (Bradley 1978). That band describes a test as robust; the coverage rule asks for nominal, so
+the band shows the excess is small and selects no K. The excess is not accepted: an H2 cell reads
+supported when its interval does and its one-sided bootstrap p-value is below its own simulated
+null's α-quantile at the sizing bound, so the calibration can only tighten the test (Loh 1987, a
+nominal level calibrated by its estimated coverage; `partition_sensitivity.py --calibrate`). The
+critical p reads at most α on the null studies it was set on by construction, so a second,
+independent set of 4,000 null studies measures the calibrated rate, itself carrying Monte Carlo
+error. The K source records that rate and refuses the simulation if it exceeds Bradley's liberal
+bound, 1.5α, at either level (`partitions.BRADLEY_LIBERAL`), since the calibration would then not
+carry over; the gate refuses bounds powered at another critical p than the one its K applies. Its K
+source is that simulation read at K = 40 (`k_coverage.py --registered-runs`), which carries the
+critical p; a test read of H2 on either score is refused at any other K, or with a K source that
+does not record the rule read at K = 40 (`cells.require_test_read`, held by `partition_pilot.py` and
+the gate alike). H2's s′ cell, registered later (Pass rule), takes the same rule on its own pilot
+and simulation at K = 40: its K source
 (`k-coverage-qt-foreignchromium-likelihood-split-other-chains.json`) carries critical p 0.0148 and
 0.0241 at the two levels, its null holding at 97.5% and calibrated at 95%, beside the s cell's own
 (research log, 2026-11-13 and 2026-11-14). H2's test reads over partitions (`partition_pilot.py
 --hypothesis H2` on the test window, on each score, at `registered_read(org, hypothesis="H2")` and
 its `coprimary_read`) and the gate that reads them beside H1 under Holm (`confirmatory_gate`) are
 built. As one cell, its detectable effects in that calibrated simulation were +0.0109 and +0.0103
-nats per token at the two levels (research log, 2026-11-02); at H2's two cells per pair direction,
-s detects +0.0118 and s′ +0.0070 on the 97.5% interval, and +0.0110 and +0.0065 on the 95% one
+nats per token at the two levels (research log, 2026-11-02); at H2's two cells per pair direction, s
+detects +0.0118 and s′ +0.0070 on the 97.5% interval, and +0.0110 and +0.0065 on the 95% one
 (research log, 2026-11-13 and 2026-11-14), all below δ.
 
 ### The test window's per-run spread: simulated above the sizing bound
@@ -509,22 +510,24 @@ and the GitHub family's too, since the family is read with the Gerrit cells' rul
 
 ### Stated power: sensitivity, not power at an observed effect
 
-H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1/6) = 0.9915, so all six
-pass together at 0.95 or more (the product understates it, Power above), and H2's cells, two per pair direction (s and s′), each at 0.95^(1/k) over its k cells: 0.95^(1/2) against Chromium's pool. Each cell is simulated at that power, its
-projected test size and its registered K, read under relation chains at the 90% upper bound of
-its own development pilot's per-run spread: s at six cells (`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`),
-s′ at its s cell's K
-(`...-logprob_per_token-other-chains-k<K>[-calibrated].json`), H2 on both scores at K = 40 calibrated. At the
-two Holm levels, H1 on s detects a half-split contrast of +0.0124 and +0.0115 nats per token on
-OpenStack, +0.0080 and +0.0074 on Wikimedia and +0.0085 and +0.0079 on Qt; on s′, +0.0096 and
-+0.0090, +0.0078 and +0.0073 (calibrated) and +0.0054 and +0.0050; H2's are under H2's K, above
-(research log, 2026-11-02, printed by `scripts/log_tables.py sizing`). Each is below the SESOI, the margin a bounded reading is judged
-against (Pass rule), and under a true null every simulated interval lies inside the SESOI band at
-both levels. Wikimedia's s′ null exceeded nominal at K = 20, so its cell, like H2's, takes a
-critical p calibrated to its simulated null (H2's K, above); OpenStack's and Qt's s′ nulls hold
-nominal. Wikimedia's test size is a lower bound if test-window arrivals hold at the
-training rate (checked at fetch), and its bounds are then conservative. Power from a pilot's own
-estimate is biased upward, so no power at an observed effect is stated.
+H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1/6) = 0.9915, so all
+six pass together at 0.95 or more (the product understates it, Power above), and H2's cells, two per
+pair direction (s and s′), each at 0.95^(1/k) over its k cells: 0.95^(1/2) against Chromium's pool.
+Each cell is simulated at that power, its projected test size and its registered K, read under
+relation chains at the 90% upper bound of its own development pilot's per-run spread: s at six cells
+(`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`), s′ at its s cell's
+K (`...-logprob_per_token-other-chains-k<K>[-calibrated].json`), H2 on both scores at K = 40
+calibrated. At the two Holm levels, H1 on s detects a half-split contrast of +0.0124 and +0.0115
+nats per token on OpenStack, +0.0080 and +0.0074 on Wikimedia and +0.0085 and +0.0079 on Qt; on s′,
++0.0096 and +0.0090, +0.0078 and +0.0073 (calibrated) and +0.0054 and +0.0050; H2's are under H2's
+K, above (research log, 2026-11-02, printed by `scripts/log_tables.py sizing`). Each is below the
+SESOI, the margin a bounded reading is judged against (Pass rule), and under a true null every
+simulated interval lies inside the SESOI band at both levels. Wikimedia's s′ null exceeded nominal
+at K = 20, so its cell, like H2's, takes a critical p calibrated to its simulated null (H2's K,
+above); OpenStack's and Qt's s′ nulls hold nominal. Wikimedia's test size is a lower bound if
+test-window arrivals hold at the training rate (checked at fetch), and its bounds are then
+conservative. Power from a pilot's own estimate is biased upward, so no power at an observed effect
+is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
 

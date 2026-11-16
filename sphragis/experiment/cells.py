@@ -44,7 +44,8 @@ K_COVERAGE = "k_coverage"
 #: A registered read's `k_rule` where its K source must be the coverage rule read at the read's own
 #: K (`k_coverage.py --registered-runs`, `partitions.registered_coverage`), so its null, and any
 #: critical p, were simulated at that K on the cell's own score: H2's cells at `H2_RUNS`, each
-#: co-primary cell at its s cell's K. An H1 cell on s takes its K from the coverage rule's grid.
+#: co-primary cell at its s cell's K. An H1 cell on s takes its K from the coverage rule's grid,
+#: and `k_coverage.py` refuses `--registered-runs` for it.
 K_RULE_REGISTERED = "registered"
 
 # The chains every chain artifact made before artifacts recorded them was drawn from, by file, as
