@@ -28,6 +28,7 @@ from sphragis.corpus.halves import suffix
 from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.across import across_organizations, partial_conjunction
 from sphragis.experiment.cells import (
+    K_RULE_REGISTERED,
     MIN_RESAMPLES,
     POSITIVE_CONTROL_CONFIDENCE,
     REGISTERED_METRIC,
@@ -406,6 +407,9 @@ def _h2_read(spec: Mapping[str, Any], org: str) -> dict[str, Any]:
             cluster_unit="chain",
         ),
         "cell": ["H2", sources[0]],
+        # Its K is registered, not found by the coverage rule: the rule read at `H2_RUNS`.
+        "runs": H2_RUNS,
+        "k_rule": K_RULE_REGISTERED,
     }
 
 
@@ -465,7 +469,7 @@ def coprimary_read(expected: Mapping[str, Any]) -> dict[str, Any]:
     calibrated from its own null at `H2_RUNS`; its bounds are its own simulation's, and its check 5
     the cell's, which tests the apparatus once (research log, 2026-10-30, 2026-11-13).
     """
-    return {**expected, "metric": COPRIMARY_METRIC}
+    return {**expected, "metric": COPRIMARY_METRIC, "k_rule": K_RULE_REGISTERED}
 
 
 def _require_exactly(given: Any, orgs: Sequence[str], *, what: str) -> None:

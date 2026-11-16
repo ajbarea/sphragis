@@ -453,7 +453,9 @@ after the cell's check 5 (`decomposition.coprimary_read`). Its K source reads it
 simulated null at that K (`k_coverage.py --registered-runs`); should the null exceed nominal at
 either level, its critical value is calibrated from it as H2's is (below), and the H1 gate reads
 the cell with it. Every H1 cell's K is thus the one the coverage rule gave its whole score. This
-rule is the implementation's of the co-primary decision, registered with it (2026-10-30).
+rule is the implementation's of the co-primary decision, registered with it (2026-10-30). A test
+read on the co-primary score refuses a K source that does not record the rule read at its own K
+(`registered_runs`), so a K the grid found for that score cannot stand in (`cells.require_test_read`).
 
 ### H2's K = 40, each cell's critical value calibrated from its own simulated null (registered 2026-10-30)
 
@@ -475,7 +477,9 @@ Monte Carlo error. The K source records that rate and refuses the simulation if 
 Bradley's liberal bound, 1.5α, at either level (`partitions.BRADLEY_LIBERAL`), since the
 calibration would then not carry over; the gate refuses bounds powered at another critical p
 than the one its K applies. Its K source is that simulation read at K = 40 (`k_coverage.py
---registered-runs`), which carries the critical p. H2's s′ cell, registered later (Pass rule), takes
+--registered-runs`), which carries the critical p; a test read of H2 on either score is refused at
+any other K, or with a K source that does not record the rule read at K = 40
+(`cells.require_test_read`, held by `partition_pilot.py` and the gate alike). H2's s′ cell, registered later (Pass rule), takes
 the same rule on its own pilot and simulation at K = 40: its K source
 (`k-coverage-qt-foreignchromium-likelihood-split-other-chains.json`) carries critical p 0.0148 and
 0.0241 at the two levels, its null holding at 97.5% and calibrated at 95%, beside the s cell's own
@@ -484,7 +488,8 @@ the same rule on its own pilot and simulation at K = 40: its K source
 its `coprimary_read`) and the gate that reads them beside H1 under Holm (`confirmatory_gate`) are
 built. As one cell, its detectable effects in that calibrated simulation were +0.0109 and +0.0103
 nats per token at the two levels (research log, 2026-11-02); at H2's two cells per pair direction,
-on the 97.5% interval, s detects +0.0118 and s′ +0.0070 (research log, 2026-11-13), both below δ.
+s detects +0.0118 and s′ +0.0070 on the 97.5% interval, and +0.0110 and +0.0065 on the 95% one
+(research log, 2026-11-13 and 2026-11-14), all below δ.
 
 ### The test window's per-run spread: simulated above the sizing bound
 

@@ -181,6 +181,8 @@ def _aosp_registered(monkeypatch: pytest.MonkeyPatch) -> None:
     source and pool guards admit them."""
     monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", "aosp")
     monkeypatch.setattr(decomposition, "FOREIGN_POOL_SHA256", "p1")
+    # The synthetic runs number `ADMISSIBLE`; registering that as H2's K reads them at it.
+    monkeypatch.setattr(decomposition, "H2_RUNS", len(ADMISSIBLE))
 
 
 def _main(monkeypatch: pytest.MonkeyPatch, argv: list[str]) -> None:
@@ -402,6 +404,13 @@ def _registered_metric(argv: list[str]) -> list[str]:
                 "org": pilot.get("org"),
                 "metric": REGISTERED_METRIC,
                 "runs": pilot["sizing"]["runs"],
+                # H2's K is the coverage rule read at its registered K (`k_coverage.py
+                # --registered-runs`).
+                **(
+                    {"registered_runs": pilot["sizing"]["runs"]}
+                    if pilot.get("hypothesis") == "H2"
+                    else {}
+                ),
                 "spread_targets": spread_targets(pilot),
                 # A coverage artifact is made for its pilot's cell, H1's or H2's.
                 **{k: pilot[k] for k in ("hypothesis", "foreign_source") if k in pilot},
@@ -700,6 +709,10 @@ def _on_coprimary(argv: list[str]) -> list[str]:
                     row[COPRIMARY_METRIC] = row["logprob_per_token"] / 2
         elif path.name in ("sensitivity.json", "sizing.json"):
             record["metric"] = COPRIMARY_METRIC
+            # The co-primary's K source is the coverage rule read at the cell's K
+            # (`k_coverage.py --registered-runs`).
+            if record.get("kind") == K_COVERAGE:
+                record["registered_runs"] = record["runs"]
         path.write_text(json.dumps(record))
     at = argv.index("--metric") + 1
     return [*argv[:at], COPRIMARY_METRIC, *argv[at + 1 :]]
@@ -710,10 +723,19 @@ def test_a_gerrit_test_read_on_the_coprimary_score_is_registered_on_it(
 ) -> None:
     from sphragis.experiment.decomposition import COPRIMARY_METRIC
 
-    _main(monkeypatch, _on_coprimary(_gerrit_test_argv(tmp_path)))
+    argv = _on_coprimary(_gerrit_test_argv(tmp_path))
+    # Its K source is the coverage rule read at the s cell's K; one the grid found is refused.
+    sizing = tmp_path / "sizing.json"
+    coverage = json.loads(sizing.read_text())
+    sizing.write_text(json.dumps({k: v for k, v in coverage.items() if k != "registered_runs"}))
+    with pytest.raises(SystemExit, match="its K source is not the coverage rule read at K"):
+        _main(monkeypatch, argv)
+    sizing.write_text(json.dumps(coverage))
+    _main(monkeypatch, argv)
     report = json.loads((tmp_path / "o.json").read_text())
     assert report["metric"] == COPRIMARY_METRIC
     assert report["sensitivity"]["cells"] == 2
+    assert report["k_from"]["registered_runs"] == report["runs"]
 
 
 def test_a_replication_member_is_not_read_on_the_coprimary_score(
@@ -1506,6 +1528,8 @@ def test_h2_reads_its_test_window_at_the_registration(
     assert registered["levels"] == [0.975, 0.95] and registered["cell"] == ["H2", "aosp"]
     assert (report["hypothesis"], report["foreign_source"]) == ("H2", "aosp")
     assert report["k_from"]["cell"] == ["H2", "aosp"]
+    # Its K source's registered K, which a test read of H2 or a co-primary score requires.
+    assert report["k_from"]["registered_runs"] == decomposition.H2_RUNS == len(ADMISSIBLE)
     # H2's two cells, s and s', each sized at 0.95^(1/2) (Stage 1 report, "Sample size").
     assert report["sensitivity"]["cell"] == ["H2", "aosp"] and report["sensitivity"]["cells"] == 2
     assert report["per_run"] == pytest.approx([1.0] * len(ADMISSIBLE))

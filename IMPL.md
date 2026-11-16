@@ -9,29 +9,22 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **Issue #274, the gate binds H2 on s and s′ (papers 2f77b02, B1): branch `gate/h2-sprime-274`,
-  PR #276 open, verify round next.** ✅ `registered_read(org, "H2")` is two cells per pair
-  direction (four with Qt and Chromium both admitted); `confirmatory_gate` takes `h2_coprimary`
-  (+ simulations, powers, spreads), the same runs as the s read, and H2 passes only when every
-  cell does at its Holm level; the s′ cell reads its own K source's critical p. `h2_names`
-  replaces `vocabulary`. ✅ `partition_pilot.py --hypothesis H2 --metric
-  logprob_per_token:other` is a registered test read. ✅ H2's s′ K source
-  `k-coverage-qt-foreignchromium-likelihood-split-other-chains.json` (research log, 2026-11-14).
-  ✅ registered-decisions.md, protocol.md and scripts.md mirror the paper; harvest claims for the
-  new figures. Reviews: Copilot and agy (Opus 4.6) clean; independent Opus round 1 (PR comment,
-  2026-11-15): no blocking, two should-fix, four nits. ✅ Round 1 fixed: S1,
-  `partition_sensitivity.plan_cell` reads H2 at 1, 2 and 4 cells (`H2_CELL_COUNTS`), docs say
-  "two cells per pair direction"; S2, `partition_pilot.py` no longer computes the uncalibrated
-  `on_s_prime` and the gate no longer carries it (committed development pilots keep it as a
-  record); N1, protocol.md and registered-decisions.md point to the exploratory rule (H2 reads on
-  s alone when its s′ cell is exploratory); N2, protocol.md reflowed. Left on the PR as nits: the
-  95% two-cell detects are not stated or harvested; the gate checks `k_from`'s metric and critical
-  p, not that it came from the s′ null at K = `H2_RUNS` (H1's co-primary has the same gap). 📋
-  Next, in a fresh session: a fresh Opus verify round on the round-1 fixes, then merge before the
-  seal (MSR final build Thu/Fri 11-19/20). Open, not in this issue: papers 90-conditional.tex
-  labels a reversed effect ("labelled reversed where the cell, sign flipped, would be
-  supported"); the gate has no such label yet. Verify: `uv run pytest
-  tests/unit/experiment/test_decomposition.py tests/unit/test_partition_pilot.py
-  tests/unit/test_partition_sensitivity_inputs.py`; `harvest.py --check` after commit.
+  PR #276, round 2 verify next.** ✅ `registered_read(org, "H2")` is two cells per pair direction
+  (four with Qt and Chromium both admitted), at K = `H2_RUNS`; `confirmatory_gate` takes
+  `h2_coprimary` and H2 passes only when every cell does at its Holm level, each score on its own
+  K source's critical p. ✅ Round 1 (Opus, 2026-11-15) fixed in fd78103: S1 (`H2_CELL_COUNTS` 1, 2,
+  4), S2 (no uncalibrated `on_s_prime`), N1 (exploratory rule named). ✅ 2026-11-16, the last nits:
+  the 95% two-cell detects stated and harvested (`rd_h2_s{,_prime}_two_cells_95`); the K-source
+  gap was real, so `require_test_read` now refuses an H2 read off K = 40 and any H2 or co-primary
+  read whose K source lacks `registered_runs` equal to its K (`cells.K_RULE_REGISTERED`;
+  `partition_pilot.py` copies `registered_runs` into `k_from`); six mutants killed. 📋 Next: a
+  fresh Opus verify round on the 2026-11-16 diff, until clean; CI green; squash-merge; remove the
+  worktrees gate-274 and headless-fix-276, and h2-sprime / headless-fix-275 only if
+  `git log origin/main..HEAD` is empty there. Then #277 (check 5 and δ from one plant). Open, not
+  in this issue: papers 90-conditional.tex labels a reversed effect; the gate has no such label
+  yet. Verify: `uv run pytest tests/unit/experiment/test_decomposition.py
+  tests/unit/test_partition_pilot.py tests/unit/test_partition_sensitivity_inputs.py
+  tests/unit/test_k_coverage.py`; `harvest.py --check`.
 
 - **Issue #253, the code mirrors the Stage 1 report's registered rules (papers 1b6e349): done.** ✅
   #261 (b7e5dd1): the calibrated bounded side (`p_bounded`), a failed check withdraws its

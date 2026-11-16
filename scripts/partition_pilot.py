@@ -494,6 +494,9 @@ def main() -> None:
             "file": str(args.sizing),
             "org": sizing_artifact.get("org"),
             "runs": runs_fixed,
+            # Set where the coverage rule was read at a registered K (`k_coverage.py
+            # --registered-runs`), which a co-primary or H2 test read requires.
+            "registered_runs": sizing_artifact.get("registered_runs"),
             "metric": sizing_artifact.get("metric", "exact_match"),
             "kind": sizing_artifact.get("kind", "pilot"),
             "cluster_unit": recorded_cluster(sizing_artifact, args.sizing),

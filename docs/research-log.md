@@ -11376,3 +11376,14 @@ at 97.5% and misses at 95%, so its critical p is calibrated, 0.0148 and 0.0241 a
 (the 97.5% one above α, so the interval decides there), with calibrated rates 0.0095 and 0.01875 on
 the second null half. H2's s K source keeps 0.0121 and 0.0255. The s′ cell reads its own; a test read
 of s′ refuses a K source made on s.
+
+On the 95% interval the same two-cell simulations detect +0.0110 (s) and +0.0065 (s′), both below
+δ, beside the 97.5% figures of 2026-11-13 (`by_level` 0.95 of the two `-sizing_bound_90`
+artifacts; PR #276 review, 2026-11-16).
+
+The gate now holds H2 to its registered K (PR #276 review, 2026-11-16): `registered_read(org,
+hypothesis="H2")` registers K = 40, and a test read of H2 on either score, or of any co-primary
+score, is refused unless its K source records the coverage rule read at the read's own K
+(`registered_runs`, which `partition_pilot.py` now copies into `k_from`). Before, an uncalibrated
+H2 read at another K, with a K source and a simulation at that K, passed the gate. The committed K
+sources all record it: H2's two at 40, and each H1 co-primary at its s cell's K.

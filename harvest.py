@@ -218,6 +218,20 @@ CLAIMS: list[tuple[Any, ...]] = [
         [*H2_K40_AT, "0.975", "by_cells", "2", "minimum_detectable_effect"],
     ),
     (
+        "rd_h2_s_two_cells_95",
+        "registered-decisions.md",
+        "+0.0110",
+        H2_K40_TWO_CELLS,
+        [*H2_K40_AT, "0.95", "by_cells", "2", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_h2_s_prime_two_cells_95",
+        "registered-decisions.md",
+        "+0.0065",
+        H2_PRIME_K40_TWO_CELLS,
+        [*H2_K40_AT, "0.95", "by_cells", "2", "minimum_detectable_effect"],
+    ),
+    (
         "rd_h2_s_prime_critical_975",
         "registered-decisions.md",
         "0.0148",

@@ -41,6 +41,11 @@ POSITIVE_CONTROL_CONFIDENCE = 0.95
 # since the coverage rule, not the pilot's reproducibility K alone, fixes K (research log
 # 2026-10-09).
 K_COVERAGE = "k_coverage"
+#: A registered read's `k_rule` where its K source must be the coverage rule read at the read's own
+#: K (`k_coverage.py --registered-runs`, `partitions.registered_coverage`), so its null, and any
+#: critical p, were simulated at that K on the cell's own score: H2's cells at `H2_RUNS`, each
+#: co-primary cell at its s cell's K. An H1 cell on s takes its K from the coverage rule's grid.
+K_RULE_REGISTERED = "registered"
 
 # The chains every chain artifact made before artifacts recorded them was drawn from, by file, as
 # `chains.chains_sha256` of the file now committed (#190): the pilots were read before #190's
@@ -390,6 +395,14 @@ def require_test_read(
             raise ValueError(
                 f"{org}: {name} is at K = {source.get('runs')!r}, the read at {report['runs']!r}"
             )
+    if "runs" in expected and report["runs"] != expected["runs"]:
+        raise ValueError(f"{org}: read at K = {report['runs']!r}, registered at {expected['runs']}")
+    registered_k = report["k_from"].get("registered_runs")
+    if expected.get("k_rule") == K_RULE_REGISTERED and registered_k != report["runs"]:
+        raise ValueError(
+            f"{org}: its K source is not the coverage rule read at K = {report['runs']!r} "
+            f"(k_coverage.py --registered-runs), so its null was not simulated at its K"
+        )
     if not isinstance(report["levels"], list | tuple):
         raise ValueError(f"{org}: levels {report['levels']!r} is not a list of levels")
     try:

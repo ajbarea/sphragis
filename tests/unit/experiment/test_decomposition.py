@@ -1757,6 +1757,10 @@ def _on_other(record: dict) -> dict:
     """`record`, a report or simulation, as the co-primary score's: the same runs and numbers, its K
     source, bounds and calibration its own pilot's, whose spread differs from the whole score's."""
     other = copy.deepcopy(record)
+    # Its K source is the coverage rule read at the whole score's K (`k_coverage.py
+    # --registered-runs`).
+    if isinstance(other.get("k_from"), dict):
+        other["k_from"]["registered_runs"] = other["k_from"].get("runs")
     for source in (other, other.get("k_from"), other.get("sensitivity")):
         if isinstance(source, dict) and "metric" in source:
             source["metric"] = COPRIMARY_METRIC
@@ -3012,6 +3016,13 @@ def _h2_pair(low: float, high: float, p: float, **kwargs: Any) -> tuple[dict, di
     report, sim = _two_levels("qt", low, high, p, **kwargs)
     cell = {"hypothesis": "H2", "foreign_source": "chromium"}
     report |= cell
+    # At H2's registered K, its K source the coverage rule read there (`k_coverage.py
+    # --registered-runs`).
+    for record in (report, report["k_from"], report["sensitivity"], sim):
+        record["runs"] = decomposition.H2_RUNS
+    report["k_from"]["registered_runs"] = decomposition.H2_RUNS
+    if isinstance(report.get("positive_control"), dict):
+        report["positive_control"]["evidence"]["runs"] = decomposition.H2_RUNS
     # Beside the cell, binding nothing: the joint reading over its K runs.
     report["joint"] = {
         "runs": report["runs"],
@@ -3602,6 +3613,62 @@ def test_h2s_s_prime_cell_takes_its_k_source_and_bounds_from_its_own_score(admit
     one = copy.deepcopy(prime) | {"sensitivity": prime["sensitivity"] | {"cells": 1}}
     with pytest.raises(ValueError, match="qt: bounds at cells 1, registered 2"):
         _full_with(h2_report, h2_sim, (one, prime_sim))
+
+
+def test_h2_is_read_at_its_registered_k(admitted) -> None:
+    """H2's K is registered at `H2_RUNS`, not found by the coverage rule (registered-decisions.md,
+    "H2's K"): a read at another K, its K source, bounds and s' twin all at that K, is refused."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    off = decomposition.H2_RUNS - 10
+    for record in (h2_report, h2_report["k_from"], h2_report["sensitivity"], h2_sim):
+        record["runs"] = off
+    h2_report["k_from"]["registered_runs"] = off
+    h2_report["positive_control"]["evidence"]["runs"] = off
+    h2_report["joint"]["runs"] = off
+    with pytest.raises(
+        ValueError, match=f"qt: read at K = {off}, registered at {decomposition.H2_RUNS}"
+    ):
+        _full_with(h2_report, h2_sim)
+
+
+def test_a_k_source_not_the_coverage_rule_read_at_its_k_is_refused(admitted) -> None:
+    """H2's two cells and every co-primary cell take K from the coverage rule read at the read's K
+    (`k_coverage.py --registered-runs`), whose null was simulated at that K on the cell's own
+    score; a K source the grid found (no `registered_runs`), or read at another K, is refused. An
+    H1 cell on s takes the grid's K."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    prime, prime_sim = _h2_prime(h2_report, h2_sim)
+    refused = f"qt: its K source is not the coverage rule read at K = {decomposition.H2_RUNS}"
+    for registered in (None, decomposition.H2_RUNS - 10):
+        on_s = copy.deepcopy(h2_report)
+        on_s["k_from"]["registered_runs"] = registered
+        with pytest.raises(ValueError, match=refused):
+            _full_with(on_s, h2_sim, (prime, prime_sim))
+        on_prime = copy.deepcopy(prime)
+        on_prime["k_from"]["registered_runs"] = registered
+        with pytest.raises(ValueError, match=refused):
+            _full_with(h2_report, h2_sim, (on_prime, prime_sim))
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    coprimary = {o: _on_other(r) for o, r in reports.items()}
+    coprimary["openstack"]["k_from"].pop("registered_runs")
+    with pytest.raises(
+        ValueError,
+        match=f"openstack: its K source is not the coverage rule read at K = "
+        f"{reports['openstack']['runs']}",
+    ):
+        confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary=coprimary,
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            **_h2_reads(h2_report, h2_sim),
+        )
+    assert all("registered_runs" not in r["k_from"] for r in reports.values())
+    _full_with(h2_report, h2_sim)
 
 
 def test_the_gate_needs_h2s_s_prime_read_beside_its_s_read(admitted) -> None:
