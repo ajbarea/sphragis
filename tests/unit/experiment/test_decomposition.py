@@ -639,7 +639,7 @@ def _replication_cell(
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
         "lora_rank": 32,
-        "planted_convention": {"passed": True},
+        "planted_convention": {"passed": True, "convention": "code", "fraction": 1.0},
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
@@ -870,6 +870,23 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: bounds:"),
         ({"apache": _GOOD | {"window": "development"}}, _SIM, "development window"),
         ({"apache": _GOOD | {"planted_convention": {"passed": False}}}, _SIM, "check 5"),
+        # Check 5 is the code-level plant at f = 1.0 (registered 2026-11-16), not the marker.
+        (
+            {
+                "apache": _GOOD
+                | {"planted_convention": {"passed": True, "convention": "marker", "fraction": 0.5}}
+            },
+            _SIM,
+            "check 5 planted 'marker' at 0.5, registered 'code' at 1.0",
+        ),
+        (
+            {
+                "apache": _GOOD
+                | {"planted_convention": {"passed": True, "convention": "code", "fraction": 0.5}}
+            },
+            _SIM,
+            "check 5 planted 'code' at 0.5",
+        ),
         ({"apache": _GOOD | {"planted_convention": None}}, _SIM, "check 5 did not pass"),
         (
             {"apache": _GOOD | {"outcome_neutral_runs": [{"file": "run-1.json", "holds": False}]}},

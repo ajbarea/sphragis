@@ -256,3 +256,34 @@ def test_without_plant_nothing_is_marked(tmp_path: Path) -> None:
     _corpus(tmp_path / "src", "qt", _rows_with_targets(40))
     _build(tmp_path / "src", tmp_path / "out")
     assert json.loads((tmp_path / "out" / "placebo.json").read_text())["plant"] is None
+
+
+def test_the_code_plant_gives_each_half_its_own_style_and_records_it(tmp_path: Path) -> None:
+    """Check 5's plant (registered 2026-11-16): every C++ row it can change, at f = 1.0."""
+    rows = [
+        dict(
+            _row(f"p{i % 4}", "2024-11-05", f"x{i}"),
+            change_id=f"c{i}",
+            # Every project carries both kinds of file, in both styles.
+            path="src/a.cpp" if (i // 4) % 2 else "doc/a.qdoc",
+            after="if(x) { y(); }\n" if (i // 8) % 2 else "if (x) { y(); }\n",
+        )
+        for i in range(80)
+    ]
+    _corpus(tmp_path / "src", "qt", rows)
+    _build(
+        tmp_path / "src", tmp_path / "out", extra=("--plant", "1.0", "--plant-convention", "code")
+    )
+    manifest = json.loads((tmp_path / "out" / "placebo.json").read_text())
+    assert (manifest["plant"]["convention"], manifest["plant"]["fraction"]) == ("code", 1.0)
+    for name, style in (("qt-a", "if (x)"), ("qt-b", "if(x)")):
+        half = _half(tmp_path / "out", name)
+        cpp = [r for r in half if r["path"].endswith(".cpp")]
+        assert cpp and all(r["after"].startswith(style) for r in cpp)
+        # A row in no language the plant reads is never changed.
+        assert {r["after"] for r in half if r["path"].endswith(".qdoc")} <= {
+            "if(x) { y(); }\n",
+            "if (x) { y(); }\n",
+        }
+        report = manifest["plant"]["halves"][name]
+        assert report["changed"] == report["eligible"] > 0 and report["realised_of_eligible"] == 1.0

@@ -169,7 +169,7 @@ def test_chunking_the_training_side_changes_no_similarity(chunk: int) -> None:
 
 
 def _planted_run(
-    verdict: str, *, tag: str = "-plant0.5", window: str = "dev", org: str = "openstack"
+    verdict: str, *, tag: str = "-plantcode1.0", window: str = "dev", org: str = "openstack"
 ) -> dict[str, Any]:
     root = f"/data/corpus-partition-{org}-p2-n1850{tag}"
     return {
@@ -200,14 +200,36 @@ def test_planted_convention_passes_only_on_a_pass_at_the_registered_fraction() -
 
 @pytest.mark.parametrize(
     ("tag", "window"),
-    [("-plant0.25", "dev"), ("", "dev"), ("-plant0.5", "test")],
-    ids=["weaker plant", "unplanted", "test window"],
+    [
+        ("-plantcode0.5", "dev"),
+        ("", "dev"),
+        ("-plantcode1.0", "test"),
+        ("-plant1.0", "dev"),
+        ("-plantquotes1.0", "dev"),
+        ("-plant0.5", "dev"),
+    ],
+    ids=[
+        "weaker plant",
+        "unplanted",
+        "test window",
+        "the marker at the dose",
+        "the Python-only quote plant",
+        "the marker check 5 used before",
+    ],
 )
 def test_planted_convention_refuses_a_run_that_is_not_the_registered_check(
     tag: str, window: str
 ) -> None:
     check = _check(_planted_run("pass", tag=tag, window=window))
     assert not check.passed and "reason" in check.evidence
+
+
+def test_planted_convention_records_the_convention_and_dose_it_read() -> None:
+    from sphragis.experiment.cells import PLANT_CONVENTION, PLANT_FRACTION
+
+    evidence = _check(_planted_run("pass")).evidence
+    assert (evidence["convention"], evidence["fraction"]) == (PLANT_CONVENTION, PLANT_FRACTION)
+    assert evidence["conventions"] == ["code", "code"] and evidence["planted"] == ["1.0", "1.0"]
 
 
 def test_planted_convention_refuses_another_organizations_run() -> None:
@@ -223,7 +245,7 @@ def test_planted_convention_refuses_a_run_at_another_training_size() -> None:
 def test_planted_convention_needs_every_half_planted() -> None:
     run = _planted_run("pass")
     half = run["corpora"]["openstack-b"]
-    half["source"] = half["source"].replace("-plant0.5", "")
+    half["source"] = half["source"].replace("-plantcode1.0", "")
     assert not _check(run).passed
     one_half = {**run, "corpora": {"openstack-a": run["corpora"]["openstack-a"]}}
     assert not _check(one_half).passed

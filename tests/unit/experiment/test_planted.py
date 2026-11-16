@@ -6,9 +6,17 @@ import pytest
 
 from sphragis.experiment.planted import (
     PLANT_CONVENTIONS,
+    ROW_CONVENTIONS,
+    cpp_spaced,
+    cpp_tight,
     flip_quotes,
     halves,
     is_python,
+    js_double,
+    js_single,
+    language_of,
+    php_double,
+    php_single,
     plant,
     planted_corpora,
     to_double,
@@ -234,3 +242,103 @@ def test_a_plant_names_its_changed_ids_only_when_asked() -> None:
 def test_a_line_separator_the_tokenizer_does_not_split_on_leaves_offsets_true(separator) -> None:
     text = f"x = 1  # a{separator}b\ny = 'v'\n"
     assert to_double(text) == f'x = 1  # a{separator}b\ny = "v"\n'
+
+
+# --- The code-level plant, check 5's (registered 2026-11-16): quote style in Python, PHP and
+# JavaScript, control-keyword spacing in C++.
+
+
+@pytest.mark.parametrize(
+    ("transform", "text", "expected"),
+    [
+        (php_single, '$a = "plain";', "$a = 'plain';"),
+        (php_double, "$a = 'plain';", '$a = "plain";'),
+        (js_single, 'const a = "plain";', "const a = 'plain';"),
+        (js_double, "const a = 'plain';", 'const a = "plain";'),
+        (cpp_spaced, "if(x) {} while(y); switch(z) {}", "if (x) {} while (y); switch (z) {}"),
+        (cpp_tight, "if (x) { for  (;;) {} } else if (q)", "if(x) { for(;;) {} } else if(q)"),
+    ],
+)
+def test_the_code_plant_restyles_each_language(transform, text: str, expected: str) -> None:
+    assert transform(text) == expected
+    assert transform(expected) == expected
+
+
+@pytest.mark.parametrize(
+    ("transform", "text"),
+    [
+        # A double-quoted PHP string interpolates and reads escapes; a single-quoted one does not.
+        (php_single, '$b = "x $y";'),
+        (php_single, '$d = "a\\n";'),
+        (php_double, "$b = 'it\\'s';"),
+        (php_double, "echo 'a\"b';"),
+        # A single-quoted `$x` is text; double-quoted, it would read the variable.
+        (php_double, "$a = '$x';"),
+        (php_single, '// a "comment"'),
+        # A template literal interpolates; a literal in a comment is not code.
+        (js_single, "b = `t ${x}`;"),
+        (js_single, 'x = 1; // "c"'),
+        (js_double, "x = 'b\\n';"),
+        # A preprocessor line, a string, a comment, a call and a parenthesis on the next line.
+        (cpp_spaced, "#if(A)"),
+        (cpp_spaced, 's = "if(z)";'),
+        (cpp_spaced, "/* for(;;) */ // while(x)"),
+        (cpp_spaced, "foreach(x) {} iff(y);"),
+        (cpp_tight, "if\n(x)"),
+    ],
+)
+def test_the_code_plant_leaves_what_would_change_meaning_or_is_not_code(
+    transform, text: str
+) -> None:
+    assert transform(text) == text
+
+
+def test_the_code_plant_reads_each_row_in_its_own_language() -> None:
+    assert [language_of({"path": p}) for p in ("a.py", "b.php", "c.js", "d.cpp", "e.h")] == [
+        "py",
+        "php",
+        "js",
+        "cpp",
+        "cpp",
+    ]
+    assert language_of({"path": "f.vue"}) is None and language_of({"path": None}) is None
+    rows = [
+        {"id": "py", "path": "m.py", "after": 'x = "v"'},
+        {"id": "php", "path": "m.php", "after": '$x = "v";'},
+        {"id": "js", "path": "m.js", "after": 'x = "v";'},
+        {"id": "cpp", "path": "m.cpp", "after": "if(x) {}"},
+        {"id": "vue", "path": "m.vue", "after": 'x = "v";'},
+        {"id": "rst", "path": "m.rst", "after": "if(x)"},
+    ]
+    (half_a, half_b), applies = PLANT_CONVENTIONS["code"]
+    assert "code" in ROW_CONVENTIONS and applies is None
+    out, report = plant(rows, fraction=1.0, seed=0, by_row=half_a, record_ids=True)
+    assert [r["after"] for r in out] == [
+        "x = 'v'",
+        "$x = 'v';",
+        "x = 'v';",
+        "if (x) {}",
+        'x = "v";',
+        "if(x)",
+    ]
+    assert report["changed_ids"] == ["py", "php", "js", "cpp"]
+    # The other half's convention is the other quote and no space.
+    flipped, _ = plant(out, fraction=1.0, seed=0, by_row=half_b)
+    assert [r["after"] for r in flipped][:4] == ['x = "v"', '$x = "v";', 'x = "v";', "if(x) {}"]
+
+
+def test_the_code_plant_is_the_quote_plant_on_python_rows() -> None:
+    """δ's exchange rate was read on the quote-style plant over Python rows (research log,
+    2026-10-16); at its dose the code-level plant changes those rows exactly as it did."""
+    rows = [
+        {"id": f"r{i}", "path": "m.py", "after": text}
+        for i, text in enumerate(["x = 'a'", 'y = "b"', "z = f'{w}'", "q = 1", "s = 'it\\'s'"])
+    ]
+    for side in (0, 1):
+        quotes, applies = PLANT_CONVENTIONS["quotes"]
+        code, _ = PLANT_CONVENTIONS["code"]
+        by_quotes, quotes_report = plant(
+            rows, fraction=1.0, seed=3, transform=quotes[side], applies=applies, record_ids=True
+        )
+        by_code, code_report = plant(rows, fraction=1.0, seed=3, by_row=code[side], record_ids=True)
+        assert by_code == by_quotes and code_report == quotes_report

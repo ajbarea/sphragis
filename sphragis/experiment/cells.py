@@ -37,6 +37,12 @@ REGISTERED_RANK = 32
 RERUN_RANK = 256
 #: Outcome-neutral check 2's interval (Stage 1 report): its lower bound must be above zero.
 POSITIVE_CONTROL_CONFIDENCE = 0.95
+#: Outcome-neutral check 5 as registered (2026-11-16, issue #277): one development run with each
+#: half's own code-level convention (`planted.PLANT_CONVENTIONS["code"]`) in every refinement it
+#: can change, the dose δ's exchange rate was read at (research log, 2026-10-16), so one plant
+#: both proves the contrast detects a planted convention and sets δ.
+PLANT_CONVENTION = "code"
+PLANT_FRACTION = 1.0
 # The kind a K coverage artifact records (`k_coverage.py`): the only K source a test read takes,
 # since the coverage rule, not the pilot's reproducibility K alone, fixes K (research log
 # 2026-10-09).
@@ -388,6 +394,12 @@ def require_test_read(
     planted = report["planted_convention"]
     if not (isinstance(planted, Mapping) and planted.get("passed") is True):
         raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")
+    registered_plant = (PLANT_CONVENTION, PLANT_FRACTION)
+    if (planted.get("convention"), planted.get("fraction")) != registered_plant:
+        raise ValueError(
+            f"{org}: check 5 planted {planted.get('convention')!r} at {planted.get('fraction')!r}, "
+            f"registered {PLANT_CONVENTION!r} at {PLANT_FRACTION}"
+        )
     for name, what in (("k_from", "K"), ("sensitivity", "bounds")):
         source = report[name]
         if not (isinstance(source, Mapping) and source.get("org") == org):

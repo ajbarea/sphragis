@@ -11387,3 +11387,32 @@ score, is refused unless its K source records the coverage rule read at the read
 (`registered_runs`, which `partition_pilot.py` now copies into `k_from`). Before, an uncalibrated
 H2 read at another K, with a K source and a simulation at that K, passed the gate. The committed K
 sources all record it: H2's two at 40, and each H1 co-primary at its s cell's K.
+
+### Planned before any run: check 5 on δ's plant, in each organization's languages (2026-11-16)
+
+`# research(2026-11)`. Issue #277, after the Stage 1 review's S1 (2026-11-12): check 5 planted a
+comment marker and δ's rate was read on a quote-style plant, so the instrument that showed
+detection was not the one that set δ. AJ's decision (2026-11-14): register the code-level plant as
+check 5 at a stated dose. Fixed here, before any run:
+
+1. The plant (`placebo_corpus.py --plant-convention code`, tagged `-plantcode<f>`): each half its
+   own quote style, half a single and half b double, on Python rows exactly as δ's plant
+   (`planted.to_single`, `to_double`), and on PHP and JavaScript rows through pygments' lexers, on
+   plain literals only (no quote, backslash or newline inside, and in PHP no `$`, which a
+   double-quoted string interpolates). C++ has one string quote, so on C++ rows half a puts a
+   space between a control keyword (`if`, `for`, `while`, `switch`) and its parenthesis and half
+   b puts none (clang-format's `SpaceBeforeParens`, `ControlStatements` against `Never`). Every
+   other file is left alone, and nothing inside a comment, a string, a template literal or a
+   preprocessor line is rewritten. Both are house rules organizations hold: MediaWiki's PHP and
+   JavaScript conventions prefer single quotes, and Qt's coding style requires the space.
+2. The dose: f = 1.0, every refinement the plant can change, the dose δ's rate was read at
+   (2026-10-16). Each half's realised share is read from its corpus manifest and reported.
+3. The runs: each admitted organization's first ten admissible partitions at N = 1,850, training
+   seeds 1 to 10, corpus v3, each chained `partition_run` -> `decoder_check` -> `likelihood_score`
+   as the marker check's were. OpenStack's ten are the partitions and seeds of δ's ten quote
+   runs, and at f = 1.0 the plant changes their Python rows exactly as δ's did
+   (`test_the_code_plant_is_the_quote_plant_on_python_rows`).
+4. The rule, the marker check's (2026-10-01): the plant is registered as an organization's check 5
+   if all ten of its runs pass on s on both halves and every run's projected pass probability is
+   at least 0.95. Otherwise nothing is registered for that organization until a decision is
+   recorded here.

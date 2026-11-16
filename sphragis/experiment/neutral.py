@@ -27,6 +27,7 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.dedup import jaccard, pair_text, shingles
+from sphragis.experiment.cells import PLANT_CONVENTION, PLANT_FRACTION
 from sphragis.experiment.runner import to_clusters
 from sphragis.measure.stats import cluster_bootstrap, supports_direction
 
@@ -36,10 +37,10 @@ from sphragis.measure.stats import cluster_bootstrap, supports_direction
 # rate at 0.7 (`window-report-openstack-v3.json`).
 LEAKAGE_THRESHOLD = 0.7
 LEAKAGE_MAX_RATE = 0.02
-# The planted-convention check as registered (research log, 2026-10-01): each half's own marker
-# in half its refinements. At a quarter it passed 2 of 10 OpenStack dev runs, at a half 10 of 10
-# with a projected pass probability above 0.999 (`rq1-partition-openstack-*-plant0.5.json`).
-PLANT_FRACTION = 0.5
+# The planted-convention check, `cells.PLANT_CONVENTION` at `cells.PLANT_FRACTION` (registered
+# 2026-11-16). Before, each half's own comment marker in half its refinements (research log,
+# 2026-10-01): at a quarter it passed 2 of 10 OpenStack dev runs, at a half 10 of 10
+# (`rq1-partition-openstack-*-plant0.5.json`).
 
 
 @dataclass(frozen=True)
@@ -200,14 +201,25 @@ def source_root(source: str) -> Path:
     return Path(source.split(_UNDER, 1)[1]).parent.parent
 
 
-def planted_convention(
-    run: Mapping[str, Any], *, org: str, train_size: int, fraction: float = PLANT_FRACTION
-) -> Check:
-    """Test 5: a run with each half's own marker planted reads `pass` on both halves.
+#: The tag a planted corpus's path carries (`cluster-env.sh`'s `tag_result_suffix`): the
+#: convention, none for the marker, and the fraction.
+_PLANT_TAG = re.compile(r"-plant([a-z]*)([0-9.]+)/")
 
-    The run is `org`'s `partition_run` result built with `PLANT=<fraction>` on the development
-    window at `train_size`; its two halves, their corpus paths (which carry the fraction and the
-    organization) and its training size are read rather than trusted, and every half must match.
+
+def planted_convention(
+    run: Mapping[str, Any],
+    *,
+    org: str,
+    train_size: int,
+    convention: str = PLANT_CONVENTION,
+    fraction: float = PLANT_FRACTION,
+) -> Check:
+    """Test 5: a run with each half's own convention planted reads `pass` on both halves.
+
+    The run is `org`'s `partition_run` result built with `PLANT=<fraction>` and
+    `PLANT_CONVENTION=<convention>` on the development window at `train_size`; its two halves,
+    their corpus paths (which carry the convention, the fraction and the organization) and its
+    training size are read rather than trusted, and every half must match.
     Only the planted run is read: the unplanted runs are H1's own data, so a condition on them
     would not be outcome neutral. Its adapter arms, which the contrast compares, must not be
     degenerate (test 6 on those arms). Its base arms are left out: the plant rewrites the
@@ -216,13 +228,17 @@ def planted_convention(
     """
     corpora = run["corpora"]
     sources = [corpus["source"] for corpus in corpora.values()]
-    planted = [m.group(1) if (m := re.search(r"-plant([0-9.]+)/", s)) else None for s in sources]
+    tags = [m.groups() if (m := _PLANT_TAG.search(s)) else None for s in sources]
+    planted = [None if t is None else t[1] for t in tags]
+    conventions = [None if t is None else (t[0] or "marker") for t in tags]
     windows = {source_windows(s) for s in sources}
     evidence: dict[str, Any] = {
         "verdict": run["verdict"]["verdict"],
         "binding": run["verdict"]["binding"],
+        "convention": convention,
         "fraction": fraction,
         "planted": planted,
+        "conventions": conventions,
         "windows": sorted(windows),
     }
     halves = {f"{org}-a", f"{org}-b"}
@@ -231,6 +247,8 @@ def planted_convention(
         evidence["reason"] = f"halves {sorted(corpora)} are not {org}'s two halves"
     elif run.get("train_size") != train_size:
         evidence["reason"] = f"trained at {run.get('train_size')}, not {train_size}"
+    elif conventions != [convention] * len(sources):
+        evidence["reason"] = f"planted {conventions}, not {convention} in every half"
     elif planted != [str(fraction)] * len(sources):
         evidence["reason"] = f"planted at {planted}, not {fraction} in every half"
     elif windows != {"train -> dev"}:

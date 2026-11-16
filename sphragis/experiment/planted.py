@@ -23,7 +23,14 @@ import random
 import re
 import tokenize
 from collections.abc import Callable, Mapping, Sequence
+from functools import cache
 from typing import Any
+
+from pygments.lexer import Lexer
+from pygments.lexers.c_cpp import CppLexer
+from pygments.lexers.javascript import JavascriptLexer
+from pygments.lexers.php import PhpLexer
+from pygments.token import Keyword, Punctuation, String, Text, Whitespace
 
 # A Python string literal with no escapes and no quote of the other kind inside it. Narrow
 # on purpose: a transform that mangles a literal it half-understands would plant noise
@@ -102,6 +109,148 @@ def is_python(row: Mapping[str, Any]) -> bool:
     return str(row.get("path") or "").endswith(".py")
 
 
+# The code-level plant in the other languages the organizations write (`PLANT_CONVENTIONS`'s
+# `code`): quote style in PHP and JavaScript, where a literal holding no quote, backslash or
+# newline (and in PHP no `$`, which a double-quoted string interpolates) means the same in either
+# quote; and in C++, whose two quotes differ in meaning, the space a formatter puts or not between
+# a control keyword and its parenthesis (clang-format `SpaceBeforeParens`). Tokens come from
+# pygments, so a literal or keyword inside a comment, a string, a template literal or a
+# preprocessor line is never rewritten; a fragment pygments cannot read is read as best it can,
+# and only the tokens it names are edited.
+@cache
+def _lexer(language: str) -> Lexer:
+    options = {"stripnl": False, "ensurenl": False}
+    if language == "php":
+        # A refinement is a fragment of a PHP file, never opened with `<?php`.
+        return PhpLexer(startinline=True, **options)
+    if language == "js":
+        return JavascriptLexer(**options)
+    return CppLexer(**options)
+
+
+def _tokens(text: str, language: str) -> list[tuple[int, Any, str]]:
+    """`text`'s tokens, lexed with a final newline: pygments closes a line comment only at one, so
+    without it a fragment ending in a comment reads the comment as code. No token edited ends
+    past `text`."""
+    source = text if text.endswith("\n") else text + "\n"
+    return list(_lexer(language).get_tokens_unprocessed(source))
+
+
+_UNSAFE = {"php": "'\"\\\n$", "js": "'\"\\\n"}
+
+
+def _restyle_lexed(text: str, quote: str, language: str) -> str:
+    """Every plain `language` literal quoted the other way rewritten with `quote`."""
+    other = "'" if quote == '"' else '"'
+    # A literal is the run of string tokens pygments gives it. An interpolation brings a `$`, an
+    # escape a backslash, and a template or heredoc opens with no quote, so each fails below.
+    spans: list[list[int]] = []
+    for index, kind, value in _tokens(text, language):
+        if kind not in String:
+            continue
+        if spans and spans[-1][1] == index:
+            spans[-1][1] = index + len(value)
+        else:
+            spans.append([index, index + len(value)])
+    for start, end in reversed(spans):
+        literal = text[start:end]
+        inner = literal[1:-1]
+        if (
+            len(literal) >= 2
+            and literal[0] == other == literal[-1]
+            and not any(c in inner for c in _UNSAFE[language])
+        ):
+            text = text[:start] + quote + inner + quote + text[end:]
+    return text
+
+
+#: The control statements whose parenthesis a C++ formatter spaces or not.
+CONTROL_KEYWORDS = frozenset({"if", "for", "while", "switch"})
+
+
+def _space_control(text: str, space: str) -> str:
+    """Every C++ control keyword followed on its line by `(`, with `space` between them."""
+    tokens = _tokens(text, "cpp")
+    edits = []
+    for i, (index, kind, value) in enumerate(tokens):
+        if kind not in Keyword or value not in CONTROL_KEYWORDS:
+            continue
+        j = i + 1
+        while j < len(tokens) and tokens[j][1] in (Text, Whitespace) and not tokens[j][2].strip():
+            j += 1
+        start = index + len(value)
+        if (
+            j < len(tokens)
+            and tokens[j][1] in Punctuation
+            and tokens[j][2].startswith("(")
+            and "\n" not in text[start : tokens[j][0]]
+            and text[start : tokens[j][0]] != space
+        ):
+            edits.append((start, tokens[j][0]))
+    for start, end in reversed(edits):
+        text = text[:start] + space + text[end:]
+    return text
+
+
+def php_single(text: str) -> str:
+    return _restyle_lexed(text, "'", "php")
+
+
+def php_double(text: str) -> str:
+    return _restyle_lexed(text, '"', "php")
+
+
+def js_single(text: str) -> str:
+    return _restyle_lexed(text, "'", "js")
+
+
+def js_double(text: str) -> str:
+    return _restyle_lexed(text, '"', "js")
+
+
+def cpp_spaced(text: str) -> str:
+    """`if (`: Qt's own style (Qt Coding Style), clang-format's `ControlStatements`."""
+    return _space_control(text, " ")
+
+
+def cpp_tight(text: str) -> str:
+    """`if(`: clang-format's `Never`."""
+    return _space_control(text, "")
+
+
+#: The files each language's half of the code-level plant reads, by suffix.
+_SUFFIXES = {
+    "py": (".py",),
+    "php": (".php",),
+    "js": (".js", ".mjs", ".cjs"),
+    "cpp": (".cpp", ".cc", ".cxx", ".h", ".hh", ".hpp", ".hxx"),
+}
+#: Each half's code-level convention, by language: half a single quotes and `if (`, half b double
+#: quotes and `if(`. Python's pair is the quote-style plant δ's exchange rate was read on.
+_CODE_HALVES = (
+    {"py": to_single, "php": php_single, "js": js_single, "cpp": cpp_spaced},
+    {"py": to_double, "php": php_double, "js": js_double, "cpp": cpp_tight},
+)
+
+
+def language_of(row: Mapping[str, Any]) -> str | None:
+    """The language the code-level plant reads `row` as, from its path, or None."""
+    path = str(row.get("path") or "")
+    return next((lang for lang, ends in _SUFFIXES.items() if path.endswith(ends)), None)
+
+
+def _by_language(half: Mapping[str, Callable[[str], str]]) -> Callable[[str, Mapping], str]:
+    def transform(text: str, row: Mapping[str, Any]) -> str:
+        language = language_of(row)
+        return text if language is None else half[language](text)
+
+    return transform
+
+
+code_a = _by_language(_CODE_HALVES[0])
+code_b = _by_language(_CODE_HALVES[1])
+
+
 MARKER = "  # reviewed"
 # The other half's convention in the symmetric design. Same shape and length as MARKER so the
 # two are equally easy to learn and neither side is handed the simpler rule.
@@ -165,6 +314,7 @@ def plant(
     transform: Callable[[str], str] = flip_quotes,
     applies: Callable[[Mapping[str, Any]], bool] | None = None,
     record_ids: bool = False,
+    by_row: Callable[[str, Mapping[str, Any]], str] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Impose the convention on a fraction of rows, and report what was actually imposed.
 
@@ -173,6 +323,8 @@ def plant(
     half and getting a fifth is the normal case. Every number this calibration produces is
     indexed by the realised rate. A row `applies` refuses is never eligible. With `record_ids`, the
     ids of the rows changed are reported, so a reader can take the planted examples apart.
+    `by_row`, given, replaces `transform` with one that reads the row too (the code-level plant
+    reads its language from the row's path).
     """
     if not 0.0 <= fraction <= 1.0:
         raise ValueError(f"fraction must lie in [0, 1], got {fraction}")
@@ -183,7 +335,10 @@ def plant(
     for row in rows:
         copy = dict(row)
         text = str(copy.get(field, ""))
-        new = transform(text) if applies is None or applies(row) else text
+        if applies is not None and not applies(row):
+            new = text
+        else:
+            new = by_row(text, row) if by_row is not None else transform(text)
         if new != text:
             eligible += 1
             if rng.random() < fraction:
@@ -253,15 +408,22 @@ def symmetric_planted_corpora(
 
 
 #: Each convention the symmetric plant can impose: the two halves' transforms, in side order,
-#: and which rows it may touch. `marker` is check 5's; `quotes` is a code-level convention, the
-#: realistic signal the exchange rate between exact match and s is read on (review panel item 15).
+#: and which rows it may touch. `quotes` is the code-level convention the exchange rate between
+#: exact match and s is read on (review panel item 15), on Python rows; `code` is check 5's
+#: (registered 2026-11-16, `cells.PLANT_CONVENTION`), the same quote styles on Python, PHP and
+#: JavaScript rows and the control-keyword spacing on C++ rows, so the instrument that proves
+#: detection is the one δ's rate was read on. `marker`, each half's comment marker, was check 5's
+#: before; it stays for the runs made with it.
 PLANT_CONVENTIONS: dict[
     str,
     tuple[
-        tuple[Callable[[str], str], Callable[[str], str]],
+        tuple[Callable[..., str], Callable[..., str]],
         Callable[[Mapping[str, Any]], bool] | None,
     ],
 ] = {
     "marker": ((append_marker_other, append_marker), None),
     "quotes": ((to_single, to_double), is_python),
+    "code": ((code_a, code_b), None),
 }
+#: The conventions whose transforms read the row as well as its text (`plant`'s `by_row`).
+ROW_CONVENTIONS = frozenset({"code"})

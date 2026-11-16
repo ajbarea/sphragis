@@ -26,11 +26,12 @@ PARTITION_SEED="${PARTITION_SEED:?set PARTITION_SEED from the admissible list}"
 # trained at any other size.
 TRAIN_SIZE="${TRAIN_SIZE:?set TRAIN_SIZE to the admissible list's size_floor}"
 SEEDS="${SEEDS:?set SEEDS to the run's position in the admissible list}"
-# Optional: outcome-neutral check 5, each half's own marker planted in this fraction of its
-# refinements (placebo_corpus.py --plant). Results are tagged -plant<fraction>.
+# Optional: outcome-neutral check 5, PLANT=1.0 PLANT_CONVENTION=code (registered 2026-11-16):
+# each half's own code-level convention in this fraction of the refinements it can change
+# (placebo_corpus.py --plant), tagged -plantcode<fraction>. PLANT_CONVENTION=quotes is the
+# exchange rate's Python-only plant (-plantquotes<fraction>); unset, the comment marker check 5
+# used before (-plant<fraction>).
 PLANT="${PLANT:-}"
-# PLANT_CONVENTION=quotes plants each half's quote style on Python refinements instead, tagged
-# -plantquotes<fraction> (placebo_corpus.py --plant-convention).
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
 ROOT="$SPHRAGIS_DATA/corpus-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX"
 # LORA_RANK=256 is the rerun the Stage 1 report registers ("Rank 256"): tagged -r256 after the

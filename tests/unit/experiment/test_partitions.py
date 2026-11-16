@@ -338,7 +338,7 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         **cell,
         "window": "test",
         "lora_rank": 32,
-        "planted_convention": {"passed": True},
+        "planted_convention": {"passed": True, "convention": "code", "fraction": 1.0},
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
