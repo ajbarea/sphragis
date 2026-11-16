@@ -535,8 +535,8 @@ def test_a_git_hooks_repository_variables_do_not_reach_another_checkout(
     """A pre-commit hook exports GIT_INDEX_FILE; `-C` into another checkout would obey it."""
     code = _repo(tmp_path / "code")
     other = _repo(tmp_path / "other")
-    # Two repositories made in the same second share a commit, and the test could not tell them
-    # apart; a second commit in the other makes its HEAD differ always.
+    # A second commit in the other keeps the two HEADs apart whatever `_repo` names its commits;
+    # the test reads which repository git asked only while they differ.
     (other / "scripts" / "attack.py").write_text("x = 4\n")
     subprocess.run(["git", "commit", "-qam", "other"], cwd=other, check=True)
     (other / "scripts" / "attack.py").write_text("x = 5\n")
