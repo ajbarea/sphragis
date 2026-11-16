@@ -22,15 +22,18 @@ import io
 import random
 import re
 import tokenize
+from bisect import bisect_right
 from collections.abc import Callable, Mapping, Sequence
 from functools import cache
 from typing import Any
 
 from pygments.lexer import Lexer
 from pygments.lexers.c_cpp import CppLexer
+from pygments.lexers.dotnet import CSharpLexer
 from pygments.lexers.javascript import JavascriptLexer
+from pygments.lexers.jvm import JavaLexer
 from pygments.lexers.php import PhpLexer
-from pygments.token import Keyword, Punctuation, String, Text, Whitespace
+from pygments.token import Comment, Error, Keyword, Punctuation, String, Text, Whitespace
 
 # A Python string literal with no escapes and no quote of the other kind inside it. Narrow
 # on purpose: a transform that mangles a literal it half-understands would plant noise
@@ -112,11 +115,14 @@ def is_python(row: Mapping[str, Any]) -> bool:
 # The code-level plant in the other languages the organizations write (`PLANT_CONVENTIONS`'s
 # `code`): quote style in PHP and JavaScript, where a literal holding no quote, backslash or
 # newline (and in PHP no `$`, which a double-quoted string interpolates) means the same in either
-# quote; and in C++, whose two quotes differ in meaning, the space a formatter puts or not between
-# a control keyword and its parenthesis (clang-format `SpaceBeforeParens`). Tokens come from
-# pygments, so a literal or keyword inside a comment, a string, a template literal or a
-# preprocessor line is never rewritten; a fragment pygments cannot read is read as best it can,
-# and only the tokens it names are edited.
+# quote; and in C++, Java and C#, whose two quotes differ in meaning, the space a formatter puts or
+# not between a control keyword and its parenthesis (clang-format `SpaceBeforeParens`). Tokens come
+# from pygments, read with the code before the hunk (`context_before`), so a literal or keyword
+# inside a comment, a string, a template literal or a preprocessor line is not rewritten. A hunk
+# pygments may be misreading is left whole, as the Python half leaves a fragment its tokenizer
+# refuses: one where pygments reports an error, a string runs across a line or across the start
+# of the hunk (a hunk that opens inside a comment holding an apostrophe reads so), or a quote
+# follows a letter, as an apostrophe in prose does.
 @cache
 def _lexer(language: str) -> Lexer:
     options = {"stripnl": False, "ensurenl": False}
@@ -125,111 +131,179 @@ def _lexer(language: str) -> Lexer:
         return PhpLexer(startinline=True, **options)
     if language == "js":
         return JavascriptLexer(**options)
+    if language == "java":
+        return JavaLexer(**options)
+    if language == "cs":
+        return CSharpLexer(**options)
     return CppLexer(**options)
 
 
-def _tokens(text: str, language: str) -> list[tuple[int, Any, str]]:
-    """`text`'s tokens, lexed with a final newline: pygments closes a line comment only at one, so
-    without it a fragment ending in a comment reads the comment as code. No token edited ends
-    past `text`."""
-    source = text if text.endswith("\n") else text + "\n"
-    return list(_lexer(language).get_tokens_unprocessed(source))
+def _lexed(text: str, language: str, context: str) -> tuple[list[tuple[int, Any, str]], int] | None:
+    """The tokens of `context` and `text` read together, with where `text` starts in them; None
+    where the reading may be wrong (above). Lexed with a final newline, since pygments closes a
+    line comment only at one."""
+    prefix = context if not context or context.endswith("\n") else context + "\n"
+    source = prefix + text
+    source += "" if source.endswith("\n") else "\n"
+    offset = len(prefix)
+    tokens = list(_lexer(language).get_tokens_unprocessed(source))
+    for start, end in _string_spans(tokens):
+        # One that opens in the context and runs into the hunk spans the newline joining them.
+        if end > offset and "\n" in source[start : end - 1]:
+            return None
+        if end > offset and start > 0 and (source[start - 1].isalnum() or source[start - 1] == "_"):
+            return None
+    if any(kind in Error and index + len(value) > offset for index, kind, value in tokens):
+        return None
+    # A hunk line opening with `*` continues a block comment; read as code, it is one the hunk
+    # opened inside, and pygments would take its words for code.
+    starts = [index for index, _, _ in tokens]
+    line = offset
+    for text_line in text.split("\n"):
+        stripped = text_line.lstrip()
+        if stripped.startswith("*") and not stripped.startswith("*/"):
+            at = line + len(text_line) - len(stripped)
+            kind = tokens[max(bisect_right(starts, at) - 1, 0)][1]
+            if kind not in Comment:
+                return None
+        line += len(text_line) + 1
+    return tokens, offset
 
 
-_UNSAFE = {"php": "'\"\\\n$", "js": "'\"\\\n"}
-
-
-def _restyle_lexed(text: str, quote: str, language: str) -> str:
-    """Every plain `language` literal quoted the other way rewritten with `quote`."""
-    other = "'" if quote == '"' else '"'
-    # A literal is the run of string tokens pygments gives it. An interpolation brings a `$`, an
-    # escape a backslash, and a template or heredoc opens with no quote, so each fails below.
+def _string_spans(tokens: Sequence[tuple[int, Any, str]]) -> list[tuple[int, int]]:
+    """Each literal as the run of string tokens pygments gives it."""
     spans: list[list[int]] = []
-    for index, kind, value in _tokens(text, language):
+    for index, kind, value in tokens:
         if kind not in String:
             continue
         if spans and spans[-1][1] == index:
             spans[-1][1] = index + len(value)
         else:
             spans.append([index, index + len(value)])
-    for start, end in reversed(spans):
-        literal = text[start:end]
+    return [(start, end) for start, end in spans]
+
+
+_UNSAFE = {"php": "'\"\\\n$", "js": "'\"\\\n"}
+
+
+def _restyle_lexed(text: str, quote: str, language: str, context: str = "") -> str:
+    """Every plain `language` literal in `text` quoted the other way rewritten with `quote`. An
+    interpolation brings a `$`, an escape a backslash, and a template or heredoc opens with no
+    quote, so none is plain."""
+    lexed = _lexed(text, language, context)
+    if lexed is None:
+        return text
+    tokens, offset = lexed
+    other = "'" if quote == '"' else '"'
+    source = "".join(value for _, _, value in tokens)
+    for start, end in reversed(_string_spans(tokens)):
+        if start < offset or end > offset + len(text):
+            continue
+        literal = source[start:end]
         inner = literal[1:-1]
         if (
             len(literal) >= 2
             and literal[0] == other == literal[-1]
             and not any(c in inner for c in _UNSAFE[language])
         ):
-            text = text[:start] + quote + inner + quote + text[end:]
+            at = start - offset
+            text = text[:at] + quote + inner + quote + text[at + len(literal) :]
     return text
 
 
-#: The control statements whose parenthesis a C++ formatter spaces or not.
+#: The control statements whose parenthesis a C-family formatter spaces or not.
 CONTROL_KEYWORDS = frozenset({"if", "for", "while", "switch"})
 
 
-def _space_control(text: str, space: str) -> str:
-    """Every C++ control keyword followed on its line by `(`, with `space` between them."""
-    tokens = _tokens(text, "cpp")
+def _space_control(text: str, space: str, language: str = "cpp", context: str = "") -> str:
+    """Every control keyword in `text` followed on its line by `(`, with `space` between them."""
+    lexed = _lexed(text, language, context)
+    if lexed is None:
+        return text
+    tokens, offset = lexed
     edits = []
     for i, (index, kind, value) in enumerate(tokens):
-        if kind not in Keyword or value not in CONTROL_KEYWORDS:
+        if index < offset or kind not in Keyword or value not in CONTROL_KEYWORDS:
             continue
         j = i + 1
         while j < len(tokens) and tokens[j][1] in (Text, Whitespace) and not tokens[j][2].strip():
             j += 1
-        start = index + len(value)
+        start, end = index + len(value) - offset, (tokens[j][0] - offset if j < len(tokens) else 0)
         if (
             j < len(tokens)
             and tokens[j][1] in Punctuation
             and tokens[j][2].startswith("(")
-            and "\n" not in text[start : tokens[j][0]]
-            and text[start : tokens[j][0]] != space
+            and end <= len(text)
+            and "\n" not in text[start:end]
+            and text[start:end] != space
         ):
-            edits.append((start, tokens[j][0]))
+            edits.append((start, end))
     for start, end in reversed(edits):
         text = text[:start] + space + text[end:]
     return text
 
 
-def php_single(text: str) -> str:
-    return _restyle_lexed(text, "'", "php")
+def php_single(text: str, context: str = "") -> str:
+    return _restyle_lexed(text, "'", "php", context)
 
 
-def php_double(text: str) -> str:
-    return _restyle_lexed(text, '"', "php")
+def php_double(text: str, context: str = "") -> str:
+    return _restyle_lexed(text, '"', "php", context)
 
 
-def js_single(text: str) -> str:
-    return _restyle_lexed(text, "'", "js")
+def js_single(text: str, context: str = "") -> str:
+    return _restyle_lexed(text, "'", "js", context)
 
 
-def js_double(text: str) -> str:
-    return _restyle_lexed(text, '"', "js")
+def js_double(text: str, context: str = "") -> str:
+    return _restyle_lexed(text, '"', "js", context)
 
 
-def cpp_spaced(text: str) -> str:
-    """`if (`: Qt's own style (Qt Coding Style), clang-format's `ControlStatements`."""
-    return _space_control(text, " ")
+def _spaced(language: str) -> Callable[[str, str], str]:
+    def spaced(text: str, context: str = "") -> str:
+        """`if (`: Qt's own style (Qt Coding Style), clang-format's `ControlStatements`."""
+        return _space_control(text, " ", language, context)
+
+    return spaced
 
 
-def cpp_tight(text: str) -> str:
-    """`if(`: clang-format's `Never`."""
-    return _space_control(text, "")
+def _tight(language: str) -> Callable[[str, str], str]:
+    def tight(text: str, context: str = "") -> str:
+        """`if(`: clang-format's `Never`."""
+        return _space_control(text, "", language, context)
+
+    return tight
 
 
-#: The files each language's half of the code-level plant reads, by suffix.
+cpp_spaced, cpp_tight = _spaced("cpp"), _tight("cpp")
+
+
+#: The files each language's half of the code-level plant reads, by suffix. A `.ts` is TypeScript
+#: in some organizations and a Qt translation file in Qt, so it is read as neither.
 _SUFFIXES = {
     "py": (".py",),
     "php": (".php",),
     "js": (".js", ".mjs", ".cjs"),
     "cpp": (".cpp", ".cc", ".cxx", ".h", ".hh", ".hpp", ".hxx"),
+    "java": (".java",),
+    "cs": (".cs",),
 }
 #: Each half's code-level convention, by language: half a single quotes and `if (`, half b double
-#: quotes and `if(`. Python's pair is the quote-style plant δ's exchange rate was read on.
-_CODE_HALVES = (
-    {"py": to_single, "php": php_single, "js": js_single, "cpp": cpp_spaced},
-    {"py": to_double, "php": php_double, "js": js_double, "cpp": cpp_tight},
+#: quotes and `if(`. Python's pair is the quote-style plant δ's exchange rate was read on, and it
+#: reads no context, as δ's did.
+_CODE_HALVES: tuple[dict[str, Callable[..., str]], dict[str, Callable[..., str]]] = (
+    {
+        "py": to_single,
+        "php": php_single,
+        "js": js_single,
+        **{lang: _spaced(lang) for lang in ("cpp", "java", "cs")},
+    },
+    {
+        "py": to_double,
+        "php": php_double,
+        "js": js_double,
+        **{lang: _tight(lang) for lang in ("cpp", "java", "cs")},
+    },
 )
 
 
@@ -239,10 +313,14 @@ def language_of(row: Mapping[str, Any]) -> str | None:
     return next((lang for lang, ends in _SUFFIXES.items() if path.endswith(ends)), None)
 
 
-def _by_language(half: Mapping[str, Callable[[str], str]]) -> Callable[[str, Mapping], str]:
+def _by_language(half: Mapping[str, Callable[..., str]]) -> Callable[[str, Mapping], str]:
     def transform(text: str, row: Mapping[str, Any]) -> str:
         language = language_of(row)
-        return text if language is None else half[language](text)
+        if language is None:
+            return text
+        if language == "py":
+            return half[language](text)
+        return half[language](text, str(row.get("context_before") or ""))
 
     return transform
 

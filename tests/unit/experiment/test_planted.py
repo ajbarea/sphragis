@@ -342,3 +342,61 @@ def test_the_code_plant_is_the_quote_plant_on_python_rows() -> None:
         )
         by_code, code_report = plant(rows, fraction=1.0, seed=3, by_row=code[side], record_ids=True)
         assert by_code == by_quotes and code_report == quotes_report
+
+
+@pytest.mark.parametrize(
+    ("transform", "text"),
+    [
+        # A hunk opening inside a doc comment with an apostrophe: pygments pairs the comment's
+        # quote with the code's, and a rewrite there would change `foo`'s arguments.
+        (js_double, " * don't do this\n */\nfoo('a', b, 'c');"),
+        (js_single, ' * a "quoted" word\n * and "another\n */\nfoo("a", b, "c");'),
+        (php_double, " * it's here\n */\n$x = [ 'a' => 1, 'b' => 2 ];"),
+        # A hunk opening inside a doc comment whose quotes pair on each line.
+        (php_single, '\t * start with "handler" followed by "Event"\n\t */\n$x = "a";'),
+        (cpp_spaced, " * if(x) is checked\n */\nif(y) {}"),
+        # A block comment opened above the hunk and closed in it, its lines not starred.
+        (js_double, "  don't use this\n*/\nfoo('a', b, 'c');"),
+        # A character pygments does not read in the language.
+        (js_double, "x = 'a'; @@ y"),
+        (cpp_spaced, "if(x) { ` }"),
+        # A hunk opening inside a multi-line string, read as prose with an apostrophe.
+        (php_double, "  it's continued';"),
+        (php_double, "  it's continued' . 'x';"),
+    ],
+)
+def test_a_hunk_pygments_may_misread_is_left_whole(transform, text: str) -> None:
+    assert transform(text) == text
+
+
+def test_the_code_before_a_hunk_is_read_with_it() -> None:
+    text = " * don't do this\n */\nfoo('a', b, 'c');"
+    assert js_double(text, "/**\n") == ' * don\'t do this\n */\nfoo("a", b, "c");'
+    # A keyword in a comment the hunk opens inside is not code.
+    assert cpp_spaced(" * if(x) is checked\n */\nif(y) {}", "/*\n") == (
+        " * if(x) is checked\n */\nif (y) {}"
+    )
+    # A string that opens in the context and closes in the hunk leaves the hunk whole.
+    assert php_double("rest of it'; $y = 'b';", "$x = 'start of\n") == ("rest of it'; $y = 'b';")
+
+
+def test_java_and_csharp_rows_take_the_c_family_spacing() -> None:
+    (half_a, half_b), _ = PLANT_CONVENTIONS["code"]
+    java = {"path": "src/Main.java", "after": "if(x) { for(;;) {} }"}
+    csharp = {"path": "src/Main.cs", "after": "if (x) { while (q) {} }"}
+    assert half_a(java["after"], java) == "if (x) { for (;;) {} }"
+    assert half_b(csharp["after"], csharp) == "if(x) { while(q) {} }"
+    # A `.ts` is TypeScript elsewhere and a Qt translation file in Qt, so it is read as neither.
+    assert language_of({"path": "i18n/qt_de.ts"}) is None
+
+
+def test_only_the_hunk_is_rewritten_never_its_context() -> None:
+    assert js_double("foo('a');", "bar('x');\n") == 'foo("a");'
+    assert cpp_spaced("if(y) {}", "if(x) {}\n") == "if (y) {}"
+    # Through a row, the row's own context is read with its hunk.
+    (_, half_b), _ = PLANT_CONVENTIONS["code"]
+    row = {"path": "a.js", "after": " * don't do this\n */\nfoo('a', b, 'c');"}
+    assert half_b(row["after"], row) == row["after"]
+    assert half_b(row["after"], row | {"context_before": "/**"}) == (
+        ' * don\'t do this\n */\nfoo("a", b, "c");'
+    )

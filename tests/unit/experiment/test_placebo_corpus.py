@@ -287,3 +287,6 @@ def test_the_code_plant_gives_each_half_its_own_style_and_records_it(tmp_path: P
         }
         report = manifest["plant"]["halves"][name]
         assert report["changed"] == report["eligible"] > 0 and report["realised_of_eligible"] == 1.0
+        # Every C++ row now carries the half's style, the ones already written in it too.
+        assert report["carrying"] == len(cpp) > report["changed"]
+        assert report["carrying_fraction"] == len(cpp) / len(half)

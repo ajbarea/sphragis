@@ -174,6 +174,16 @@ def main() -> None:
                 record_ids=True,
                 **({"by_row": transforms[side]} if by_row else {"transform": transforms[side]}),
             )
+            # Where a half's convention is the organization's own (Qt writes `if (`), the plant
+            # changes few of its rows, though each carries the convention: those carrying it are
+            # the rows the other half's transform would change.
+            if by_row:
+                other = transforms[1 - side]
+                carrying = sum(
+                    other(str(r.get("after", "")), r) != r.get("after", "") for r in marked
+                )
+                report["carrying"] = float(carrying)
+                report["carrying_fraction"] = carrying / len(marked) if marked else 0.0
             planted[names[side]] = report
             marked_rows = iter(marked)
             for halves in by_month.values():
