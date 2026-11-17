@@ -38,7 +38,8 @@ from sphragis.measure.stats import cluster_bootstrap, supports_direction
 LEAKAGE_THRESHOLD = 0.7
 LEAKAGE_MAX_RATE = 0.02
 # The planted-convention check, at `cells.registered_plant(org)` (registered 2026-11-16, Qt's kept
-# 2026-11-17). Before, each half's own comment marker in half its refinements (research log,
+# 2026-11-17). The end-of-line marker in half its refinements, every organization's check 5 before
+# 2026-11-16 and Qt's still (research log,
 # 2026-10-01): at a quarter it passed 2 of 10 OpenStack dev runs, at a half 10 of 10
 # (`rq1-partition-openstack-*-plant0.5.json`).
 

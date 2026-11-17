@@ -245,10 +245,13 @@ def test_qt_is_read_on_its_registered_marker_plant() -> None:
 def test_an_organization_whose_ten_runs_were_never_read_has_no_check_5() -> None:
     """Item 4 registers a plant only on the organization's own ten runs (research log, 2026-11-16):
     one never read is refused, not read on another's plant; a named candidate is still read."""
-    from sphragis.experiment.cells import registered_plant
+    from sphragis.experiment.cells import PLANT_BY_ORG, PLANT_ORDER, registered_plant
 
     with pytest.raises(ValueError, match="apache: no plant is registered as its check 5"):
         registered_plant("apache")
+    # The order fixed before any member's runs: δ's plant, then the marker; Qt's is that order.
+    assert PLANT_ORDER == (("code", 1.0), ("marker", 0.5))
+    assert PLANT_BY_ORG["qt"] == PLANT_ORDER[1] and PLANT_BY_ORG["openstack"] == PLANT_ORDER[0]
     with pytest.raises(ValueError, match="no plant is registered"):
         _check(_planted_run("pass", org="apache"), org="apache")
     candidate = planted_convention(

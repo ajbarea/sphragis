@@ -419,7 +419,10 @@ This is a disclosed deviation from the plan and changes no pass rule (AJ's decis
 2026-11-17). The code reads each organization's own (`cells.registered_plant`), and
 `planted_check.py` writes `planted-check-<org>-<plant>.json`. An organization whose ten runs were
 never read under the rule, Chromium or a GitHub member, has no registered plant: its check 5, and
-so its test read, is refused until its runs are read and the decision recorded.
+so its test read, is refused until its runs are read and the decision recorded. That decision is
+fixed in advance: a GitHub member (mostly Java or C#, where keyword spacing stands in) takes δ's
+plant if its ten runs meet the rule, otherwise the end-of-line marker at 0.5 if its ten runs meet
+it, otherwise it is withdrawn as an apparatus failure.
 
 ### Interval the gate reads: the crossed run-by-cluster bootstrap
 

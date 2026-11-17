@@ -11534,4 +11534,9 @@ the plant per organization (`cells.registered_plant`: `PLANT_BY_ORG` holds Qt's 
 and `require_test_read` and `neutral.planted_convention` read each organization's own. Item 4
 registers a plant only on an organization's own ten runs, so one never read under it (Chromium, a
 GitHub member) has none: `registered_plant` refuses it, and its test read with it, until its runs
-are read and the decision recorded here (review round 2).
+are read and the decision recorded here (review round 2). So that decision leaves nothing open,
+the order is fixed now, before any member's runs are read (review round 3): a GitHub replication
+member, mostly Java or C#, where keyword spacing stands in for δ's quote style, takes δ's plant if
+its ten runs meet item 4's rule; otherwise each half's end-of-line marker at 0.5 if its ten runs
+meet the same rule; otherwise it is withdrawn as an apparatus failure, as a failed check 5
+withdraws any organization. Qt's case is this order read on Qt.

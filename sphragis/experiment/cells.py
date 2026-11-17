@@ -55,6 +55,11 @@ PLANT_BY_ORG: dict[str, tuple[str, float]] = {
     "qt": ("marker", 0.5),
 }
 
+#: The order an organization not yet read takes its check 5 in, fixed before any of its runs
+#: (research log, 2026-11-17): δ's plant if its ten runs meet item 4's rule, else the end-of-line
+#: marker at 0.5 if its ten runs meet it, else the organization is withdrawn. Qt's is this order.
+PLANT_ORDER: tuple[tuple[str, float], ...] = ((PLANT_CONVENTION, PLANT_FRACTION), ("marker", 0.5))
+
 
 def registered_plant(org: str) -> tuple[str, float]:
     """The convention and fraction check 5 is registered at for `org`.
@@ -64,9 +69,9 @@ def registered_plant(org: str) -> tuple[str, float]:
     """
     if org not in PLANT_BY_ORG:
         raise ValueError(
-            f"{org}: no plant is registered as its check 5; read its ten runs under item 4 "
-            f"(planted_check.py --convention {PLANT_CONVENTION} --fraction {PLANT_FRACTION}) "
-            "and record the decision first"
+            f"{org}: no plant is registered as its check 5; read its ten runs under item 4 in "
+            f"the order {PLANT_ORDER} (planted_check.py --convention --fraction) and record the "
+            "plant that meets it, or withdraw the organization"
         )
     return PLANT_BY_ORG[org]
 
