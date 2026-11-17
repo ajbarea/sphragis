@@ -37,7 +37,11 @@ _Z = 1.959963984540054
 #: A run's corpus (`partition_run.sbatch`'s ROOT) and the partition it names: the training seed
 #: in the name changes no corpus, so runs are counted by partition.
 _ROOT = re.compile(r"corpus-partition-[^/]+")
-_PARTITION = re.compile(r"^corpus-partition-.+?-p(\d+)(?:-|$)")
+
+
+def _partition(root: str, org: str) -> int | None:
+    match = re.match(rf"corpus-partition-{re.escape(org)}-p(\d+)(?:-|$)", root)
+    return int(match.group(1)) if match else None
 
 
 def projected_pass(binding: dict[str, dict[str, float]]) -> float:
@@ -61,11 +65,7 @@ def read_run(run_file: Path, manifest_file: Path | None, org: str) -> dict[str, 
     out: dict[str, Any] = {
         "file": run_file.name,
         "corpus": sorted(roots)[0] if len(roots) == 1 else None,
-        "partition": (
-            int(m.group(1))
-            if len(roots) == 1 and (m := _PARTITION.match(next(iter(roots))))
-            else None
-        ),
+        "partition": _partition(next(iter(roots)), org) if len(roots) == 1 else None,
         "metric": run.get("metric", "exact_match"),
         "passed": check.passed,
         "verdict": run["verdict"]["verdict"],

@@ -71,21 +71,21 @@ def test_the_projection_is_the_rule_logged_for_check_5() -> None:
 def test_the_plant_is_registered_only_when_every_run_passes_well_above_the_floor(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=i) for i in range(10)]
+    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
     out = _main(monkeypatch, tmp_path, passing)
     assert (out["runs"], out["passed"], out["registered"]) == (10, 10, True)
     assert (out["convention"], out["fraction"], out["metric"]) == ("code", 1.0, "logprob_per_token")
     # One run in ten mixed, or planted with anything but the registered plant, or read on exact
     # match, registers nothing.
     for bad in (
-        _run(tmp_path, "mixed.json", "mixed", 0.05, partition=9),
-        _run(tmp_path, "marker.json", "pass", 0.05, tag="-plant0.5", partition=9),
-        _run(tmp_path, "em.json", "pass", 0.05, metric="exact_match", partition=9),
+        _run(tmp_path, "mixed.json", "mixed", 0.05, partition=19),
+        _run(tmp_path, "marker.json", "pass", 0.05, tag="-plant0.5", partition=19),
+        _run(tmp_path, "em.json", "pass", 0.05, metric="exact_match", partition=19),
         # A run file recording no metric was read on exact match.
-        _run(tmp_path, "unnamed.json", "pass", 0.05, metric=None, partition=9),
+        _run(tmp_path, "unnamed.json", "pass", 0.05, metric=None, partition=19),
         # A run of a corpus already counted, under another name; one partition at another seed.
-        _run(tmp_path, "copy.json", "pass", 0.05, partition=0),
-        _run(tmp_path, "reseeded.json", "pass", 0.05, partition=0, seed="-s2"),
+        _run(tmp_path, "copy.json", "pass", 0.05, partition=10),
+        _run(tmp_path, "reseeded.json", "pass", 0.05, partition=10, seed="-s2"),
     ):
         out = _main(monkeypatch, tmp_path, [*passing[:9], bad])
         assert out["runs"] == 10 and not out["registered"]
@@ -94,7 +94,7 @@ def test_the_plant_is_registered_only_when_every_run_passes_well_above_the_floor
     assert not _main(monkeypatch, tmp_path, [*passing[:9], passing[0]])["registered"]
     # Every run passing, one projected below the floor. A symmetric interval that clears zero
     # projects at least 0.975 a half, so only a long upper tail can fall below it.
-    thin = _run(tmp_path, "thin.json", "pass", 0.0001, high=0.5, partition=9)
+    thin = _run(tmp_path, "thin.json", "pass", 0.0001, high=0.5, partition=19)
     out = _main(monkeypatch, tmp_path, [*passing[:9], thin])
     assert out["passed"] == 10 and out["projected_pass_min"] < 0.95 and not out["registered"]
 
@@ -105,14 +105,20 @@ def test_a_point_interval_projects_its_estimates_side() -> None:
     assert planted_check.projected_pass({"a": {"estimate": 0.0, "low": 0.0, "high": 0.0}}) == 0
 
 
+def test_a_run_of_another_organization_counts_as_no_partition() -> None:
+    assert planted_check._partition("corpus-partition-qt-p21-s10-n1850-plantcode1.0", "qt") == 21
+    assert planted_check._partition("corpus-partition-qt-p4-n1850-plantcode1.0", "qt") == 4
+    assert planted_check._partition("corpus-partition-wikimedia-p4-n1850", "qt") is None
+
+
 def test_a_run_whose_halves_name_two_corpora_counts_as_no_partition(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=i) for i in range(9)]
-    split = _run(tmp_path, "split.json", "pass", 0.05, partition=9)
+    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(9)]
+    split = _run(tmp_path, "split.json", "pass", 0.05, partition=19)
     run = json.loads(split.read_text())
     half = run["corpora"]["qt-b"]
-    half["source"] = half["source"].replace("-p9-", "-p8-")
+    half["source"] = half["source"].replace("-p19-", "-p18-")
     split.write_text(json.dumps(run))
     out = _main(monkeypatch, tmp_path, [*passing, split])
     assert out["by_run"][-1]["partition"] is None and not out["registered"]
@@ -121,7 +127,7 @@ def test_a_run_whose_halves_name_two_corpora_counts_as_no_partition(
 def test_a_run_projected_exactly_at_the_floor_registers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    runs = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=i) for i in range(10)]
+    runs = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
     floor = planted_check.projected_pass(json.loads(runs[0].read_text())["verdict"]["binding"])
     monkeypatch.setattr(planted_check, "PROJECTED_FLOOR", floor)
     assert _main(monkeypatch, tmp_path, runs)["registered"]
