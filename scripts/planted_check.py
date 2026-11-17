@@ -4,9 +4,11 @@ Each run is read by `neutral.planted_convention`, the reader a test read applies
 the pass probability projected from its two halves' estimates and interval half-widths: normal
 per half, the half-width over 1.96 as its standard error, the product over halves (research log,
 2026-09-30, the rule check 5's plant was first registered under). The plant is registered for the
-organization when every run passes and every run's projected probability is at least
-`PROJECTED_FLOOR` (research log, 2026-11-16, item 4). Each run's corpus manifest gives the share
-of each half the plant changed and the share carrying its convention.
+organization only on `REGISTERED_RUNS` runs of different corpora, each read on s, every one
+passing and every one projected at `PROJECTED_FLOOR` or above (research log, 2026-11-16, item 4;
+which partitions the runs are, the organization's first ten admissible, is the submission's).
+Each run's corpus manifest gives the share of each half the plant changed and the share carrying
+its convention.
 
     uv run --no-sync --no-active python scripts/planted_check.py --org qt \
         --run likelihood-partition-qt-p4-n1850-plantcode1.0-rp1.0.json=corpus/placebo.json ... \
@@ -18,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any
 
@@ -25,13 +28,14 @@ from sphragis.experiment.cells import PLANT_CONVENTION, PLANT_FRACTION, REGISTER
 from sphragis.experiment.neutral import planted_convention
 from sphragis.provenance import provenance_header
 
-#: The registered rule's floor on each run's projected pass probability, and its runs: each
-#: organization's first ten admissible partitions.
+#: The registered rule's floor on each run's projected pass probability, and its count of runs.
 PROJECTED_FLOOR = 0.95
 REGISTERED_RUNS = 10
 #: The training size every check 5 run is read at, the admissible list's size floor.
 TRAIN_SIZE = 1850
 _Z = 1.959963984540054
+#: A run's corpus, its organization, partition, seed and plant (`partition_run.sbatch`'s ROOT).
+_ROOT = re.compile(r"corpus-partition-[^/]+")
 
 
 def projected_pass(binding: dict[str, dict[str, float]]) -> float:
@@ -51,8 +55,10 @@ def read_run(run_file: Path, manifest_file: Path | None, org: str) -> dict[str, 
     run = json.loads(run_file.read_text())
     check = planted_convention(run, org=org, train_size=TRAIN_SIZE)
     binding = run["verdict"]["binding"]
+    roots = {m.group(0) for c in run["corpora"].values() if (m := _ROOT.search(c["source"]))}
     out: dict[str, Any] = {
         "file": run_file.name,
+        "corpus": sorted(roots)[0] if len(roots) == 1 else None,
         "metric": run.get("metric", "exact_match"),
         "passed": check.passed,
         "verdict": run["verdict"]["verdict"],
@@ -96,8 +102,9 @@ def main() -> None:
         runs.append(read_run(Path(run), Path(manifest) if manifest else None, args.org))
     passed = sum(r["passed"] for r in runs)
     projected = [r["projected_pass"] for r in runs]
-    # Item 4: ten different runs, read on s, all passing, each projected at the floor.
-    distinct = len({r["file"] for r in runs}) == len(runs)
+    # Item 4: ten runs of different corpora, read on s, all passing, each projected at the floor.
+    corpora = [r["corpus"] for r in runs]
+    distinct = None not in corpora and len(set(corpora)) == len(runs)
     on_s = all(r["metric"] == REGISTERED_METRIC for r in runs)
     registered = (
         len(runs) == REGISTERED_RUNS

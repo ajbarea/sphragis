@@ -118,14 +118,14 @@ def is_python(row: Mapping[str, Any]) -> bool:
 # in C++, Java and C#, whose two quotes differ in meaning, the space a formatter puts or not between
 # a control keyword and its parenthesis (clang-format `SpaceBeforeParens`). Tokens come from
 # pygments, read with the code before the hunk (`context_before`), so a literal or keyword that
-# pygments places inside a comment, another string, a template literal (outside its `${}` code) or a
-# preprocessor line is not rewritten. A hunk pygments may be misreading is left whole, as the Python
-# half leaves a fragment its tokenizer refuses: one where pygments reports an error, a string runs
-# across a line or across the start of the hunk (a hunk that opens inside a comment holding an
-# apostrophe reads so), a quote follows a letter, as an apostrophe in prose does, a block comment's
-# `*` or `*/` reads as code, or the hunk holds what pygments does not read (`_UNREAD`). A hunk lying
-# wholly inside a comment or string that opens above its context and closes below it may show none
-# of these, and is then read as code.
+# pygments places inside a comment, another string, a template literal (outside an interpolation's
+# code, `${}` in JavaScript and `{$}` in PHP) or a preprocessor line is not rewritten. A hunk
+# pygments may be misreading is left whole, as the Python half leaves a fragment its tokenizer
+# refuses: one where pygments reports an error, a string runs across a line or across the start of
+# the hunk (a hunk that opens inside a comment holding an apostrophe reads so), a quote follows a
+# letter, as an apostrophe in prose does, a block comment's `*` or `*/` reads as code, or the hunk
+# holds what pygments does not read (`_UNREAD`). A hunk lying wholly inside a comment or string that
+# opens above its context and closes below it may show none of these, and is then read as code.
 @cache
 def _lexer(language: str) -> Lexer:
     options = {"stripnl": False, "ensurenl": False}

@@ -11403,9 +11403,9 @@ check 5 at a stated dose. Fixed here, before any run:
    between a control keyword (`if`, `for`, `while`, `switch`) and its parenthesis and half b puts
    none (clang-format's `SpaceBeforeParens`, `ControlStatements` against `Never`). Every other file
    is left alone, and no literal or keyword pygments places inside a comment, another string, a
-   template literal (outside its `${}` code) or a preprocessor line is rewritten. Both are house
-   rules organizations hold: MediaWiki's PHP and JavaScript conventions prefer single quotes, and
-   Qt's coding style requires the space.
+   template literal (outside an interpolation's code, `${}` in JavaScript and `{$}` in PHP) or a
+   preprocessor line is rewritten. Both are house rules organizations hold: MediaWiki's PHP and
+   JavaScript conventions prefer single quotes, and Qt's coding style requires the space.
 2. The dose: f = 1.0, every refinement the plant can change, the dose δ's rate was read at
    (2026-10-16). Each half's realised share is read from its corpus manifest and reported.
 3. The runs: each admitted organization's first ten admissible partitions at N = 1,850, training

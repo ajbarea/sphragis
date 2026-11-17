@@ -27,9 +27,10 @@ def _run(
     low: float,
     tag: str = "-plantcode1.0",
     high: float | None = None,
-    metric: str = "logprob_per_token",
+    metric: str | None = "logprob_per_token",
+    partition: int = 4,
 ) -> Path:
-    root = f"/data/corpus-partition-qt-p4-n1850{tag}"
+    root = f"/data/corpus-partition-qt-p{partition}-n1850{tag}"
     binding = {
         f"qt-{h}": {"estimate": 0.1, "low": low, "high": 0.2 - low if high is None else high}
         for h in ("a", "b")
@@ -41,7 +42,7 @@ def _run(
             for h in ("qt-a", "qt-b")
         },
         "train_size": 1850,
-        "metric": metric,
+        **({} if metric is None else {"metric": metric}),
         "verdict": {"verdict": verdict, "binding": binding},
         "results": {f"adapter:qt-{o}|qt-{h}|s1": rows for o in "ab" for h in "ab"},
     }
@@ -69,16 +70,20 @@ def test_the_projection_is_the_rule_logged_for_check_5() -> None:
 def test_the_plant_is_registered_only_when_every_run_passes_well_above_the_floor(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05) for i in range(10)]
+    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=i) for i in range(10)]
     out = _main(monkeypatch, tmp_path, passing)
     assert (out["runs"], out["passed"], out["registered"]) == (10, 10, True)
     assert (out["convention"], out["fraction"], out["metric"]) == ("code", 1.0, "logprob_per_token")
     # One run in ten mixed, or planted with anything but the registered plant, or read on exact
     # match, registers nothing.
     for bad in (
-        _run(tmp_path, "mixed.json", "mixed", 0.05),
-        _run(tmp_path, "marker.json", "pass", 0.05, tag="-plant0.5"),
-        _run(tmp_path, "em.json", "pass", 0.05, metric="exact_match"),
+        _run(tmp_path, "mixed.json", "mixed", 0.05, partition=9),
+        _run(tmp_path, "marker.json", "pass", 0.05, tag="-plant0.5", partition=9),
+        _run(tmp_path, "em.json", "pass", 0.05, metric="exact_match", partition=9),
+        # A run file recording no metric was read on exact match.
+        _run(tmp_path, "unnamed.json", "pass", 0.05, metric=None, partition=9),
+        # A run of a corpus already counted, under another name.
+        _run(tmp_path, "copy.json", "pass", 0.05, partition=0),
     ):
         out = _main(monkeypatch, tmp_path, [*passing[:9], bad])
         assert out["runs"] == 10 and not out["registered"]
@@ -87,7 +92,7 @@ def test_the_plant_is_registered_only_when_every_run_passes_well_above_the_floor
     assert not _main(monkeypatch, tmp_path, [*passing[:9], passing[0]])["registered"]
     # Every run passing, one projected below the floor. A symmetric interval that clears zero
     # projects at least 0.975 a half, so only a long upper tail can fall below it.
-    thin = _run(tmp_path, "thin.json", "pass", 0.0001, high=0.5)
+    thin = _run(tmp_path, "thin.json", "pass", 0.0001, high=0.5, partition=9)
     out = _main(monkeypatch, tmp_path, [*passing[:9], thin])
     assert out["passed"] == 10 and out["projected_pass_min"] < 0.95 and not out["registered"]
 
@@ -95,3 +100,4 @@ def test_the_plant_is_registered_only_when_every_run_passes_well_above_the_floor
 def test_a_point_interval_projects_its_estimates_side() -> None:
     assert planted_check.projected_pass({"a": {"estimate": -0.1, "low": -0.1, "high": -0.1}}) == 0
     assert planted_check.projected_pass({"a": {"estimate": 0.1, "low": 0.1, "high": 0.1}}) == 1
+    assert planted_check.projected_pass({"a": {"estimate": 0.0, "low": 0.0, "high": 0.0}}) == 0
