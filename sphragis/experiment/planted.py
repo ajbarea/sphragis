@@ -505,11 +505,12 @@ def symmetric_planted_corpora(
 
 #: Each convention the symmetric plant can impose: the two halves' transforms, in side order,
 #: and which rows it may touch. `quotes` is the code-level convention the exchange rate between
-#: exact match and s is read on (review panel item 15), on Python rows; `code` is check 5's
-#: (registered 2026-11-16, `cells.PLANT_CONVENTION`), the same quote styles on Python, PHP and
-#: JavaScript rows and the control-keyword spacing on C++ rows, so the instrument that proves
-#: detection is the one δ's rate was read on. `marker`, each half's comment marker, was check 5's
-#: before; it stays for the runs made with it.
+#: exact match and s is read on (review panel item 15), on Python rows; `code` is check 5 on
+#: OpenStack and Wikimedia (registered 2026-11-16, `cells.registered_plant`), the same quote styles
+#: on Python, PHP and JavaScript rows with the control-keyword spacing standing in on C++ rows, so
+#: on Python rows the instrument that shows detection is the one δ's rate was read on. `marker`,
+#: each half's end-of-line marker, was every organization's check 5 before and stays Qt's
+#: (2026-11-17).
 PLANT_CONVENTIONS: dict[
     str,
     tuple[

@@ -39,15 +39,15 @@ RERUN_RANK = 256
 POSITIVE_CONTROL_CONFIDENCE = 0.95
 #: Outcome-neutral check 5 as registered (2026-11-16, issue #277): one development run with each
 #: half's own code-level convention (`planted.PLANT_CONVENTIONS["code"]`) in every refinement it
-#: can change, the dose δ's exchange rate was read at (research log, 2026-10-16): on Python rows it
-#: is the plant δ's rate was read on, so the plant that shows the contrast detects a convention is
-#: the one that sets δ, carried into each organization's other languages.
+#: can change, the dose δ's exchange rate was read at (research log, 2026-10-16). On Python rows it
+#: is the plant δ's rate was read on, so there the plant that shows the contrast detects a
+#: convention is the one that sets δ; on C++, Java and C# rows keyword spacing stands in.
 PLANT_CONVENTION = "code"
 PLANT_FRACTION = 1.0
-#: Where check 5 keeps another plant (research log, 2026-11-17): Qt writes half a's C++ spacing
-#: already, so the code plant rewrites almost none of half a's rows and failed item 4's rule there;
-#: Qt keeps each half's own comment marker in half its refinements, which passed that rule
-#: (2026-10-01).
+#: Where check 5 keeps another plant (research log, 2026-11-17): the code plant failed item 4's
+#: rule on Qt (9 of 10), whose style already writes half a's C++ spacing; Qt keeps each half's own
+#: end-of-line marker in half its refinements, an easy artificial convention, whose runs
+#: (2026-10-18) pass that rule (2026-10-01).
 PLANT_BY_ORG: dict[str, tuple[str, float]] = {"qt": ("marker", 0.5)}
 
 

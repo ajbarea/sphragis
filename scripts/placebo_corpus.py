@@ -67,15 +67,17 @@ parser.add_argument(
     type=float,
     default=None,
     help="plant each half's own convention (--plant-convention) in this fraction of the "
-    "refinements it can change, every window (outcome-neutral check 5 at 1.0 with `code`)",
+    "refinements it can change, every window (outcome-neutral check 5 at its organization's "
+    "`cells.registered_plant`: 1.0 with `code`, or 0.5 with `marker` on Qt)",
 )
 parser.add_argument(
     "--plant-convention",
     choices=sorted(PLANT_CONVENTIONS),
     default="marker",
-    help="what --plant imposes: `code`, check 5's, each half's quote style on Python, PHP and "
-    "JavaScript and its control-keyword spacing on C++; `quotes`, the exchange rate's, on Python "
-    "alone; `marker`, each half's comment marker, check 5's before 2026-11-16",
+    help="what --plant imposes: `code`, each half's quote style on Python, PHP and "
+    "JavaScript and its control-keyword spacing on C++, check 5 on OpenStack and Wikimedia; "
+    "`quotes`, the exchange rate's, on Python alone; `marker`, each half's end-of-line marker, "
+    "Qt's check 5 and every organization's before 2026-11-16",
 )
 # The symmetric calibration's seed, so the plant is drawn as it was there.
 parser.add_argument("--plant-seed", type=int, default=11)

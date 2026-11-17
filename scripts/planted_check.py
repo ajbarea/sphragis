@@ -127,7 +127,7 @@ def main() -> None:
     partitions = [r["partition"] for r in runs]
     distinct = None not in partitions and len(set(partitions)) == len(runs)
     on_s = all(r["metric"] == REGISTERED_METRIC for r in runs)
-    registered = (
+    rule_met = (
         len(runs) == REGISTERED_RUNS
         and distinct
         and on_s
@@ -146,7 +146,7 @@ def main() -> None:
         "projected_pass_min": min(projected),
         "projected_pass_mean": sum(projected) / len(projected),
         "projected_floor": PROJECTED_FLOOR,
-        "registered": registered,
+        "rule_met": rule_met,
         # The plant `cells` registers as the organization's check 5, which a candidate may not be.
         "registered_plant": list(registered_plant(args.org)),
         "by_run": runs,
@@ -155,7 +155,7 @@ def main() -> None:
     args.out.write_text(json.dumps(out, indent=2) + "\n")
     print(
         f"{args.org}: {passed} of {len(runs)} pass, projected min {min(projected):.4f}; "
-        f"{'registered' if registered else 'NOT registered'}"
+        f"{'meets' if rule_met else 'FAILS'} item 4's rule"
     )
 
 

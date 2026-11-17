@@ -80,12 +80,12 @@ def test_the_projection_is_the_rule_logged_for_check_5() -> None:
     assert planted_check.projected_pass({"a": half, "b": half}) == pytest.approx(expected)
 
 
-def test_the_plant_is_registered_only_when_every_run_passes_well_above_the_floor(
+def test_the_rule_is_met_only_when_every_run_passes_well_above_the_floor(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
     out = _main(monkeypatch, tmp_path, passing)
-    assert (out["runs"], out["passed"], out["registered"]) == (10, 10, True)
+    assert (out["runs"], out["passed"], out["rule_met"]) == (10, 10, True)
     assert (out["convention"], out["fraction"], out["metric"]) == ("code", 1.0, "logprob_per_token")
     # One run in ten mixed, or planted with anything but the registered plant, or read on exact
     # match, registers nothing.
@@ -100,15 +100,15 @@ def test_the_plant_is_registered_only_when_every_run_passes_well_above_the_floor
         _run(tmp_path, "reseeded.json", "pass", 0.05, partition=10, seed="-s2"),
     ):
         out = _main(monkeypatch, tmp_path, [*passing[:9], bad])
-        assert out["runs"] == 10 and not out["registered"]
+        assert out["runs"] == 10 and not out["rule_met"]
     # Fewer than ten runs, or one run given twice, registers nothing.
-    assert not _main(monkeypatch, tmp_path, passing[:9])["registered"]
-    assert not _main(monkeypatch, tmp_path, [*passing[:9], passing[0]])["registered"]
+    assert not _main(monkeypatch, tmp_path, passing[:9])["rule_met"]
+    assert not _main(monkeypatch, tmp_path, [*passing[:9], passing[0]])["rule_met"]
     # Every run passing, one projected below the floor. A symmetric interval that clears zero
     # projects at least 0.975 a half, so only a long upper tail can fall below it.
     thin = _run(tmp_path, "thin.json", "pass", 0.0001, high=0.5, partition=19)
     out = _main(monkeypatch, tmp_path, [*passing[:9], thin])
-    assert out["passed"] == 10 and out["projected_pass_min"] < 0.95 and not out["registered"]
+    assert out["passed"] == 10 and out["projected_pass_min"] < 0.95 and not out["rule_met"]
 
 
 def test_a_point_interval_projects_its_estimates_side() -> None:
@@ -133,7 +133,7 @@ def test_a_run_whose_halves_name_two_corpora_counts_as_no_partition(
     half["source"] = half["source"].replace("-p19-", "-p18-")
     split.write_text(json.dumps(run))
     out = _main(monkeypatch, tmp_path, [*passing, split])
-    assert out["by_run"][-1]["partition"] is None and not out["registered"]
+    assert out["by_run"][-1]["partition"] is None and not out["rule_met"]
 
 
 def test_a_run_projected_exactly_at_the_floor_registers(
@@ -142,7 +142,7 @@ def test_a_run_projected_exactly_at_the_floor_registers(
     runs = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
     floor = planted_check.projected_pass(json.loads(runs[0].read_text())["verdict"]["binding"])
     monkeypatch.setattr(planted_check, "PROJECTED_FLOOR", floor)
-    assert _main(monkeypatch, tmp_path, runs)["registered"]
+    assert _main(monkeypatch, tmp_path, runs)["rule_met"]
 
 
 def test_an_organization_is_read_on_its_registered_plant_unless_a_candidate_is_named(
@@ -154,13 +154,13 @@ def test_an_organization_is_read_on_its_registered_plant_unless_a_candidate_is_n
         for i in range(10)
     ]
     out = _main(monkeypatch, tmp_path, marker, plant=())
-    assert (out["convention"], out["fraction"], out["registered"]) == ("marker", 0.5, True)
+    assert (out["convention"], out["fraction"], out["rule_met"]) == ("marker", 0.5, True)
     assert out["registered_plant"] == ["marker", 0.5]
     code = [_run(tmp_path, f"c{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
     out = _main(monkeypatch, tmp_path, code, plant=())
-    assert out["passed"] == 0 and not out["registered"]
+    assert out["passed"] == 0 and not out["rule_met"]
     out = _main(monkeypatch, tmp_path, code)
-    assert out["registered"] and out["registered_plant"] == ["marker", 0.5]
+    assert out["rule_met"] and out["registered_plant"] == ["marker", 0.5]
 
 
 @pytest.mark.parametrize("half", [("--convention", "code"), ("--fraction", "1.0")])
