@@ -11449,3 +11449,50 @@ so this reading is a review's, not an artifact. The limit it found stays: a hunk
 a comment or string that opens above its context and closes below it may show pygments nothing to
 refuse, and no local row is one. On OpenStack the plant is δ's on every Python row and changes five
 others (four JavaScript, one C++).
+
+### Check 5 on δ's plant: registered on OpenStack and Wikimedia, not on Qt (2026-11-17)
+
+`# research(2026-11)`. The 30 chains the entry above fixes ran at 32c14c5 (TIGRIS 1027701 to
+1027791, each organization's ten `partition_run`, `decoder_check` and `likelihood_score` jobs
+chained on `afterok`; `likelihood-partition-*-plantcode1.0-rp1.0.json`). `scripts/planted_check.py`
+reads each organization's ten under item 4 (`planted-check-{openstack,wikimedia,qt}-code1.0.json`),
+and `scripts/reading.py` prints them:
+
+- OpenStack: 10 of 10 pass on s, projected pass min 0.9928 (floor 0.95). Registered.
+- Wikimedia: 10 of 10 pass on s, projected pass min 0.9998. Registered.
+- Qt: 9 of 10 pass on s, projected pass min 0.3535. **Not registered.** Partition 13 reads mixed:
+  half b passes, and half a's estimate is −0.0043 [−0.0270, +0.0177].
+
+Qt's table, from `reading.py --markdown` ("changed" is the share of the half's training examples
+the plant rewrote, from its corpus manifest):
+
+| partition | verdict | projected pass | half | estimate | interval | changed |
+|---|---|---|---|---|---|---|
+| p4 | pass | 0.9888 | qt-a | +0.0203 | [+0.0041, +0.0389] | 0.0017 |
+| p4 | pass | 0.9888 | qt-b | +0.0784 | [+0.0463, +0.1159] | 0.0944 |
+| p7 | pass | 0.9923 | qt-a | +0.0241 | [+0.0052, +0.0442] | 0.0039 |
+| p7 | pass | 0.9923 | qt-b | +0.0481 | [+0.0291, +0.0694] | 0.1146 |
+| p11 | pass | 0.9998 | qt-a | +0.0553 | [+0.0355, +0.0803] | 0.0053 |
+| p11 | pass | 0.9998 | qt-b | +0.0513 | [+0.0237, +0.0814] | 0.1158 |
+| p12 | pass | 0.9999 | qt-a | +0.0341 | [+0.0168, +0.0520] | 0.0013 |
+| p12 | pass | 0.9999 | qt-b | +0.0727 | [+0.0494, +0.0993] | 0.1005 |
+| p13 | mixed | 0.3535 | qt-a | -0.0043 | [-0.0270, +0.0177] | 0.0007 |
+| p13 | mixed | 0.3535 | qt-b | +0.0449 | [+0.0259, +0.0640] | 0.0909 |
+| p16 | pass | 0.9999 | qt-a | +0.0344 | [+0.0164, +0.0529] | 0.0022 |
+| p16 | pass | 0.9999 | qt-b | +0.0582 | [+0.0360, +0.0840] | 0.1055 |
+| p18 | pass | 0.9989 | qt-a | +0.0307 | [+0.0113, +0.0505] | 0.0032 |
+| p18 | pass | 0.9989 | qt-b | +0.0735 | [+0.0504, +0.0986] | 0.1000 |
+| p19 | pass | 0.9845 | qt-a | +0.0222 | [+0.0020, +0.0423] | 0.0019 |
+| p19 | pass | 0.9845 | qt-b | +0.0584 | [+0.0379, +0.0824] | 0.0902 |
+| p20 | pass | 0.9994 | qt-a | +0.0581 | [+0.0426, +0.0747] | 0.0035 |
+| p20 | pass | 0.9994 | qt-b | +0.0528 | [+0.0232, +0.0872] | 0.1043 |
+| p21 | pass | 0.9999 | qt-a | +0.0440 | [+0.0284, +0.0628] | 0.0015 |
+| p21 | pass | 0.9999 | qt-b | +0.0684 | [+0.0352, +0.1076] | 0.0844 |
+
+Half a's convention, `if (`, is the one Qt's coding style requires, so the plant rewrites between
+0.0007 and 0.0053 of half a's examples, where it rewrites between 0.0844 and 0.1158 of half b's;
+partition 13's half a has the fewest rewritten (3 of 4,492). Half a's estimate is not ordered by
+that share across the ten (partition 12 rewrites 0.0013 and reads +0.0341), so the share alone
+does not say why partition 13 fails, and no reading here is taken to say it. Under item 4 nothing
+is registered as Qt's check 5 until a decision is recorded here, and the code's registration of
+the plant for Qt is withdrawn before the change is merged.
