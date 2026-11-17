@@ -39,8 +39,9 @@ RERUN_RANK = 256
 POSITIVE_CONTROL_CONFIDENCE = 0.95
 #: Outcome-neutral check 5 as registered (2026-11-16, issue #277): one development run with each
 #: half's own code-level convention (`planted.PLANT_CONVENTIONS["code"]`) in every refinement it
-#: can change, the dose δ's exchange rate was read at (research log, 2026-10-16), so one plant
-#: both proves the contrast detects a planted convention and sets δ.
+#: can change, the dose δ's exchange rate was read at (research log, 2026-10-16): on Python rows it
+#: is the plant δ's rate was read on, so the plant that shows the contrast detects a convention is
+#: the one that sets δ, carried into each organization's other languages.
 PLANT_CONVENTION = "code"
 PLANT_FRACTION = 1.0
 # The kind a K coverage artifact records (`k_coverage.py`): the only K source a test read takes,

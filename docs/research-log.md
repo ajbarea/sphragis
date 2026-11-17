@@ -11402,8 +11402,8 @@ check 5 at a stated dose. Fixed here, before any run:
    double-quoted string interpolates). C++ has one string quote, so on C++ rows half a puts a
    space between a control keyword (`if`, `for`, `while`, `switch`) and its parenthesis and half
    b puts none (clang-format's `SpaceBeforeParens`, `ControlStatements` against `Never`). Every
-   other file is left alone, and nothing inside a comment, a string, a template literal or a
-   preprocessor line is rewritten. Both are house rules organizations hold: MediaWiki's PHP and
+   other file is left alone, and nothing pygments reads as a comment, a string, a template literal
+   or a preprocessor line is rewritten. Both are house rules organizations hold: MediaWiki's PHP and
    JavaScript conventions prefer single quotes, and Qt's coding style requires the space.
 2. The dose: f = 1.0, every refinement the plant can change, the dose δ's rate was read at
    (2026-10-16). Each half's realised share is read from its corpus manifest and reported.
@@ -11432,8 +11432,18 @@ all three organizations no changed row reads differently with its context and wi
 context only adds refusals), and no comment-led line is changed. The share the plant can change
 moves little: Wikimedia's PHP rows 1,244 to 1,203 and JavaScript rows 353 to 316, Qt's C++ rows
 968 to 955. The same commits read Java and C# rows with the C-family spacing, for the GitHub
-family's members, and each half's manifest records the rows that carry its convention beside
+family's members (Qt's 50 Java and 6 C# rows and one of Wikimedia's take it too), and each half's manifest records the rows that carry its convention beside
 those it changed, since a half whose convention is the organization's own (Qt writes `if (`)
 changes few rows that all carry it. The 30 chains are resubmitted at the fixed commit. The code
 registers the plant as check 5 with this entry; should the rule in item 4 fail for an
 organization, that registration is withdrawn before the change is merged.
+
+A third independent Opus round read every changed row outside Python (2,551 row-halves over the
+three organizations' local refinements) with tree-sitter's grammars for C++, JavaScript, PHP, Java
+and C#, the context and hunk parsed before and after the rewrite: each quote edit lies on a string
+delimiter and each spacing edit between a control keyword and its parenthesis, and in 2,550 the
+token sequences are the same but for the delimiters (the one other is tree-sitter misreading a
+URL as a comment after an error). The limit it found stays: a hunk lying wholly inside a comment or
+string that opens above its context and closes below it shows pygments nothing to refuse, and no
+local row is one. On OpenStack the plant is δ's on every Python row and changes five others (four
+JavaScript, one C++).
