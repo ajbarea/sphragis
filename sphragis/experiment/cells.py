@@ -48,7 +48,8 @@ PLANT_FRACTION = 1.0
 #: 2026-11-16 and 2026-11-17). The code plant met it on OpenStack and Wikimedia and failed it on Qt
 #: (9 of 10), whose style already writes half a's C++ spacing; Qt keeps each half's own end-of-line
 #: marker in half its refinements, an easy artificial convention, whose runs (2026-10-18) meet the
-#: same rule (fixed 2026-09-30). An organization not read under it has no registered plant.
+#: same rule (fixed 2026-09-30, registered 2026-10-01). An organization not read under it has no
+#: registered plant.
 PLANT_BY_ORG: dict[str, tuple[str, float]] = {
     "openstack": (PLANT_CONVENTION, PLANT_FRACTION),
     "wikimedia": (PLANT_CONVENTION, PLANT_FRACTION),

@@ -137,7 +137,7 @@ in half its refinements, whose runs (2026-10-18) passed the same rule, 10 of 10
 (`planted.append_marker`), so on Qt the check shows that s sees a convention that strong, not δ's.
 Qt's plant was chosen after δ's plant was read there. This is a disclosed deviation from the plan,
 and no pass rule changed (research log, 2026-11-17). An organization whose ten runs were never read
-under the rule, Chromium or a GitHub member, has no registered plant, so its check 5 is refused
+under the rule, such as a GitHub member, has no registered plant, so its check 5 is refused
 until they are (`cells.registered_plant`). The order is fixed in advance: an organization not yet read,
 such as a GitHub member (mostly Java or C#, where keyword spacing stands in), takes δ's plant if its ten runs meet the rule,
 otherwise the end-of-line marker at 0.5 if its ten runs do, otherwise it is withdrawn as an

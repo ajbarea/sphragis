@@ -11532,8 +11532,8 @@ So on Qt the instrument that shows detection is not the one that sets δ, only t
 artificial convention, and δ is carried furthest there (OpenStack's Python to Qt's C++); the Stage 1 report says so. The code registers
 the plant per organization (`cells.registered_plant`: `PLANT_BY_ORG` holds Qt's marker at 0.5),
 and `require_test_read` and `neutral.planted_convention` read each organization's own. Item 4
-registers a plant only on an organization's own ten runs, so one never read under it (Chromium, a
-GitHub member) has none: `registered_plant` refuses it, and its test read with it, until its runs
+registers a plant only on an organization's own ten runs, so one never read under it (a GitHub
+member; Chromium is a pool, never split) has none: `registered_plant` refuses it, and its test read with it, until its runs
 are read and the decision recorded here (review round 2). So that decision leaves nothing open,
 the order is fixed now, before any member's runs are read (review round 3): a GitHub replication
 member, mostly Java or C#, where keyword spacing stands in for δ's quote style, takes δ's plant if

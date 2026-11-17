@@ -402,7 +402,7 @@ figures they replace are in the research log.
 ### Outcome-neutral check 5: δ's plant on OpenStack and Wikimedia, Qt's end-of-line marker (registered 2026-11-16 and 2026-11-17)
 
 Decided by each plant's own runs, under a rule fixed before any was read: item 4 of the
-2026-11-16 plan for δ's plant, the same rule fixed on 2026-09-30 for the marker. An organization's runs on its first ten admissible partitions must all pass on
+2026-11-16 plan for δ's plant, the same rule fixed on 2026-09-30 (registered 2026-10-01) for the marker. An organization's runs on its first ten admissible partitions must all pass on
 s on both halves, each projected to pass with probability at least 0.95. The plant is δ's: each
 half's own quote style on Python, PHP and JavaScript literals, with a space or none between a
 control keyword and its parenthesis standing in on C++, Java and C#, in every refinement it can
@@ -418,7 +418,7 @@ shown for a convention that strong, not δ's. Qt's plant was chosen after δ's p
 This is a disclosed deviation from the plan and changes no pass rule (AJ's decision; research log,
 2026-11-17). The code reads each organization's own (`cells.registered_plant`), and
 `planted_check.py` writes `planted-check-<org>-<plant>.json`. An organization whose ten runs were
-never read under the rule, Chromium or a GitHub member, has no registered plant: its check 5, and
+never read under the rule, such as a GitHub member, has no registered plant: its check 5, and
 so its test read, is refused until its runs are read and the decision recorded. That decision is
 fixed in advance: an organization not yet read, such as a GitHub member (mostly Java or C#, where
 keyword spacing stands in), takes δ's
