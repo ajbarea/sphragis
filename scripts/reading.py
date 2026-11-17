@@ -98,7 +98,11 @@ def planted_summary(path: Path) -> str:
         f"{passed} of {report['runs']} pass on {report['metric']}, projected pass "
         f"min {report['projected_pass_min']:.4f} (floor {report['projected_floor']}), "
         f"{'meets' if report['rule_met'] else 'fails'} item 4's rule, "
-        f"{'' if plant == report['registered_plant'] else 'not '}the registered plant"
+        + (
+            "no plant registered yet"
+            if report["registered_plant"] is None
+            else f"{'' if plant == report['registered_plant'] else 'not '}the registered plant"
+        )
     )
 
 

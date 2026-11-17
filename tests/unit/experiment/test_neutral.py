@@ -264,6 +264,14 @@ def test_an_organization_whose_ten_runs_were_never_read_has_no_check_5() -> None
     assert candidate.passed
 
 
+@pytest.mark.parametrize("half", [{"convention": "code"}, {"fraction": 1.0}])
+def test_a_candidate_plant_names_its_convention_and_fraction_together(half: dict) -> None:
+    with pytest.raises(ValueError, match="together"):
+        planted_convention(
+            _planted_run("pass", org="apache"), org="apache", train_size=1850, **half
+        )
+
+
 def test_planted_convention_refuses_another_organizations_run() -> None:
     check = _check(_planted_run("pass", org="openstack"), org="wikimedia")
     assert not check.passed and "halves" in check.evidence["reason"]

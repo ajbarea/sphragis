@@ -227,10 +227,10 @@ def planted_convention(
     references they are scored on and the base model never emits the marker, so on an
     organization with a low base rate they can score zero with the apparatus working.
     """
+    if (convention is None) != (fraction is None):
+        raise ValueError("a candidate plant names its convention and fraction together")
     if convention is None or fraction is None:
-        registered = registered_plant(org)
-        convention = registered[0] if convention is None else convention
-        fraction = registered[1] if fraction is None else fraction
+        convention, fraction = registered_plant(org)
     corpora = run["corpora"]
     sources = [corpus["source"] for corpus in corpora.values()]
     tags = [m.groups() if (m := _PLANT_TAG.search(s)) else None for s in sources]

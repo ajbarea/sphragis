@@ -11539,4 +11539,5 @@ the order is fixed now, before any member's runs are read (review round 3): a Gi
 member, mostly Java or C#, where keyword spacing stands in for δ's quote style, takes δ's plant if
 its ten runs meet item 4's rule; otherwise each half's end-of-line marker at 0.5 if its ten runs
 meet the same rule; otherwise it is withdrawn as an apparatus failure, as a failed check 5
-withdraws any organization. Qt's case is this order read on Qt.
+withdraws any organization; it applies to any organization not yet read. Qt's decision took this
+order, though on Qt it was made after both plants had been read.

@@ -57,7 +57,8 @@ PLANT_BY_ORG: dict[str, tuple[str, float]] = {
 
 #: The order an organization not yet read takes its check 5 in, fixed before any of its runs
 #: (research log, 2026-11-17): δ's plant if its ten runs meet item 4's rule, else the end-of-line
-#: marker at 0.5 if its ten runs meet it, else the organization is withdrawn. Qt's is this order.
+#: marker at 0.5 if its ten runs meet it, else the organization is withdrawn. Qt's decision took
+#: this order, after both its plants had been read.
 PLANT_ORDER: tuple[tuple[str, float], ...] = ((PLANT_CONVENTION, PLANT_FRACTION), ("marker", 0.5))
 
 

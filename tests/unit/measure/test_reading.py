@@ -133,6 +133,15 @@ def test_a_check_5_summary_says_whether_the_rule_held_and_the_plant_is_registere
     assert summary.endswith("fails item 4's rule, not the registered plant")
 
 
+def test_a_check_5_summary_of_an_unread_organization_says_none_is_registered(
+    tmp_path: Path,
+) -> None:
+    path = _planted(tmp_path)
+    report = json.loads(path.read_text())
+    path.write_text(json.dumps({**report, "registered_plant": None}))
+    assert reading.planted_summary(path).endswith("no plant registered yet")
+
+
 def test_check_5_and_seed_artifacts_are_not_read_together(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
