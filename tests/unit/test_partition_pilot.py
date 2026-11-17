@@ -18,7 +18,7 @@ from sphragis.experiment.cells import (
     require_test_read,
 )
 from sphragis.experiment.grid import EvalRun, run_id
-from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
+from sphragis.experiment.neutral import SCORED_IDENTITY
 from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, spread_targets
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -91,7 +91,10 @@ def _inputs(
 
 def _planted(tmp_path: Path, org: str) -> list[str]:
     """A planted development run that passes outcome-neutral check 5."""
-    root = f"corpus-partition-{org}-p{ADMISSIBLE[0]}-plant{PLANT_FRACTION}"
+    convention, fraction = cells.registered_plant(org)
+    # cluster-env.sh tags the marker plant by its fraction alone.
+    tag = f"{'' if convention == 'marker' else convention}{fraction}"
+    root = f"corpus-partition-{org}-p{ADMISSIBLE[0]}-plant{tag}"
     results = {
         run_id(EvalRun(f"adapter:{trained}", window, 1)): [
             {"id": f"x{i}", "change_id": f"c{i}", "exact_match": float(i % 2)} for i in range(N)
@@ -173,6 +176,14 @@ def _chain_unit(chains: str) -> dict:
         "file": chains,
         "sha256": chains_sha256(json.loads(Path(chains).read_text())),
     }
+
+
+@pytest.fixture(autouse=True)
+def _members_plant_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The GitHub members read here have no registered check 5 (`cells.registered_plant` refuses
+    them until their ten runs are read); these tests register the code plant for them."""
+    members = {org: (cells.PLANT_CONVENTION, cells.PLANT_FRACTION) for org in ("apache", "llvm")}
+    monkeypatch.setattr(cells, "PLANT_BY_ORG", {**cells.PLANT_BY_ORG, **members})
 
 
 @pytest.fixture(autouse=True)

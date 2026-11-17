@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 867 artifacts under
-75 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 901 artifacts under
+76 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -458,12 +458,15 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 |---|
 | `likelihood-partition-openstack-p10-s8-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p10-s8-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p10-s8-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p10-s8-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p11-s9-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p11-s9-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p11-s9-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p11-s9-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p12-s10-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p12-s10-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p12-s10-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p12-s10-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p14-s11-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p15-s12-n1850-rp1.0.json` |
@@ -472,6 +475,7 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-openstack-p19-s15-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p2-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p2-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p2-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p2-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p21-s16-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p22-s17-n1850-rp1.0.json` |
@@ -483,54 +487,68 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-openstack-p28-s23-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p3-s2-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p3-s2-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p3-s2-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p3-s2-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p30-s24-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p4-s3-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p4-s3-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p4-s3-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p4-s3-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p5-s4-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p5-s4-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p5-s4-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p5-s4-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p7-s5-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p7-s5-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p7-s5-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p7-s5-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p8-s6-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p8-s6-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p8-s6-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p8-s6-n1850-rp1.0.json` |
 | `likelihood-partition-openstack-p9-s7-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p9-s7-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-openstack-p9-s7-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-openstack-p9-s7-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p11-s3-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p11-s3-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p11-s3-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p11-s3-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p11-s3-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p12-s4-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p12-s4-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p12-s4-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p12-s4-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p12-s4-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p13-s5-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p13-s5-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p13-s5-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p13-s5-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p13-s5-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p16-s6-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p16-s6-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p16-s6-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p16-s6-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p16-s6-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p18-s7-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p18-s7-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p18-s7-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p18-s7-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p18-s7-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p19-s8-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p19-s8-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p19-s8-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p19-s8-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p19-s8-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p20-s9-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p20-s9-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p20-s9-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p20-s9-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p20-s9-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p21-s10-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p21-s10-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p21-s10-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p21-s10-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p21-s10-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p25-s11-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p25-s11-n1850-foreignfuchsia-rp1.0.json` |
@@ -565,6 +583,7 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-qt-p4-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p4-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p4-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p4-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p4-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p41-s21-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p41-s21-n1850-foreignfuchsia-rp1.0.json` |
@@ -575,12 +594,16 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-qt-p7-s2-n1850-foreignchromium-rp1.0.json` |
 | `likelihood-partition-qt-p7-s2-n1850-foreignfuchsia-rp1.0.json` |
 | `likelihood-partition-qt-p7-s2-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-qt-p7-s2-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-qt-p7-s2-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p1-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p1-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p1-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p10-s9-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p10-s9-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p10-s9-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p11-s10-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p11-s10-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p11-s10-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p12-s11-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p13-s12-n1850-rp1.0.json` |
@@ -589,6 +612,7 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-wikimedia-p18-s15-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p19-s16-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p2-s2-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p2-s2-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p2-s2-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p20-s17-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p21-s18-n1850-rp1.0.json` |
@@ -597,16 +621,22 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-wikimedia-p27-s21-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p29-s22-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p3-s3-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p3-s3-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p3-s3-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p5-s4-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p5-s4-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p5-s4-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p6-s5-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p6-s5-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p6-s5-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p7-s6-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p7-s6-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p7-s6-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p8-s7-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p8-s7-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p8-s7-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p9-s8-n1850-plant0.5-rp1.0.json` |
+| `likelihood-partition-wikimedia-p9-s8-n1850-plantcode1.0-rp1.0.json` |
 | `likelihood-partition-wikimedia-p9-s8-n1850-rp1.0.json` |
 | `likelihood-placebo-openstack-v3-rp1.0.json` |
 | `likelihood-placebo-wikimedia-rp1.0.json` |
@@ -1023,6 +1053,17 @@ Two pseudo-organizations built from one organization's own projects.
 | `rq1-placebo-qt.json` |
 | `rq1-placebo-wikimedia-rp1.0.json` |
 | `rq1-placebo-wikimedia.json` |
+
+## `scripts/planted_check.py`
+
+Read an organization's check 5 runs under the rule that registers a plant as its check 5.
+
+| artifact |
+|---|
+| `planted-check-openstack-code1.0.json` |
+| `planted-check-qt-code1.0.json` |
+| `planted-check-qt-marker0.5.json` |
+| `planted-check-wikimedia-code1.0.json` |
 
 ## `scripts/planted_exchange.py`
 

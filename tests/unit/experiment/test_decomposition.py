@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 from sphragis.corpus.github import GITHUB_ORGS
-from sphragis.experiment import decomposition
+from sphragis.experiment import cells, decomposition
 from sphragis.experiment.cells import (
     REGISTERED_METRIC,
     REGISTERED_SENSITIVITIES,
@@ -615,6 +615,22 @@ _CALIBRATION = {
 }
 
 
+#: The GitHub family's fixtures stand for members whose check 5 would be registered by their own ten
+#: runs; none is yet (`cells.registered_plant` refuses them), so the tests register the code plant.
+_FIXTURE_PLANTS = {
+    org: (cells.PLANT_CONVENTION, cells.PLANT_FRACTION) for org in ("apache", "llvm", "dotnet", "o")
+}
+
+
+def _plant(org: str) -> tuple[str, float]:
+    return {**cells.PLANT_BY_ORG, **_FIXTURE_PLANTS}[org]
+
+
+@pytest.fixture(autouse=True)
+def _fixture_members_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cells, "PLANT_BY_ORG", {**cells.PLANT_BY_ORG, **_FIXTURE_PLANTS})
+
+
 def _replication_cell(
     low: float,
     high: float,
@@ -639,7 +655,10 @@ def _replication_cell(
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
         "lora_rank": 32,
-        "planted_convention": {"passed": True},
+        "planted_convention": {
+            "passed": True,
+            **dict(zip(("convention", "fraction"), _plant(org), strict=True)),
+        },
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
@@ -870,6 +889,24 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: bounds:"),
         ({"apache": _GOOD | {"window": "development"}}, _SIM, "development window"),
         ({"apache": _GOOD | {"planted_convention": {"passed": False}}}, _SIM, "check 5"),
+        # Check 5 is the code-level plant at f = 1.0 (registered 2026-11-16), not the marker,
+        # outside Qt (`test_qt_check_5_is_the_marker_plant`).
+        (
+            {
+                "apache": _GOOD
+                | {"planted_convention": {"passed": True, "convention": "marker", "fraction": 0.5}}
+            },
+            _SIM,
+            "check 5 planted 'marker' at 0.5, registered 'code' at 1.0",
+        ),
+        (
+            {
+                "apache": _GOOD
+                | {"planted_convention": {"passed": True, "convention": "code", "fraction": 0.5}}
+            },
+            _SIM,
+            "check 5 planted 'code' at 0.5",
+        ),
         ({"apache": _GOOD | {"planted_convention": None}}, _SIM, "check 5 did not pass"),
         (
             {"apache": _GOOD | {"outcome_neutral_runs": [{"file": "run-1.json", "holds": False}]}},
@@ -4044,3 +4081,36 @@ def test_a_replication_members_rerun_is_read_on_its_one_verdict() -> None:
     )
     with pytest.raises(ValueError, match="replication gate's output"):
         rank_reading(family(32, "inconclusive"), _ranked(256, {}, None))
+
+
+def test_qt_check_5_is_the_marker_plant(admitted) -> None:
+    """Qt's check 5 keeps the end-of-line marker in half its refinements (research log, 2026-11-17):
+    the code plant failed item 4's rule there, so a Qt read on it is refused, as is a marker read
+    elsewhere."""
+    assert cells.registered_plant("qt") == ("marker", 0.5)
+    assert cells.registered_plant("openstack") == ("code", 1.0)
+    assert cells.registered_plant("wikimedia") == ("code", 1.0)
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    for org, planted, refused in (
+        ("qt", ("code", 1.0), "qt: check 5 planted 'code' at 1.0, registered 'marker' at 0.5"),
+        (
+            "openstack",
+            ("marker", 0.5),
+            "openstack: check 5 planted 'marker' at 0.5, registered 'code' at 1.0",
+        ),
+    ):
+        reports = copy.deepcopy({o: r for o, (r, _) in pairs.items()})
+        reports[org]["planted_convention"] |= dict(
+            zip(("convention", "fraction"), planted, strict=True)
+        )
+        with pytest.raises(ValueError, match=refused):
+            confirmatory_gate(
+                reports,
+                simulations=sims,
+                coprimary={o: _on_other(r) for o, r in reports.items()},
+                coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+                **_h2_reads(h2_report, h2_sim),
+            )

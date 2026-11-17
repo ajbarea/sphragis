@@ -35,7 +35,7 @@ from pathlib import Path
 
 from sphragis.corpus.halves import assign, project_counts
 from sphragis.corpus.load import built_dir, mark_derived, refined_dir, refined_month_files
-from sphragis.experiment.planted import PLANT_CONVENTIONS, plant
+from sphragis.experiment.planted import PLANT_CONVENTIONS, ROW_CONVENTIONS, plant
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -66,15 +66,18 @@ parser.add_argument(
     "--plant",
     type=float,
     default=None,
-    help="plant each half's own comment marker in this fraction of its refinements, every "
-    "window (outcome-neutral check 5, the symmetric planted convention)",
+    help="plant each half's own convention (--plant-convention) in this fraction of the "
+    "refinements it can change, every window (outcome-neutral check 5 at its organization's "
+    "`cells.registered_plant`: 1.0 with `code`, or 0.5 with `marker` on Qt)",
 )
 parser.add_argument(
     "--plant-convention",
     choices=sorted(PLANT_CONVENTIONS),
     default="marker",
-    help="what --plant imposes: each half's comment marker (check 5), or each half's quote style "
-    "on Python refinements (the exchange rate's code-level convention)",
+    help="what --plant imposes: `code`, each half's quote style on Python, PHP and "
+    "JavaScript and its control-keyword spacing on C++, check 5 on OpenStack and Wikimedia; "
+    "`quotes`, the exchange rate's, on Python alone; `marker`, each half's end-of-line marker, "
+    "Qt's check 5 and every organization's before 2026-11-16",
 )
 # The symmetric calibration's seed, so the plant is drawn as it was there.
 parser.add_argument("--plant-seed", type=int, default=11)
@@ -164,14 +167,25 @@ def main() -> None:
         transforms, applies = PLANT_CONVENTIONS[args.plant_convention]
         for side, offset in ((0, 2), (1, 1)):
             rows = [row for halves in by_month.values() for row in halves.get(side, [])]
+            by_row = args.plant_convention in ROW_CONVENTIONS
             marked, report = plant(
                 rows,
                 fraction=args.plant,
                 seed=args.plant_seed + offset,
-                transform=transforms[side],
                 applies=applies,
                 record_ids=True,
+                **({"by_row": transforms[side]} if by_row else {"transform": transforms[side]}),
             )
+            # Where a half's convention is the organization's own (Qt writes `if (`), the plant
+            # changes few of its rows, though each carries the convention: those carrying it are
+            # the rows the other half's transform would change.
+            if by_row:
+                other = transforms[1 - side]
+                carrying = sum(
+                    other(str(r.get("after", "")), r) != r.get("after", "") for r in marked
+                )
+                report["carrying"] = float(carrying)
+                report["carrying_fraction"] = carrying / len(marked) if marked else 0.0
             planted[names[side]] = report
             marked_rows = iter(marked)
             for halves in by_month.values():

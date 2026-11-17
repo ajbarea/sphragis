@@ -399,6 +399,32 @@ reading against a SESOI uses the metric's own (`decomposition.metric_sesoi`). Th
 K and power figures in the sections below are measured on the registered metric; the exact-match
 figures they replace are in the research log.
 
+### Outcome-neutral check 5: δ's plant on OpenStack and Wikimedia, Qt's end-of-line marker (registered 2026-11-16 and 2026-11-17)
+
+Decided by each plant's own runs, under a rule fixed before any was read: item 4 of the
+2026-11-16 plan for δ's plant, the same rule fixed on 2026-09-30 (registered 2026-10-01) for the marker. An organization's runs on its first ten admissible partitions must all pass on
+s on both halves, each projected to pass with probability at least 0.95. The plant is δ's: each
+half's own quote style on Python, PHP and JavaScript literals, with a space or none between a
+control keyword and its parenthesis standing in on C++, Java and C#, in every refinement it can
+change (f = 1.0, the dose δ's rate was read at). On Python rows it is the plant δ's exchange rate
+was read on, so on OpenStack's Python one instrument both shows that s detects a convention and
+sets δ. It passed 10 of 10 on OpenStack and on Wikimedia, and is their check 5. On Qt it passed 9 of
+10. Qt's coding style already requires half a's spacing, so the plant rewrote almost none of half
+a's rows; Wikimedia's half a was lightly rewritten too and passed, so the share is a difference of
+degree, and the reason no second code plant was tried on Qt rather than the cause of the failed
+run. Qt's check 5 is each half's own end-of-line marker in half its refinements, whose runs passed
+the same rule, 10 of 10: the easy, deliberately artificial ceiling case, so on Qt detection is
+shown for a convention that strong, not δ's. Qt's plant was chosen after δ's plant was read there.
+This is a disclosed deviation from the plan and changes no pass rule (AJ's decision; research log,
+2026-11-17). The code reads each organization's own (`cells.registered_plant`), and
+`planted_check.py` writes `planted-check-<org>-<plant>.json`. An organization whose ten runs were
+never read under the rule, such as a GitHub member, has no registered plant: its check 5, and
+so its test read, is refused until its runs are read and the decision recorded. That decision is
+fixed in advance: an organization not yet read, such as a GitHub member (mostly Java or C#, where
+keyword spacing stands in), takes δ's
+plant if its ten runs meet the rule, otherwise the end-of-line marker at 0.5 if its ten runs meet
+it, otherwise it is withdrawn as an apparatus failure.
+
 ### Interval the gate reads: the crossed run-by-cluster bootstrap
 
 Decided by the coverage study and the fixed-K simulation. A Gerrit read's cluster is a relation
@@ -561,6 +587,7 @@ Qt's foreign organization (V8, AOSP, Fuchsia).
 | Exploratory comparators read sibling minus foreign across languages on OpenStack and Wikimedia before H2's language matching was fixed. | 2026-10-06, "The retrieval comparator read"; 2026-10-07, "The rules-file comparator read"; 2026-10-14, "Planned before any adapter d_org on s is read" |
 | After development readings on s′ (by token class, before it was a co-primary), on H2's contrast (inconclusive) and on its simulation, s′ became co-primary for H1, H2's K the cap, and Fuchsia an exploratory arm. Fuchsia's development contrast, read after, is supported. | 2026-10-15, "s split by token class"; 2026-10-18, "s split by token class on Qt"; 2026-10-29, "H2's development pilot is inconclusive"; 2026-10-30, "Five design decisions before the seal"; 2026-11-01, "Fuchsia's exploratory arm read beside Chromium's" |
 | After H2's s′ development contrast (inconclusive) and its simulation at K = 40, s′ bound H2 too, which can only tighten H2. | 2026-11-11, "The development pilots carry the readings registered beside the cells"; 2026-11-13, "H2 on s′ at K = 40 calibrated" |
+| Check 5's plant became δ's after the Stage 1 review, under a rule fixed before its runs. It held on OpenStack and Wikimedia; Qt, where it did not, kept the end-of-line marker, which had passed the same rule, a choice made after that reading. No pass rule changed. | 2026-11-16, "Planned before any run: check 5 on δ's plant"; 2026-11-17, "Check 5 on δ's plant" and "Decided: Qt's check 5 keeps the end-of-line marker" |
 | Qt and AOSP were first fetched over REST before their grants. Both REST fetches stopped with the collection stop, recorded on 2026-09-22 and carried out on 2026-09-23, when the hosts' robots.txt was read. Qt's pre-grant build ran faster than its crawl delay and was then blocked for about thirty-three hours, which the log reads as a firewall ban. AOSP's records were then fetched over its git host on 2026-09-23 and 2026-09-25, and Chromium's git host was used three times (two ref listings and one fetch of a single commit), all before their grants. Chromium's review host was queried before its grant as well: comments read on a sample of changes, a scoping pass, and a test that reached it in two local runs after the stop, which the log records as a breach of it; a guard test also opened one connection to a Google address and a review step tried one to the review host, sending no request. Nothing from those Chromium contacts is in the corpus. OpenStack's held corpus was collected faster than the crawl delay its robots.txt asks for, throughout. Host checks on 2026-09-29 sent about fifteen requests to TYPO3's disallowed `/changes/` and spaced OpenDev's size queries a second and a half apart, against the two seconds its robots.txt asks. | 2026-09-15, "Collection: our own volume got connections to opendev dropped"; 2026-09-16, "Qt's ban lifts"; 2026-09-21, "Chromium yields reviewer comments at Qt's rate"; 2026-09-22, "RQ1 re-registered around granularity" and "Chromium scoped"; 2026-09-23, "A rebased test reached chromium-review" and "The review UIs are closed to crawlers and the git hosts are not"; 2026-09-29, "Candidate organizations beyond Qt and Chromium"; 2026-10-14, "Google's git hosts need their maintainers' written permission"; 2026-10-18, "Qt's development pilot on its granted corpus" |
 | A pilot on Qt's data led to the bot filter and to testing two boundaries. Source-attribution pilots on Qt's and AOSP's data set AOSP last in the order. None of these pilots is in a figure in the report. | 2026-09-18, "How long each client trains decides which altitude leaks" and "Composition, not coherence, was the confound worth testing"; 2026-09-22, "RQ1 re-registered around granularity"; 2026-09-23, "A data audit"; 2026-10-14, "Planned before any adapter d_org on s is read" |
 | LineageOS was read and kept out of the confirmatory cells: its training window is too small for an H1 cell. | 2026-09-29, "Candidate organizations beyond Qt and Chromium"; 2026-09-30, "Wikimedia meets the split criteria and is admissible at N = 1,850" |

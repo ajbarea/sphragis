@@ -109,24 +109,53 @@ measured rate, so that it has something to detect.
 
 Every null is otherwise ambiguous between "no organization-specific adaptation" and "an
 instrument that cannot see one". On each admitted organization's development window, one run
-with each half's own comment marker planted in half of its training refinements must read
-`pass` on both halves. Only the planted run is read: the unplanted runs are H1's own data, so a
-condition on them would depend on the outcome.
+with each half's own convention planted in its training refinements must read `pass` on s on both
+halves. Only the planted run is read: the unplanted runs are H1's own data, so a condition on them
+would depend on the outcome.
 
-On exact match, planted on every refinement of one half, a convention returns +0.310 and +0.316
-over the two sides, about fifteen times what the two real organizations differ by, so the contrast can see a house
-style of that size. Its strength was measured before it was registered, on OpenStack's first ten admissible
+On OpenStack and Wikimedia the plant is δ's (registered 2026-11-16). Each half gets its own quote
+style, half a single and half b double, on Python, PHP and JavaScript string literals. On C++, Java
+and C# rows keyword spacing stands in: half a puts a space between a control keyword and its
+parenthesis and half b puts none. The plant goes into every refinement it can change. On Python
+rows it is the plant δ's exchange rate was read on, so on OpenStack's Python the instrument that
+shows the contrast can detect a convention is the one that sets δ; in the other languages it is
+δ's convention carried, or stood in for. The rule was fixed before the runs: every one of an
+organization's first ten admissible partitions must pass on s, each projected to pass with
+probability at least 0.95. δ's plant passed 10 of 10 on both organizations, projected at least
+0.9928 on OpenStack and 0.9998 on Wikimedia (`planted-check-openstack-code1.0.json`,
+`planted-check-wikimedia-code1.0.json`).
+
+On Qt it failed that rule: 9 of 10 passed, and the lowest projection was 0.3535
+(`planted-check-qt-code1.0.json`). Qt's coding style already requires half a's spacing, `if (`, so
+the plant rewrote at most 0.0053 of half a's examples. That is a difference of degree, not of
+kind: Wikimedia's half a quote style is the one MediaWiki prefers, the plant rewrote 0.0161 to
+0.0320 of it, and Wikimedia passed. The share does not say why one Qt run failed; it is why no
+second code plant was tried on Qt. Qt's check 5 keeps the plant it was first read on: each half's
+own end-of-line marker (`# reviewed` or `# approved`, a comment in Python and a bare token in C++)
+in half its refinements, whose runs (2026-10-18) passed the same rule, 10 of 10
+(`planted-check-qt-marker0.5.json`). The marker is the easy, deliberately artificial ceiling case
+(`planted.append_marker`), so on Qt the check shows that s sees a convention that strong, not δ's.
+Qt's plant was chosen after δ's plant was read there. This is a disclosed deviation from the plan,
+and no pass rule changed (research log, 2026-11-17). An organization whose ten runs were never read
+under the rule, such as a GitHub member, has no registered plant, so its check 5 is refused
+until they are (`cells.registered_plant`). The order is fixed in advance: an organization not yet read,
+such as a GitHub member (mostly Java or C#, where keyword spacing stands in), takes δ's plant if its ten runs meet the rule,
+otherwise the end-of-line marker at 0.5 if its ten runs do, otherwise it is withdrawn as an
+apparatus failure.
+
+On exact match, the marker planted on every refinement of one half returns +0.310 and +0.316
+over the two sides, about fifteen times what the two real organizations differ by, so the contrast
+can see a house style of that size. The marker's strength was measured before it was registered, on OpenStack's first ten admissible
 partitions under a rule fixed before the runs: planted in a quarter of the refinements it would
 have halted a working apparatus most of the time, and planted in half it passed every run
-(research log, 2026-09-30 and 2026-10-01). At the registered decoder greedy exact match then missed the
-half-rate convention in most runs, so the check is read on the registered metric, the
-reference's log-probability: planted in half it passed every run on both organizations, and
-planted in a quarter every OpenStack run (research
-log, 2026-10-09). The check reads the strength from the run's
-corpus path rather than trusting it, and refuses a run planted at any other strength, in only
-one half, read on any other window, or from another organization or training size. A read of the
-sealed window without it is refused. The planted run's adapter arms must not be degenerate; its base arms are left
-out, because the plant rewrites the references they are scored on.
+(research log, 2026-09-30 and 2026-10-01). At the registered decoder greedy exact match then missed
+the half-rate convention in most runs, so the check is read on the registered metric, the
+reference's log-probability (research log, 2026-10-09). The check reads the plant and its strength
+from the run's corpus path rather than trusting it. It refuses a run planted with any plant or
+strength other than its organization's (`cells.registered_plant`), planted in only one half, read
+on any other window, or from another organization or training size. A read of the sealed window
+without it is refused. The planted run's adapter arms must not be degenerate; its base arms are
+left out, because the plant rewrites the references they are scored on.
 
 ## 6. Non-degeneracy
 

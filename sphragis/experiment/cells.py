@@ -37,6 +37,47 @@ REGISTERED_RANK = 32
 RERUN_RANK = 256
 #: Outcome-neutral check 2's interval (Stage 1 report): its lower bound must be above zero.
 POSITIVE_CONTROL_CONFIDENCE = 0.95
+#: Outcome-neutral check 5 as registered (2026-11-16, issue #277): one development run with each
+#: half's own code-level convention (`planted.PLANT_CONVENTIONS["code"]`) in every refinement it
+#: can change, the dose δ's exchange rate was read at (research log, 2026-10-16). On Python rows it
+#: is the plant δ's rate was read on, so there the plant that shows the contrast detects a
+#: convention is the one that sets δ; on C++, Java and C# rows keyword spacing stands in.
+PLANT_CONVENTION = "code"
+PLANT_FRACTION = 1.0
+#: Each organization's check 5, registered by its ten runs under item 4's rule (research log,
+#: 2026-11-16 and 2026-11-17). The code plant met it on OpenStack and Wikimedia and failed it on Qt
+#: (9 of 10), whose style already writes half a's C++ spacing; Qt keeps each half's own end-of-line
+#: marker in half its refinements, an easy artificial convention, whose runs (2026-10-18) meet the
+#: same rule (fixed 2026-09-30, registered 2026-10-01). An organization not read under it has no
+#: registered plant.
+PLANT_BY_ORG: dict[str, tuple[str, float]] = {
+    "openstack": (PLANT_CONVENTION, PLANT_FRACTION),
+    "wikimedia": (PLANT_CONVENTION, PLANT_FRACTION),
+    "qt": ("marker", 0.5),
+}
+
+#: The order an organization not yet read takes its check 5 in, fixed before any of its runs
+#: (research log, 2026-11-17): δ's plant if its ten runs meet item 4's rule, else the end-of-line
+#: marker at 0.5 if its ten runs meet it, else the organization is withdrawn. Qt's decision took
+#: this order, after both its plants had been read.
+PLANT_ORDER: tuple[tuple[str, float], ...] = ((PLANT_CONVENTION, PLANT_FRACTION), ("marker", 0.5))
+
+
+def registered_plant(org: str) -> tuple[str, float]:
+    """The convention and fraction check 5 is registered at for `org`.
+
+    Item 4 registers a plant for an organization only on its own ten runs, so one whose runs were
+    never read has none, and its check 5 is refused rather than read on another's plant.
+    """
+    if org not in PLANT_BY_ORG:
+        raise ValueError(
+            f"{org}: no plant is registered as its check 5; read its ten runs under item 4 in "
+            f"the order {PLANT_ORDER} (planted_check.py --convention --fraction) and record the "
+            "plant that meets it, or withdraw the organization"
+        )
+    return PLANT_BY_ORG[org]
+
+
 # The kind a K coverage artifact records (`k_coverage.py`): the only K source a test read takes,
 # since the coverage rule, not the pilot's reproducibility K alone, fixes K (research log
 # 2026-10-09).
@@ -388,6 +429,12 @@ def require_test_read(
     planted = report["planted_convention"]
     if not (isinstance(planted, Mapping) and planted.get("passed") is True):
         raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")
+    convention, fraction = registered_plant(org)
+    if (planted.get("convention"), planted.get("fraction")) != (convention, fraction):
+        raise ValueError(
+            f"{org}: check 5 planted {planted.get('convention')!r} at {planted.get('fraction')!r}, "
+            f"registered {convention!r} at {fraction}"
+        )
     for name, what in (("k_from", "K"), ("sensitivity", "bounds")):
         source = report[name]
         if not (isinstance(source, Mapping) and source.get("org") == org):

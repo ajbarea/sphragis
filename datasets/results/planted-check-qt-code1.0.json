@@ -1,0 +1,822 @@
+{
+  "kind": "planted_check",
+  "org": "qt",
+  "convention": "code",
+  "fraction": 1.0,
+  "runs": 10,
+  "registered_runs": 10,
+  "metric": "logprob_per_token",
+  "passed": 9,
+  "projected_pass_min": 0.35353065633342673,
+  "projected_pass_mean": 0.9316853987504052,
+  "projected_floor": 0.95,
+  "rule_met": false,
+  "registered_plant": [
+    "marker",
+    0.5
+  ],
+  "by_run": [
+    {
+      "file": "likelihood-partition-qt-p11-s3-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p11-s3-n1850-plantcode1.0",
+      "partition": 11,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9997537323452769,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.055326745138072786,
+          "low": 0.03550641751666528,
+          "high": 0.08028401877708397
+        },
+        "qt-b": {
+          "estimate": 0.05126241321996089,
+          "low": 0.023715478692344805,
+          "high": 0.0813675402514275
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.055326745138072786,
+            "low": 0.03550641751666528,
+            "high": 0.08028401877708397,
+            "clusters": 216.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          },
+          "qt-b": {
+            "estimate": 0.05126241321996089,
+            "low": 0.023715478692344805,
+            "high": 0.0813675402514275,
+            "clusters": 187.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s3": 0.3722943722943723,
+          "adapter:qt-a|qt-b|s3": 0.28106508875739644,
+          "adapter:qt-b|qt-a|s3": 0.31385281385281383,
+          "adapter:qt-b|qt-b|s3": 0.28994082840236685
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 4906.0,
+          "eligible": 26.0,
+          "changed": 26.0,
+          "realised_fraction": 0.005299633102323685,
+          "carrying": 481.0,
+          "carrying_fraction": 0.09804321239298817
+        },
+        "qt-b": {
+          "examples": 4526.0,
+          "eligible": 524.0,
+          "changed": 524.0,
+          "realised_fraction": 0.11577551922227132,
+          "carrying": 526.0,
+          "carrying_fraction": 0.11621741051701281
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p12-s4-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p12-s4-n1850-plantcode1.0",
+      "partition": 12,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999260095805769,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.034109730182205866,
+          "low": 0.016755662130054194,
+          "high": 0.05199334919964027
+        },
+        "qt-b": {
+          "estimate": 0.07274323091316587,
+          "low": 0.04944838981869887,
+          "high": 0.0992757387242672
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.034109730182205866,
+            "low": 0.016755662130054194,
+            "high": 0.05199334919964027,
+            "clusters": 196.0,
+            "resamples": 10000.0,
+            "binding_seed": 4.0
+          },
+          "qt-b": {
+            "estimate": 0.07274323091316587,
+            "low": 0.04944838981869887,
+            "high": 0.0992757387242672,
+            "clusters": 207.0,
+            "resamples": 10000.0,
+            "binding_seed": 4.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s4": 0.28901734104046245,
+          "adapter:qt-a|qt-b|s4": 0.29295154185022027,
+          "adapter:qt-b|qt-a|s4": 0.2832369942196532,
+          "adapter:qt-b|qt-b|s4": 0.3590308370044053
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 4665.0,
+          "eligible": 6.0,
+          "changed": 6.0,
+          "realised_fraction": 0.0012861736334405145,
+          "carrying": 506.0,
+          "carrying_fraction": 0.10846730975348338
+        },
+        "qt-b": {
+          "examples": 4767.0,
+          "eligible": 479.0,
+          "changed": 479.0,
+          "realised_fraction": 0.10048248374239564,
+          "carrying": 501.0,
+          "carrying_fraction": 0.10509754562617998
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p13-s5-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p13-s5-n1850-plantcode1.0",
+      "partition": 13,
+      "metric": "logprob_per_token",
+      "passed": false,
+      "verdict": "mixed",
+      "projected_pass": 0.35353065633342673,
+      "halves": {
+        "qt-a": {
+          "estimate": -0.004287346215272159,
+          "low": -0.027034988620289302,
+          "high": 0.017685376341839976
+        },
+        "qt-b": {
+          "estimate": 0.04485632138800821,
+          "low": 0.025913723210787776,
+          "high": 0.06398038800452055
+        }
+      },
+      "evidence": {
+        "verdict": "mixed",
+        "binding": {
+          "qt-a": {
+            "estimate": -0.004287346215272159,
+            "low": -0.027034988620289302,
+            "high": 0.017685376341839976,
+            "clusters": 179.0,
+            "resamples": 10000.0,
+            "binding_seed": 5.0
+          },
+          "qt-b": {
+            "estimate": 0.04485632138800821,
+            "low": 0.025913723210787776,
+            "high": 0.06398038800452055,
+            "clusters": 224.0,
+            "resamples": 10000.0,
+            "binding_seed": 5.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s5": 0.2635135135135135,
+          "adapter:qt-a|qt-b|s5": 0.2857142857142857,
+          "adapter:qt-b|qt-a|s5": 0.2905405405405405,
+          "adapter:qt-b|qt-b|s5": 0.35912698412698413
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 4492.0,
+          "eligible": 3.0,
+          "changed": 3.0,
+          "realised_fraction": 0.0006678539626001781,
+          "carrying": 533.0,
+          "carrying_fraction": 0.1186553873552983
+        },
+        "qt-b": {
+          "examples": 4940.0,
+          "eligible": 449.0,
+          "changed": 449.0,
+          "realised_fraction": 0.09089068825910931,
+          "carrying": 474.0,
+          "carrying_fraction": 0.09595141700404858
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p16-s6-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p16-s6-n1850-plantcode1.0",
+      "partition": 16,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9998895499818581,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.03441680469863295,
+          "low": 0.01640676126775742,
+          "high": 0.0529077895083811
+        },
+        "qt-b": {
+          "estimate": 0.058228881685935985,
+          "low": 0.03597557172530136,
+          "high": 0.08395529870506957
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.03441680469863295,
+            "low": 0.01640676126775742,
+            "high": 0.0529077895083811,
+            "clusters": 185.0,
+            "resamples": 10000.0,
+            "binding_seed": 6.0
+          },
+          "qt-b": {
+            "estimate": 0.058228881685935985,
+            "low": 0.03597557172530136,
+            "high": 0.08395529870506957,
+            "clusters": 218.0,
+            "resamples": 10000.0,
+            "binding_seed": 6.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s6": 0.34971098265895956,
+          "adapter:qt-a|qt-b|s6": 0.29295154185022027,
+          "adapter:qt-b|qt-a|s6": 0.315028901734104,
+          "adapter:qt-b|qt-b|s6": 0.32599118942731276
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 4124.0,
+          "eligible": 9.0,
+          "changed": 9.0,
+          "realised_fraction": 0.0021823472356935015,
+          "carrying": 428.0,
+          "carrying_fraction": 0.1037827352085354
+        },
+        "qt-b": {
+          "examples": 5308.0,
+          "eligible": 560.0,
+          "changed": 560.0,
+          "realised_fraction": 0.10550113036925396,
+          "carrying": 579.0,
+          "carrying_fraction": 0.10908063300678221
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p18-s7-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p18-s7-n1850-plantcode1.0",
+      "partition": 18,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9989022418340321,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.030673066741606914,
+          "low": 0.011270299392575456,
+          "high": 0.050532063360602175
+        },
+        "qt-b": {
+          "estimate": 0.07348082188434424,
+          "low": 0.05036508033906728,
+          "high": 0.09860027230642326
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.030673066741606914,
+            "low": 0.011270299392575456,
+            "high": 0.050532063360602175,
+            "clusters": 176.0,
+            "resamples": 10000.0,
+            "binding_seed": 7.0
+          },
+          "qt-b": {
+            "estimate": 0.07348082188434424,
+            "low": 0.05036508033906728,
+            "high": 0.09860027230642326,
+            "clusters": 227.0,
+            "resamples": 10000.0,
+            "binding_seed": 7.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s7": 0.33663366336633666,
+          "adapter:qt-a|qt-b|s7": 0.2937625754527163,
+          "adapter:qt-b|qt-a|s7": 0.31683168316831684,
+          "adapter:qt-b|qt-b|s7": 0.3319919517102616
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 4402.0,
+          "eligible": 14.0,
+          "changed": 14.0,
+          "realised_fraction": 0.0031803725579282144,
+          "carrying": 489.0,
+          "carrying_fraction": 0.11108587005906406
+        },
+        "qt-b": {
+          "examples": 5030.0,
+          "eligible": 503.0,
+          "changed": 503.0,
+          "realised_fraction": 0.1,
+          "carrying": 518.0,
+          "carrying_fraction": 0.10298210735586481
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p19-s8-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p19-s8-n1850-plantcode1.0",
+      "partition": 19,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9845157696128001,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.02218192100731675,
+          "low": 0.0019505145622351616,
+          "high": 0.04225285327050443
+        },
+        "qt-b": {
+          "estimate": 0.0584068852392165,
+          "low": 0.037944383618607525,
+          "high": 0.08242129417468236
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.02218192100731675,
+            "low": 0.0019505145622351616,
+            "high": 0.04225285327050443,
+            "clusters": 167.0,
+            "resamples": 10000.0,
+            "binding_seed": 8.0
+          },
+          "qt-b": {
+            "estimate": 0.0584068852392165,
+            "low": 0.037944383618607525,
+            "high": 0.08242129417468236,
+            "clusters": 236.0,
+            "resamples": 10000.0,
+            "binding_seed": 8.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s8": 0.2912280701754386,
+          "adapter:qt-a|qt-b|s8": 0.3087378640776699,
+          "adapter:qt-b|qt-a|s8": 0.2982456140350877,
+          "adapter:qt-b|qt-b|s8": 0.3533980582524272
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 4210.0,
+          "eligible": 8.0,
+          "changed": 8.0,
+          "realised_fraction": 0.0019002375296912114,
+          "carrying": 516.0,
+          "carrying_fraction": 0.12256532066508313
+        },
+        "qt-b": {
+          "examples": 5222.0,
+          "eligible": 471.0,
+          "changed": 471.0,
+          "realised_fraction": 0.090195327460743,
+          "carrying": 491.0,
+          "carrying_fraction": 0.09402527767139027
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p20-s9-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p20-s9-n1850-plantcode1.0",
+      "partition": 20,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9993920993170299,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.05810547222386547,
+          "low": 0.04259082331586833,
+          "high": 0.0746917320677436
+        },
+        "qt-b": {
+          "estimate": 0.052840311178718624,
+          "low": 0.023150397752148333,
+          "high": 0.08717537602488479
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.05810547222386547,
+            "low": 0.04259082331586833,
+            "high": 0.0746917320677436,
+            "clusters": 240.0,
+            "resamples": 10000.0,
+            "binding_seed": 9.0
+          },
+          "qt-b": {
+            "estimate": 0.052840311178718624,
+            "low": 0.023150397752148333,
+            "high": 0.08717537602488479,
+            "clusters": 163.0,
+            "resamples": 10000.0,
+            "binding_seed": 9.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s9": 0.34710743801652894,
+          "adapter:qt-a|qt-b|s9": 0.29430379746835444,
+          "adapter:qt-b|qt-a|s9": 0.3037190082644628,
+          "adapter:qt-b|qt-b|s9": 0.31962025316455694
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 5691.0,
+          "eligible": 20.0,
+          "changed": 20.0,
+          "realised_fraction": 0.003514320857494289,
+          "carrying": 609.0,
+          "carrying_fraction": 0.1070110701107011
+        },
+        "qt-b": {
+          "examples": 3741.0,
+          "eligible": 390.0,
+          "changed": 390.0,
+          "realised_fraction": 0.10425020048115477,
+          "carrying": 398.0,
+          "carrying_fraction": 0.10638866613205025
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p21-s10-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p21-s10-n1850-plantcode1.0",
+      "partition": 21,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9998918287949031,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.04398469597737126,
+          "low": 0.028422328967394772,
+          "high": 0.06278464086601149
+        },
+        "qt-b": {
+          "estimate": 0.06838355463752754,
+          "low": 0.03517341155651188,
+          "high": 0.10762674866553046
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.04398469597737126,
+            "low": 0.028422328967394772,
+            "high": 0.06278464086601149,
+            "clusters": 254.0,
+            "resamples": 10000.0,
+            "binding_seed": 10.0
+          },
+          "qt-b": {
+            "estimate": 0.06838355463752754,
+            "low": 0.03517341155651188,
+            "high": 0.10762674866553046,
+            "clusters": 149.0,
+            "resamples": 10000.0,
+            "binding_seed": 10.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s10": 0.3562992125984252,
+          "adapter:qt-a|qt-b|s10": 0.2910958904109589,
+          "adapter:qt-b|qt-a|s10": 0.297244094488189,
+          "adapter:qt-b|qt-b|s10": 0.3253424657534247
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 5378.0,
+          "eligible": 8.0,
+          "changed": 8.0,
+          "realised_fraction": 0.0014875418371141688,
+          "carrying": 645.0,
+          "carrying_fraction": 0.11993306061732986
+        },
+        "qt-b": {
+          "examples": 4054.0,
+          "eligible": 342.0,
+          "changed": 342.0,
+          "realised_fraction": 0.08436112481499754,
+          "carrying": 362.0,
+          "carrying_fraction": 0.0892945239269857
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p4-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p4-n1850-plantcode1.0",
+      "partition": 4,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.988791881571804,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.020273461703713136,
+          "low": 0.004116943650319782,
+          "high": 0.03892034455307508
+        },
+        "qt-b": {
+          "estimate": 0.07836012249420776,
+          "low": 0.046296380853136365,
+          "high": 0.11592006078386718
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.020273461703713136,
+            "low": 0.004116943650319782,
+            "high": 0.03892034455307508,
+            "clusters": 229.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          },
+          "qt-b": {
+            "estimate": 0.07836012249420776,
+            "low": 0.046296380853136365,
+            "high": 0.11592006078386718,
+            "clusters": 174.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s1": 0.34394904458598724,
+          "adapter:qt-a|qt-b|s1": 0.2917933130699088,
+          "adapter:qt-b|qt-a|s1": 0.31422505307855625,
+          "adapter:qt-b|qt-b|s1": 0.3191489361702128
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 5144.0,
+          "eligible": 9.0,
+          "changed": 9.0,
+          "realised_fraction": 0.001749611197511664,
+          "carrying": 583.0,
+          "carrying_fraction": 0.11333592534992223
+        },
+        "qt-b": {
+          "examples": 4288.0,
+          "eligible": 405.0,
+          "changed": 405.0,
+          "realised_fraction": 0.09444962686567164,
+          "carrying": 424.0,
+          "carrying_fraction": 0.09888059701492537
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-qt-p7-s2-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-qt-p7-s2-n1850-plantcode1.0",
+      "partition": 7,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.992260218132344,
+      "halves": {
+        "qt-a": {
+          "estimate": 0.02411475453855194,
+          "low": 0.00516019249259303,
+          "high": 0.04420473334491559
+        },
+        "qt-b": {
+          "estimate": 0.04805161871496244,
+          "low": 0.02906660911522302,
+          "high": 0.06944724430562643
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "qt-a": {
+            "estimate": 0.02411475453855194,
+            "low": 0.00516019249259303,
+            "high": 0.04420473334491559,
+            "clusters": 163.0,
+            "resamples": 10000.0,
+            "binding_seed": 2.0
+          },
+          "qt-b": {
+            "estimate": 0.04805161871496244,
+            "low": 0.02906660911522302,
+            "high": 0.06944724430562643,
+            "clusters": 240.0,
+            "resamples": 10000.0,
+            "binding_seed": 2.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:qt-a|qt-a|s2": 0.3193548387096774,
+          "adapter:qt-a|qt-b|s2": 0.3346938775510204,
+          "adapter:qt-b|qt-a|s2": 0.2903225806451613,
+          "adapter:qt-b|qt-b|s2": 0.3224489795918367
+        }
+      },
+      "plant": {
+        "qt-a": {
+          "examples": 4066.0,
+          "eligible": 16.0,
+          "changed": 16.0,
+          "realised_fraction": 0.003935071323167732,
+          "carrying": 381.0,
+          "carrying_fraction": 0.09370388588293163
+        },
+        "qt-b": {
+          "examples": 5366.0,
+          "eligible": 615.0,
+          "changed": 615.0,
+          "realised_fraction": 0.11461051062243757,
+          "carrying": 626.0,
+          "carrying_fraction": 0.11666045471487141
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-11-17T10:35:54.854335+00:00",
+    "git": {
+      "commit": "3183e50672047744fd28e0f510ea6d85808dcf32",
+      "branch": "feat/check5-one-plant-277"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

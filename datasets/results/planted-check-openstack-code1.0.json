@@ -1,0 +1,822 @@
+{
+  "kind": "planted_check",
+  "org": "openstack",
+  "convention": "code",
+  "fraction": 1.0,
+  "runs": 10,
+  "registered_runs": 10,
+  "metric": "logprob_per_token",
+  "passed": 10,
+  "projected_pass_min": 0.992816377412537,
+  "projected_pass_mean": 0.998271223096188,
+  "projected_floor": 0.95,
+  "rule_met": true,
+  "registered_plant": [
+    "code",
+    1.0
+  ],
+  "by_run": [
+    {
+      "file": "likelihood-partition-openstack-p10-s8-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p10-s8-n1850-plantcode1.0",
+      "partition": 10,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999735626494132,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.05538814792928626,
+          "low": 0.030965963561461196,
+          "high": 0.08466808607330367
+        },
+        "openstack-b": {
+          "estimate": 0.08836636883096383,
+          "low": 0.05638066170099543,
+          "high": 0.12146491208877391
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.05538814792928626,
+            "low": 0.030965963561461196,
+            "high": 0.08466808607330367,
+            "clusters": 102.0,
+            "resamples": 10000.0,
+            "binding_seed": 8.0
+          },
+          "openstack-b": {
+            "estimate": 0.08836636883096383,
+            "low": 0.05638066170099543,
+            "high": 0.12146491208877391,
+            "clusters": 104.0,
+            "resamples": 10000.0,
+            "binding_seed": 8.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s8": 0.25650557620817843,
+          "adapter:openstack-a|openstack-b|s8": 0.2413793103448276,
+          "adapter:openstack-b|openstack-a|s8": 0.24535315985130113,
+          "adapter:openstack-b|openstack-b|s8": 0.29310344827586204
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2534.0,
+          "eligible": 158.0,
+          "changed": 158.0,
+          "realised_fraction": 0.062352012628255724,
+          "carrying": 348.0,
+          "carrying_fraction": 0.13733228097868982
+        },
+        "openstack-b": {
+          "examples": 2483.0,
+          "eligible": 291.0,
+          "changed": 291.0,
+          "realised_fraction": 0.11719693918646798,
+          "carrying": 524.0,
+          "carrying_fraction": 0.21103503826016914
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p11-s9-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p11-s9-n1850-plantcode1.0",
+      "partition": 11,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9995481212892502,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.043116695467636634,
+          "low": 0.02239457535906475,
+          "high": 0.06746516596591712
+        },
+        "openstack-b": {
+          "estimate": 0.06990740696740938,
+          "low": 0.030530506390537615,
+          "high": 0.11162434948307631
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.043116695467636634,
+            "low": 0.02239457535906475,
+            "high": 0.06746516596591712,
+            "clusters": 100.0,
+            "resamples": 10000.0,
+            "binding_seed": 9.0
+          },
+          "openstack-b": {
+            "estimate": 0.06990740696740938,
+            "low": 0.030530506390537615,
+            "high": 0.11162434948307631,
+            "clusters": 106.0,
+            "resamples": 10000.0,
+            "binding_seed": 9.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s9": 0.24829931972789115,
+          "adapter:openstack-a|openstack-b|s9": 0.24154589371980675,
+          "adapter:openstack-b|openstack-a|s9": 0.22448979591836735,
+          "adapter:openstack-b|openstack-b|s9": 0.2898550724637681
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2506.0,
+          "eligible": 187.0,
+          "changed": 187.0,
+          "realised_fraction": 0.07462090981644054,
+          "carrying": 402.0,
+          "carrying_fraction": 0.160415003990423
+        },
+        "openstack-b": {
+          "examples": 2511.0,
+          "eligible": 248.0,
+          "changed": 248.0,
+          "realised_fraction": 0.09876543209876543,
+          "carrying": 470.0,
+          "carrying_fraction": 0.1871764237355635
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p12-s10-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p12-s10-n1850-plantcode1.0",
+      "partition": 12,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9944947726364437,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.09662849244680405,
+          "low": 0.05836707830476251,
+          "high": 0.13484247783671088
+        },
+        "openstack-b": {
+          "estimate": 0.025936626841397414,
+          "low": 0.005689033374126906,
+          "high": 0.0456788509826585
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.09662849244680405,
+            "low": 0.05836707830476251,
+            "high": 0.13484247783671088,
+            "clusters": 112.0,
+            "resamples": 10000.0,
+            "binding_seed": 10.0
+          },
+          "openstack-b": {
+            "estimate": 0.025936626841397414,
+            "low": 0.005689033374126906,
+            "high": 0.0456788509826585,
+            "clusters": 94.0,
+            "resamples": 10000.0,
+            "binding_seed": 10.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s10": 0.28193832599118945,
+          "adapter:openstack-a|openstack-b|s10": 0.25547445255474455,
+          "adapter:openstack-b|openstack-a|s10": 0.23348017621145375,
+          "adapter:openstack-b|openstack-b|s10": 0.26277372262773724
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2455.0,
+          "eligible": 279.0,
+          "changed": 279.0,
+          "realised_fraction": 0.11364562118126273,
+          "carrying": 508.0,
+          "carrying_fraction": 0.2069246435845214
+        },
+        "openstack-b": {
+          "examples": 2562.0,
+          "eligible": 232.0,
+          "changed": 232.0,
+          "realised_fraction": 0.09055425448868072,
+          "carrying": 364.0,
+          "carrying_fraction": 0.14207650273224043
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p2-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p2-n1850-plantcode1.0",
+      "partition": 2,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9991628519274437,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.06863623045012113,
+          "low": 0.02988881363335011,
+          "high": 0.10772620703990321
+        },
+        "openstack-b": {
+          "estimate": 0.050075632779803314,
+          "low": 0.026087769595900645,
+          "high": 0.08636280337809144
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.06863623045012113,
+            "low": 0.02988881363335011,
+            "high": 0.10772620703990321,
+            "clusters": 125.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          },
+          "openstack-b": {
+            "estimate": 0.050075632779803314,
+            "low": 0.026087769595900645,
+            "high": 0.08636280337809144,
+            "clusters": 81.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s1": 0.29411764705882354,
+          "adapter:openstack-a|openstack-b|s1": 0.2073170731707317,
+          "adapter:openstack-b|openstack-a|s1": 0.25098039215686274,
+          "adapter:openstack-b|openstack-b|s1": 0.24796747967479674
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2604.0,
+          "eligible": 291.0,
+          "changed": 291.0,
+          "realised_fraction": 0.11175115207373272,
+          "carrying": 493.0,
+          "carrying_fraction": 0.18932411674347158
+        },
+        "openstack-b": {
+          "examples": 2413.0,
+          "eligible": 268.0,
+          "changed": 268.0,
+          "realised_fraction": 0.11106506423539163,
+          "carrying": 379.0,
+          "carrying_fraction": 0.15706589307915458
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p3-s2-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p3-s2-n1850-plantcode1.0",
+      "partition": 3,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9989003609001768,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.07248926813606649,
+          "low": 0.03411690678869428,
+          "high": 0.11233137004049332
+        },
+        "openstack-b": {
+          "estimate": 0.0404080501410361,
+          "low": 0.017465708234400412,
+          "high": 0.06852139627254172
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.07248926813606649,
+            "low": 0.03411690678869428,
+            "high": 0.11233137004049332,
+            "clusters": 90.0,
+            "resamples": 10000.0,
+            "binding_seed": 2.0
+          },
+          "openstack-b": {
+            "estimate": 0.0404080501410361,
+            "low": 0.017465708234400412,
+            "high": 0.06852139627254172,
+            "clusters": 116.0,
+            "resamples": 10000.0,
+            "binding_seed": 2.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s2": 0.2781065088757396,
+          "adapter:openstack-a|openstack-b|s2": 0.25301204819277107,
+          "adapter:openstack-b|openstack-a|s2": 0.21893491124260356,
+          "adapter:openstack-b|openstack-b|s2": 0.25903614457831325
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2527.0,
+          "eligible": 173.0,
+          "changed": 173.0,
+          "realised_fraction": 0.06846062524732885,
+          "carrying": 496.0,
+          "carrying_fraction": 0.1962801741195093
+        },
+        "openstack-b": {
+          "examples": 2490.0,
+          "eligible": 144.0,
+          "changed": 144.0,
+          "realised_fraction": 0.05783132530120482,
+          "carrying": 376.0,
+          "carrying_fraction": 0.15100401606425704
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p4-s3-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p4-s3-n1850-plantcode1.0",
+      "partition": 4,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9992647649998677,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.06610132977376548,
+          "low": 0.030773821832487447,
+          "high": 0.10307001036824048
+        },
+        "openstack-b": {
+          "estimate": 0.054960757381891545,
+          "low": 0.027002560630491834,
+          "high": 0.09318258235993648
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.06610132977376548,
+            "low": 0.030773821832487447,
+            "high": 0.10307001036824048,
+            "clusters": 98.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          },
+          "openstack-b": {
+            "estimate": 0.054960757381891545,
+            "low": 0.027002560630491834,
+            "high": 0.09318258235993648,
+            "clusters": 108.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s3": 0.2578947368421053,
+          "adapter:openstack-a|openstack-b|s3": 0.2540192926045016,
+          "adapter:openstack-b|openstack-a|s3": 0.24210526315789474,
+          "adapter:openstack-b|openstack-b|s3": 0.2604501607717042
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2266.0,
+          "eligible": 192.0,
+          "changed": 192.0,
+          "realised_fraction": 0.08473080317740513,
+          "carrying": 414.0,
+          "carrying_fraction": 0.18270079435127978
+        },
+        "openstack-b": {
+          "examples": 2751.0,
+          "eligible": 252.0,
+          "changed": 252.0,
+          "realised_fraction": 0.0916030534351145,
+          "carrying": 458.0,
+          "carrying_fraction": 0.16648491457651762
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p5-s4-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p5-s4-n1850-plantcode1.0",
+      "partition": 5,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.992816377412537,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.08323371872466023,
+          "low": 0.03851058598183488,
+          "high": 0.12749756077694252
+        },
+        "openstack-b": {
+          "estimate": 0.022828461806678413,
+          "low": 0.0029856108826560313,
+          "high": 0.039449197491647936
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.08323371872466023,
+            "low": 0.03851058598183488,
+            "high": 0.12749756077694252,
+            "clusters": 102.0,
+            "resamples": 10000.0,
+            "binding_seed": 4.0
+          },
+          "openstack-b": {
+            "estimate": 0.022828461806678413,
+            "low": 0.0029856108826560313,
+            "high": 0.039449197491647936,
+            "clusters": 104.0,
+            "resamples": 10000.0,
+            "binding_seed": 4.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s4": 0.2564102564102564,
+          "adapter:openstack-a|openstack-b|s4": 0.27124183006535946,
+          "adapter:openstack-b|openstack-a|s4": 0.21025641025641026,
+          "adapter:openstack-b|openstack-b|s4": 0.28431372549019607
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2467.0,
+          "eligible": 256.0,
+          "changed": 256.0,
+          "realised_fraction": 0.1037697608431293,
+          "carrying": 521.0,
+          "carrying_fraction": 0.21118767734089988
+        },
+        "openstack-b": {
+          "examples": 2550.0,
+          "eligible": 209.0,
+          "changed": 209.0,
+          "realised_fraction": 0.08196078431372548,
+          "carrying": 351.0,
+          "carrying_fraction": 0.1376470588235294
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p7-s5-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p7-s5-n1850-plantcode1.0",
+      "partition": 7,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9995581864418165,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.09587819666912978,
+          "low": 0.06071663368890923,
+          "high": 0.13687423516362418
+        },
+        "openstack-b": {
+          "estimate": 0.047160902754988854,
+          "low": 0.02282094313145705,
+          "high": 0.07841297118270418
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.09587819666912978,
+            "low": 0.06071663368890923,
+            "high": 0.13687423516362418,
+            "clusters": 112.0,
+            "resamples": 10000.0,
+            "binding_seed": 5.0
+          },
+          "openstack-b": {
+            "estimate": 0.047160902754988854,
+            "low": 0.02282094313145705,
+            "high": 0.07841297118270418,
+            "clusters": 94.0,
+            "resamples": 10000.0,
+            "binding_seed": 5.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s5": 0.2653061224489796,
+          "adapter:openstack-a|openstack-b|s5": 0.2754098360655738,
+          "adapter:openstack-b|openstack-a|s5": 0.18877551020408162,
+          "adapter:openstack-b|openstack-b|s5": 0.28524590163934427
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2440.0,
+          "eligible": 219.0,
+          "changed": 219.0,
+          "realised_fraction": 0.08975409836065573,
+          "carrying": 433.0,
+          "carrying_fraction": 0.17745901639344264
+        },
+        "openstack-b": {
+          "examples": 2577.0,
+          "eligible": 259.0,
+          "changed": 259.0,
+          "realised_fraction": 0.10050446255335661,
+          "carrying": 439.0,
+          "carrying_fraction": 0.17035312378734963
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p8-s6-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p8-s6-n1850-plantcode1.0",
+      "partition": 8,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999561452116597,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.09236615944015769,
+          "low": 0.05648058418550772,
+          "high": 0.13171834682771488
+        },
+        "openstack-b": {
+          "estimate": 0.044464879447825734,
+          "low": 0.02549281092285427,
+          "high": 0.0698841161669404
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.09236615944015769,
+            "low": 0.05648058418550772,
+            "high": 0.13171834682771488,
+            "clusters": 122.0,
+            "resamples": 10000.0,
+            "binding_seed": 6.0
+          },
+          "openstack-b": {
+            "estimate": 0.044464879447825734,
+            "low": 0.02549281092285427,
+            "high": 0.0698841161669404,
+            "clusters": 84.0,
+            "resamples": 10000.0,
+            "binding_seed": 6.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s6": 0.3132530120481928,
+          "adapter:openstack-a|openstack-b|s6": 0.21825396825396826,
+          "adapter:openstack-b|openstack-a|s6": 0.24096385542168675,
+          "adapter:openstack-b|openstack-b|s6": 0.2619047619047619
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2610.0,
+          "eligible": 286.0,
+          "changed": 286.0,
+          "realised_fraction": 0.10957854406130269,
+          "carrying": 522.0,
+          "carrying_fraction": 0.2
+        },
+        "openstack-b": {
+          "examples": 2407.0,
+          "eligible": 235.0,
+          "changed": 235.0,
+          "realised_fraction": 0.09763190693809722,
+          "carrying": 350.0,
+          "carrying_fraction": 0.14540922309929372
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-openstack-p9-s7-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-openstack-p9-s7-n1850-plantcode1.0",
+      "partition": 9,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9990370874932712,
+      "halves": {
+        "openstack-a": {
+          "estimate": 0.07297728651209923,
+          "low": 0.040632511454511966,
+          "high": 0.10817383489731058
+        },
+        "openstack-b": {
+          "estimate": 0.04861525068608458,
+          "low": 0.02306080202180899,
+          "high": 0.08443619851924655
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "openstack-a": {
+            "estimate": 0.07297728651209923,
+            "low": 0.040632511454511966,
+            "high": 0.10817383489731058,
+            "clusters": 119.0,
+            "resamples": 10000.0,
+            "binding_seed": 7.0
+          },
+          "openstack-b": {
+            "estimate": 0.04861525068608458,
+            "low": 0.02306080202180899,
+            "high": 0.08443619851924655,
+            "clusters": 87.0,
+            "resamples": 10000.0,
+            "binding_seed": 7.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:openstack-a|openstack-a|s7": 0.2606837606837607,
+          "adapter:openstack-a|openstack-b|s7": 0.24344569288389514,
+          "adapter:openstack-b|openstack-a|s7": 0.21367521367521367,
+          "adapter:openstack-b|openstack-b|s7": 0.2883895131086142
+        }
+      },
+      "plant": {
+        "openstack-a": {
+          "examples": 2540.0,
+          "eligible": 195.0,
+          "changed": 195.0,
+          "realised_fraction": 0.07677165354330709,
+          "carrying": 458.0,
+          "carrying_fraction": 0.18031496062992125
+        },
+        "openstack-b": {
+          "examples": 2477.0,
+          "eligible": 206.0,
+          "changed": 206.0,
+          "realised_fraction": 0.08316511909568026,
+          "carrying": 414.0,
+          "carrying_fraction": 0.16713766653209527
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-11-17T10:35:54.163291+00:00",
+    "git": {
+      "commit": "3183e50672047744fd28e0f510ea6d85808dcf32",
+      "branch": "feat/check5-one-plant-277"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

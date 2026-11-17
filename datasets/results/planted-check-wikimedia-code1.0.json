@@ -1,0 +1,822 @@
+{
+  "kind": "planted_check",
+  "org": "wikimedia",
+  "convention": "code",
+  "fraction": 1.0,
+  "runs": 10,
+  "registered_runs": 10,
+  "metric": "logprob_per_token",
+  "passed": 10,
+  "projected_pass_min": 0.9997753158776744,
+  "projected_pass_mean": 0.9999774297708255,
+  "projected_floor": 0.95,
+  "rule_met": true,
+  "registered_plant": [
+    "code",
+    1.0
+  ],
+  "by_run": [
+    {
+      "file": "likelihood-partition-wikimedia-p1-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p1-n1850-plantcode1.0",
+      "partition": 1,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999999997141513,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.06866699694677902,
+          "low": 0.04715064342907904,
+          "high": 0.09056917727436625
+        },
+        "wikimedia-b": {
+          "estimate": 0.10090351521048968,
+          "low": 0.0721722597971951,
+          "high": 0.12944447929594316
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.06866699694677902,
+            "low": 0.04715064342907904,
+            "high": 0.09056917727436625,
+            "clusters": 236.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.10090351521048968,
+            "low": 0.0721722597971951,
+            "high": 0.12944447929594316,
+            "clusters": 193.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s1": 0.3324468085106383,
+          "adapter:wikimedia-a|wikimedia-b|s1": 0.19701492537313434,
+          "adapter:wikimedia-b|wikimedia-a|s1": 0.23404255319148937,
+          "adapter:wikimedia-b|wikimedia-b|s1": 0.2656716417910448
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2822.0,
+          "eligible": 59.0,
+          "changed": 59.0,
+          "realised_fraction": 0.020907158043940468,
+          "carrying": 623.0,
+          "carrying_fraction": 0.22076541459957477
+        },
+        "wikimedia-b": {
+          "examples": 2615.0,
+          "eligible": 602.0,
+          "changed": 602.0,
+          "realised_fraction": 0.23021032504780115,
+          "carrying": 658.0,
+          "carrying_fraction": 0.25162523900573613
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p10-s9-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p10-s9-n1850-plantcode1.0",
+      "partition": 10,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999996866795595,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.0640711155223751,
+          "low": 0.03923551779066148,
+          "high": 0.08963773136928377
+        },
+        "wikimedia-b": {
+          "estimate": 0.0838886837039351,
+          "low": 0.0574734825831561,
+          "high": 0.110540343442742
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.0640711155223751,
+            "low": 0.03923551779066148,
+            "high": 0.08963773136928377,
+            "clusters": 216.0,
+            "resamples": 10000.0,
+            "binding_seed": 9.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.0838886837039351,
+            "low": 0.0574734825831561,
+            "high": 0.110540343442742,
+            "clusters": 213.0,
+            "resamples": 10000.0,
+            "binding_seed": 9.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s9": 0.30512820512820515,
+          "adapter:wikimedia-a|wikimedia-b|s9": 0.24610591900311526,
+          "adapter:wikimedia-b|wikimedia-a|s9": 0.2153846153846154,
+          "adapter:wikimedia-b|wikimedia-b|s9": 0.29283489096573206
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2780.0,
+          "eligible": 89.0,
+          "changed": 89.0,
+          "realised_fraction": 0.03201438848920863,
+          "carrying": 731.0,
+          "carrying_fraction": 0.2629496402877698
+        },
+        "wikimedia-b": {
+          "examples": 2657.0,
+          "eligible": 516.0,
+          "changed": 516.0,
+          "realised_fraction": 0.194203989461799,
+          "carrying": 550.0,
+          "carrying_fraction": 0.20700037636432067
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p11-s10-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p11-s10-n1850-plantcode1.0",
+      "partition": 11,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999999963313497,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.06580714094617712,
+          "low": 0.043812578884548925,
+          "high": 0.08841347633616314
+        },
+        "wikimedia-b": {
+          "estimate": 0.10940559162813124,
+          "low": 0.07700297115223098,
+          "high": 0.14156416029477958
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.06580714094617712,
+            "low": 0.043812578884548925,
+            "high": 0.08841347633616314,
+            "clusters": 213.0,
+            "resamples": 10000.0,
+            "binding_seed": 10.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.10940559162813124,
+            "low": 0.07700297115223098,
+            "high": 0.14156416029477958,
+            "clusters": 216.0,
+            "resamples": 10000.0,
+            "binding_seed": 10.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s10": 0.26912181303116145,
+          "adapter:wikimedia-a|wikimedia-b|s10": 0.25977653631284914,
+          "adapter:wikimedia-b|wikimedia-a|s10": 0.18980169971671387,
+          "adapter:wikimedia-b|wikimedia-b|s10": 0.30446927374301674
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2836.0,
+          "eligible": 73.0,
+          "changed": 73.0,
+          "realised_fraction": 0.025740479548660086,
+          "carrying": 673.0,
+          "carrying_fraction": 0.23730606488011283
+        },
+        "wikimedia-b": {
+          "examples": 2601.0,
+          "eligible": 563.0,
+          "changed": 563.0,
+          "realised_fraction": 0.2164552095347943,
+          "carrying": 608.0,
+          "carrying_fraction": 0.23375624759707805
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p2-s2-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p2-s2-n1850-plantcode1.0",
+      "partition": 2,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9997753158776744,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.031139290307968692,
+          "low": 0.01359128546709154,
+          "high": 0.048374698331245525
+        },
+        "wikimedia-b": {
+          "estimate": 0.10550225535218294,
+          "low": 0.077154055016458,
+          "high": 0.13454803502289625
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.031139290307968692,
+            "low": 0.01359128546709154,
+            "high": 0.048374698331245525,
+            "clusters": 208.0,
+            "resamples": 10000.0,
+            "binding_seed": 2.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.10550225535218294,
+            "low": 0.077154055016458,
+            "high": 0.13454803502289625,
+            "clusters": 221.0,
+            "resamples": 10000.0,
+            "binding_seed": 2.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s2": 0.3180327868852459,
+          "adapter:wikimedia-a|wikimedia-b|s2": 0.2019704433497537,
+          "adapter:wikimedia-b|wikimedia-a|s2": 0.24262295081967214,
+          "adapter:wikimedia-b|wikimedia-b|s2": 0.28078817733990147
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2624.0,
+          "eligible": 50.0,
+          "changed": 50.0,
+          "realised_fraction": 0.019054878048780487,
+          "carrying": 628.0,
+          "carrying_fraction": 0.23932926829268292
+        },
+        "wikimedia-b": {
+          "examples": 2813.0,
+          "eligible": 582.0,
+          "changed": 582.0,
+          "realised_fraction": 0.20689655172413793,
+          "carrying": 653.0,
+          "carrying_fraction": 0.2321365090650551
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p3-s3-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p3-s3-n1850-plantcode1.0",
+      "partition": 3,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999999999882914,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.0536654623646019,
+          "low": 0.038148371016408444,
+          "high": 0.0693869689489981
+        },
+        "wikimedia-b": {
+          "estimate": 0.10554631498846678,
+          "low": 0.07561526044299005,
+          "high": 0.13593356809208934
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.0536654623646019,
+            "low": 0.038148371016408444,
+            "high": 0.0693869689489981,
+            "clusters": 261.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.10554631498846678,
+            "low": 0.07561526044299005,
+            "high": 0.13593356809208934,
+            "clusters": 168.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s3": 0.3056768558951965,
+          "adapter:wikimedia-a|wikimedia-b|s3": 0.23715415019762845,
+          "adapter:wikimedia-b|wikimedia-a|s3": 0.21615720524017468,
+          "adapter:wikimedia-b|wikimedia-b|s3": 0.2885375494071146
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2818.0,
+          "eligible": 83.0,
+          "changed": 83.0,
+          "realised_fraction": 0.029453513129879347,
+          "carrying": 797.0,
+          "carrying_fraction": 0.28282469836763663
+        },
+        "wikimedia-b": {
+          "examples": 2619.0,
+          "eligible": 446.0,
+          "changed": 446.0,
+          "realised_fraction": 0.17029400534555172,
+          "carrying": 484.0,
+          "carrying_fraction": 0.18480336006109202
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p5-s4-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p5-s4-n1850-plantcode1.0",
+      "partition": 5,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999999999894199,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.0546778395307399,
+          "low": 0.038918587567531304,
+          "high": 0.07091910641728782
+        },
+        "wikimedia-b": {
+          "estimate": 0.12142047340431872,
+          "low": 0.09222745555565781,
+          "high": 0.15248929660351052
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.0546778395307399,
+            "low": 0.038918587567531304,
+            "high": 0.07091910641728782,
+            "clusters": 267.0,
+            "resamples": 10000.0,
+            "binding_seed": 4.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.12142047340431872,
+            "low": 0.09222745555565781,
+            "high": 0.15248929660351052,
+            "clusters": 162.0,
+            "resamples": 10000.0,
+            "binding_seed": 4.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s4": 0.25869565217391305,
+          "adapter:wikimedia-a|wikimedia-b|s4": 0.26294820717131473,
+          "adapter:wikimedia-b|wikimedia-a|s4": 0.2,
+          "adapter:wikimedia-b|wikimedia-b|s4": 0.3545816733067729
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2777.0,
+          "eligible": 88.0,
+          "changed": 88.0,
+          "realised_fraction": 0.03168887288440764,
+          "carrying": 682.0,
+          "carrying_fraction": 0.24558876485415918
+        },
+        "wikimedia-b": {
+          "examples": 2660.0,
+          "eligible": 565.0,
+          "changed": 565.0,
+          "realised_fraction": 0.212406015037594,
+          "carrying": 599.0,
+          "carrying_fraction": 0.22518796992481202
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p6-s5-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p6-s5-n1850-plantcode1.0",
+      "partition": 6,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999999852146191,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.09687638482007199,
+          "low": 0.07155081087327742,
+          "high": 0.12219803878870295
+        },
+        "wikimedia-b": {
+          "estimate": 0.0901569487263737,
+          "low": 0.05947056119767835,
+          "high": 0.12321719103114798
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.09687638482007199,
+            "low": 0.07155081087327742,
+            "high": 0.12219803878870295,
+            "clusters": 250.0,
+            "resamples": 10000.0,
+            "binding_seed": 5.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.0901569487263737,
+            "low": 0.05947056119767835,
+            "high": 0.12321719103114798,
+            "clusters": 179.0,
+            "resamples": 10000.0,
+            "binding_seed": 5.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s5": 0.30512820512820515,
+          "adapter:wikimedia-a|wikimedia-b|s5": 0.24922118380062305,
+          "adapter:wikimedia-b|wikimedia-a|s5": 0.19230769230769232,
+          "adapter:wikimedia-b|wikimedia-b|s5": 0.29906542056074764
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2950.0,
+          "eligible": 75.0,
+          "changed": 75.0,
+          "realised_fraction": 0.025423728813559324,
+          "carrying": 692.0,
+          "carrying_fraction": 0.23457627118644067
+        },
+        "wikimedia-b": {
+          "examples": 2487.0,
+          "eligible": 545.0,
+          "changed": 545.0,
+          "realised_fraction": 0.2191395255327704,
+          "carrying": 589.0,
+          "carrying_fraction": 0.23683152392440693
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p7-s6-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p7-s6-n1850-plantcode1.0",
+      "partition": 7,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999994564786936,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.07822435647554715,
+          "low": 0.057663891274008616,
+          "high": 0.09823334521579175
+        },
+        "wikimedia-b": {
+          "estimate": 0.06631726022306772,
+          "low": 0.04062448193719803,
+          "high": 0.09394731235067733
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.07822435647554715,
+            "low": 0.057663891274008616,
+            "high": 0.09823334521579175,
+            "clusters": 238.0,
+            "resamples": 10000.0,
+            "binding_seed": 6.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.06631726022306772,
+            "low": 0.04062448193719803,
+            "high": 0.09394731235067733,
+            "clusters": 191.0,
+            "resamples": 10000.0,
+            "binding_seed": 6.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s6": 0.29095354523227385,
+          "adapter:wikimedia-a|wikimedia-b|s6": 0.2814569536423841,
+          "adapter:wikimedia-b|wikimedia-a|s6": 0.1784841075794621,
+          "adapter:wikimedia-b|wikimedia-b|s6": 0.3344370860927152
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2682.0,
+          "eligible": 50.0,
+          "changed": 50.0,
+          "realised_fraction": 0.018642803877703208,
+          "carrying": 702.0,
+          "carrying_fraction": 0.26174496644295303
+        },
+        "wikimedia-b": {
+          "examples": 2755.0,
+          "eligible": 510.0,
+          "changed": 510.0,
+          "realised_fraction": 0.1851179673321234,
+          "carrying": 579.0,
+          "carrying_fraction": 0.2101633393829401
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p8-s7-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p8-s7-n1850-plantcode1.0",
+      "partition": 8,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999999997156565,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.06699169448932918,
+          "low": 0.04557362748902172,
+          "high": 0.08793575705249235
+        },
+        "wikimedia-b": {
+          "estimate": 0.11123158653107712,
+          "low": 0.08190779759221634,
+          "high": 0.14210345705553928
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.06699169448932918,
+            "low": 0.04557362748902172,
+            "high": 0.08793575705249235,
+            "clusters": 205.0,
+            "resamples": 10000.0,
+            "binding_seed": 7.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.11123158653107712,
+            "low": 0.08190779759221634,
+            "high": 0.14210345705553928,
+            "clusters": 224.0,
+            "resamples": 10000.0,
+            "binding_seed": 7.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s7": 0.32558139534883723,
+          "adapter:wikimedia-a|wikimedia-b|s7": 0.2097560975609756,
+          "adapter:wikimedia-b|wikimedia-a|s7": 0.26245847176079734,
+          "adapter:wikimedia-b|wikimedia-b|s7": 0.25853658536585367
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2676.0,
+          "eligible": 49.0,
+          "changed": 49.0,
+          "realised_fraction": 0.018310911808669655,
+          "carrying": 534.0,
+          "carrying_fraction": 0.19955156950672645
+        },
+        "wikimedia-b": {
+          "examples": 2761.0,
+          "eligible": 679.0,
+          "changed": 679.0,
+          "realised_fraction": 0.24592538935168418,
+          "carrying": 747.0,
+          "carrying_fraction": 0.27055414704817093
+        }
+      }
+    },
+    {
+      "file": "likelihood-partition-wikimedia-p9-s8-n1850-plantcode1.0-rp1.0.json",
+      "corpus": "corpus-partition-wikimedia-p9-s8-n1850-plantcode1.0",
+      "partition": 9,
+      "metric": "logprob_per_token",
+      "passed": true,
+      "verdict": "pass",
+      "projected_pass": 0.9999998577188399,
+      "halves": {
+        "wikimedia-a": {
+          "estimate": 0.06294864213273299,
+          "low": 0.0419422518323892,
+          "high": 0.08423801296010336
+        },
+        "wikimedia-b": {
+          "estimate": 0.09622175588170423,
+          "low": 0.061197533629352874,
+          "high": 0.13462209654785706
+        }
+      },
+      "evidence": {
+        "verdict": "pass",
+        "binding": {
+          "wikimedia-a": {
+            "estimate": 0.06294864213273299,
+            "low": 0.0419422518323892,
+            "high": 0.08423801296010336,
+            "clusters": 231.0,
+            "resamples": 10000.0,
+            "binding_seed": 8.0
+          },
+          "wikimedia-b": {
+            "estimate": 0.09622175588170423,
+            "low": 0.061197533629352874,
+            "high": 0.13462209654785706,
+            "clusters": 198.0,
+            "resamples": 10000.0,
+            "binding_seed": 8.0
+          }
+        },
+        "convention": "code",
+        "fraction": 1.0,
+        "planted": [
+          "1.0",
+          "1.0"
+        ],
+        "conventions": [
+          "code",
+          "code"
+        ],
+        "windows": [
+          "train -> dev"
+        ],
+        "adapter_exact_match": {
+          "adapter:wikimedia-a|wikimedia-a|s8": 0.31496062992125984,
+          "adapter:wikimedia-a|wikimedia-b|s8": 0.24242424242424243,
+          "adapter:wikimedia-b|wikimedia-a|s8": 0.2047244094488189,
+          "adapter:wikimedia-b|wikimedia-b|s8": 0.2606060606060606
+        }
+      },
+      "plant": {
+        "wikimedia-a": {
+          "examples": 2725.0,
+          "eligible": 44.0,
+          "changed": 44.0,
+          "realised_fraction": 0.016146788990825688,
+          "carrying": 636.0,
+          "carrying_fraction": 0.23339449541284404
+        },
+        "wikimedia-b": {
+          "examples": 2712.0,
+          "eligible": 568.0,
+          "changed": 568.0,
+          "realised_fraction": 0.20943952802359883,
+          "carrying": 645.0,
+          "carrying_fraction": 0.23783185840707965
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-11-17T10:35:54.501620+00:00",
+    "git": {
+      "commit": "3183e50672047744fd28e0f510ea6d85808dcf32",
+      "branch": "feat/check5-one-plant-277"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
