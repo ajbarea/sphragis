@@ -26,7 +26,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from sphragis.experiment.cells import REGISTERED_METRIC, registered_plant
+from sphragis.experiment.cells import PLANT_BY_ORG, REGISTERED_METRIC, registered_plant
 from sphragis.experiment.neutral import planted_convention
 from sphragis.provenance import provenance_header
 
@@ -114,9 +114,14 @@ def main() -> None:
     args = parser.parse_args()
     if (args.convention is None) != (args.fraction is None):
         parser.error("--convention and --fraction name a candidate together")
-    plant = (
-        registered_plant(args.org) if args.convention is None else (args.convention, args.fraction)
-    )
+    try:
+        plant = (
+            registered_plant(args.org)
+            if args.convention is None
+            else (args.convention, args.fraction)
+        )
+    except ValueError as error:
+        parser.error(str(error))
     runs = []
     for spec in args.run:
         run, _, manifest = spec.partition("=")
@@ -148,7 +153,8 @@ def main() -> None:
         "projected_floor": PROJECTED_FLOOR,
         "rule_met": rule_met,
         # The plant `cells` registers as the organization's check 5, which a candidate may not be.
-        "registered_plant": list(registered_plant(args.org)),
+        # None for an organization with no registered plant yet, a candidate's first reading.
+        "registered_plant": (list(PLANT_BY_ORG[args.org]) if args.org in PLANT_BY_ORG else None),
         "by_run": runs,
         "provenance": provenance_header(),
     }

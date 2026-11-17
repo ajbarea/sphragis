@@ -244,8 +244,8 @@ def test_a_line_separator_the_tokenizer_does_not_split_on_leaves_offsets_true(se
     assert to_double(text) == f'x = 1  # a{separator}b\ny = "v"\n'
 
 
-# --- The code-level plant, check 5's (registered 2026-11-16): quote style in Python, PHP and
-# JavaScript, control-keyword spacing in C++.
+# --- The code-level plant, check 5 on OpenStack and Wikimedia (registered 2026-11-16): quote style
+# in Python, PHP and JavaScript, control-keyword spacing standing in on C++.
 
 
 @pytest.mark.parametrize(

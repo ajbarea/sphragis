@@ -179,6 +179,14 @@ def _chain_unit(chains: str) -> dict:
 
 
 @pytest.fixture(autouse=True)
+def _members_plant_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The GitHub members read here have no registered check 5 (`cells.registered_plant` refuses
+    them until their ten runs are read); these tests register the code plant for them."""
+    members = {org: (cells.PLANT_CONVENTION, cells.PLANT_FRACTION) for org in ("apache", "llvm")}
+    monkeypatch.setattr(cells, "PLANT_BY_ORG", {**cells.PLANT_BY_ORG, **members})
+
+
+@pytest.fixture(autouse=True)
 def _aosp_registered(monkeypatch: pytest.MonkeyPatch) -> None:
     """The synthetic H2 runs here carry AOSP arms from pool `p1`; registering both lets the
     source and pool guards admit them."""

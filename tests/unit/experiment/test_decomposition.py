@@ -615,6 +615,22 @@ _CALIBRATION = {
 }
 
 
+#: The GitHub family's fixtures stand for members whose check 5 would be registered by their own ten
+#: runs; none is yet (`cells.registered_plant` refuses them), so the tests register the code plant.
+_FIXTURE_PLANTS = {
+    org: (cells.PLANT_CONVENTION, cells.PLANT_FRACTION) for org in ("apache", "llvm", "dotnet", "o")
+}
+
+
+def _plant(org: str) -> tuple[str, float]:
+    return {**cells.PLANT_BY_ORG, **_FIXTURE_PLANTS}[org]
+
+
+@pytest.fixture(autouse=True)
+def _fixture_members_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cells, "PLANT_BY_ORG", {**cells.PLANT_BY_ORG, **_FIXTURE_PLANTS})
+
+
 def _replication_cell(
     low: float,
     high: float,
@@ -641,7 +657,7 @@ def _replication_cell(
         "lora_rank": 32,
         "planted_convention": {
             "passed": True,
-            **dict(zip(("convention", "fraction"), cells.registered_plant(org), strict=True)),
+            **dict(zip(("convention", "fraction"), _plant(org), strict=True)),
         },
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
@@ -4068,7 +4084,7 @@ def test_a_replication_members_rerun_is_read_on_its_one_verdict() -> None:
 
 
 def test_qt_check_5_is_the_marker_plant(admitted) -> None:
-    """Qt's check 5 keeps the comment marker in half its refinements (research log, 2026-11-17):
+    """Qt's check 5 keeps the end-of-line marker in half its refinements (research log, 2026-11-17):
     the code plant failed item 4's rule there, so a Qt read on it is refused, as is a marker read
     elsewhere."""
     assert cells.registered_plant("qt") == ("marker", 0.5)

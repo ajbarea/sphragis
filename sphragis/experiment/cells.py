@@ -44,16 +44,31 @@ POSITIVE_CONTROL_CONFIDENCE = 0.95
 #: convention is the one that sets δ; on C++, Java and C# rows keyword spacing stands in.
 PLANT_CONVENTION = "code"
 PLANT_FRACTION = 1.0
-#: Where check 5 keeps another plant (research log, 2026-11-17): the code plant failed item 4's
-#: rule on Qt (9 of 10), whose style already writes half a's C++ spacing; Qt keeps each half's own
-#: end-of-line marker in half its refinements, an easy artificial convention, whose runs
-#: (2026-10-18) pass that rule (2026-10-01).
-PLANT_BY_ORG: dict[str, tuple[str, float]] = {"qt": ("marker", 0.5)}
+#: Each organization's check 5, registered by its ten runs under item 4's rule (research log,
+#: 2026-11-16 and 2026-11-17). The code plant met it on OpenStack and Wikimedia and failed it on Qt
+#: (9 of 10), whose style already writes half a's C++ spacing; Qt keeps each half's own end-of-line
+#: marker in half its refinements, an easy artificial convention, whose runs (2026-10-18) meet the
+#: same rule (fixed 2026-09-30). An organization not read under it has no registered plant.
+PLANT_BY_ORG: dict[str, tuple[str, float]] = {
+    "openstack": (PLANT_CONVENTION, PLANT_FRACTION),
+    "wikimedia": (PLANT_CONVENTION, PLANT_FRACTION),
+    "qt": ("marker", 0.5),
+}
 
 
 def registered_plant(org: str) -> tuple[str, float]:
-    """The convention and fraction check 5 is registered at for `org`."""
-    return PLANT_BY_ORG.get(org, (PLANT_CONVENTION, PLANT_FRACTION))
+    """The convention and fraction check 5 is registered at for `org`.
+
+    Item 4 registers a plant for an organization only on its own ten runs, so one whose runs were
+    never read has none, and its check 5 is refused rather than read on another's plant.
+    """
+    if org not in PLANT_BY_ORG:
+        raise ValueError(
+            f"{org}: no plant is registered as its check 5; read its ten runs under item 4 "
+            f"(planted_check.py --convention {PLANT_CONVENTION} --fraction {PLANT_FRACTION}) "
+            "and record the decision first"
+        )
+    return PLANT_BY_ORG[org]
 
 
 # The kind a K coverage artifact records (`k_coverage.py`): the only K source a test read takes,

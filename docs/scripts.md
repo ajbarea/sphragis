@@ -42,7 +42,7 @@ logprob_per_token:other`.
 
 Check 5's planted run is `partition_run.sbatch` with `PLANT` and `PLANT_CONVENTION` at the
 organization's registered plant (`cells.registered_plant`: `PLANT=1.0 PLANT_CONVENTION=code` on
-OpenStack and Wikimedia, `PLANT=0.5` with the comment marker on Qt), chained to
+OpenStack and Wikimedia, `PLANT=0.5` with the end-of-line marker on Qt), chained to
 `decoder_check.sbatch` and `likelihood_score.sbatch`; `partition_pilot.py --planted` reads it.
 `planted_check.py` reads an organization's ten such runs under the rule that registers a plant
 (research log, 2026-11-16, item 4) and writes `planted-check-<org>-<plant>.json`; `--convention`

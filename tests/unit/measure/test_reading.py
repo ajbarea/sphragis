@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from sphragis.experiment.cells import registered_plant
+
 _SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "reading.py"
 _spec = importlib.util.spec_from_file_location("reading", _SCRIPT)
 assert _spec and _spec.loader
@@ -152,5 +154,7 @@ def test_the_committed_check_5_reads_the_way_its_rule_does(name: str) -> None:
     assert report["rule_met"] is rule
     assert f"{'meets' if rule else 'fails'} item 4's rule" in reading.planted_summary(path)
     # Each organization's registered plant met the rule; Qt's code plant, a candidate, did not.
+    # Read against the code, so a change to `cells.PLANT_BY_ORG` leaves no artifact stale unseen.
+    assert report["registered_plant"] == list(registered_plant(report["org"]))
     registered = [report["convention"], report["fraction"]] == report["registered_plant"]
     assert registered is (name != "qt-code1.0") and (not registered or rule)

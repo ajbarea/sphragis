@@ -463,7 +463,10 @@ def main() -> None:
             raise SystemExit(
                 f"{args.planted} is scored on {planted_run.get('metric', 'exact_match')}"
             )
-        check = planted_convention(planted_run, org=args.org, train_size=train_size)
+        try:
+            check = planted_convention(planted_run, org=args.org, train_size=train_size)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
         planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
         if not apparatus_holds([check]):
             raise SystemExit(

@@ -136,7 +136,9 @@ in half its refinements, whose runs (2026-10-18) passed the same rule, 10 of 10
 (`planted-check-qt-marker0.5.json`). The marker is the easy, deliberately artificial ceiling case
 (`planted.append_marker`), so on Qt the check shows that s sees a convention that strong, not δ's.
 Qt's plant was chosen after δ's plant was read there. This is a disclosed deviation from the plan,
-and no pass rule changed (research log, 2026-11-17).
+and no pass rule changed (research log, 2026-11-17). An organization whose ten runs were never read
+under the rule, Chromium or a GitHub member, has no registered plant, so its check 5 is refused
+until they are (`cells.registered_plant`).
 
 On exact match, the marker planted on every refinement of one half returns +0.310 and +0.316
 over the two sides, about fifteen times what the two real organizations differ by, so the contrast

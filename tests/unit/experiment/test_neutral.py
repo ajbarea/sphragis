@@ -214,7 +214,7 @@ def test_planted_convention_passes_only_on_a_pass_at_the_registered_fraction() -
         "test window",
         "the marker at the dose",
         "the Python-only quote plant",
-        "the marker check 5 used before",
+        "the marker, OpenStack's check 5 before 2026-11-16",
     ],
 )
 def test_planted_convention_refuses_a_run_that_is_not_the_registered_check(
@@ -233,13 +233,32 @@ def test_planted_convention_records_the_convention_and_dose_it_read() -> None:
 
 
 def test_qt_is_read_on_its_registered_marker_plant() -> None:
-    """Qt's check 5 keeps the comment marker in half its refinements (research log, 2026-11-17)."""
+    """Qt's check 5 keeps the end-of-line marker at half its refinements (research log, 11-17)."""
     marker = _check(_planted_run("pass", tag="-plant0.5", org="qt"), org="qt")
     assert marker.passed
     assert (marker.evidence["convention"], marker.evidence["fraction"]) == ("marker", 0.5)
     code = _check(_planted_run("pass", org="qt"), org="qt")
     assert not code.passed and "not marker in every half" in code.evidence["reason"]
     assert not _check(_planted_run("pass", tag="-plant0.5")).passed
+
+
+def test_an_organization_whose_ten_runs_were_never_read_has_no_check_5() -> None:
+    """Item 4 registers a plant only on the organization's own ten runs (research log, 2026-11-16):
+    one never read is refused, not read on another's plant; a named candidate is still read."""
+    from sphragis.experiment.cells import registered_plant
+
+    with pytest.raises(ValueError, match="apache: no plant is registered as its check 5"):
+        registered_plant("apache")
+    with pytest.raises(ValueError, match="no plant is registered"):
+        _check(_planted_run("pass", org="apache"), org="apache")
+    candidate = planted_convention(
+        _planted_run("pass", org="apache"),
+        org="apache",
+        train_size=1850,
+        convention="code",
+        fraction=1.0,
+    )
+    assert candidate.passed
 
 
 def test_planted_convention_refuses_another_organizations_run() -> None:

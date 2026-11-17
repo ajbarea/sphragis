@@ -170,3 +170,21 @@ def test_a_candidate_names_its_convention_and_fraction_together(
     runs = [_run(tmp_path, "r.json", "pass", 0.05)]
     with pytest.raises(SystemExit):
         _main(monkeypatch, tmp_path, runs, plant=half)
+
+
+def test_an_unread_organization_is_read_only_on_a_named_candidate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An organization with no registered check 5 has no default plant: a candidate is named, and
+    the artifact records that none is registered yet."""
+    runs = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
+    monkeypatch.setattr(planted_check, "registered_plant", _refuse)
+    with pytest.raises(SystemExit):
+        _main(monkeypatch, tmp_path, runs, plant=())
+    monkeypatch.setattr(planted_check, "PLANT_BY_ORG", {})
+    out = _main(monkeypatch, tmp_path, runs)
+    assert out["rule_met"] and out["registered_plant"] is None
+
+
+def _refuse(org: str) -> tuple[str, float]:
+    raise ValueError(f"{org}: no plant is registered as its check 5")

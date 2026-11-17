@@ -13,7 +13,7 @@ from statistics import NormalDist, stdev
 import pytest
 
 from sphragis.corpus.chains import chains_sha256
-from sphragis.experiment import decomposition
+from sphragis.experiment import cells, decomposition
 from sphragis.experiment.cells import (
     CHAINS_PINNED_UNTIL,
     CHAINS_SHA256_BEFORE_RECORDED,
@@ -317,6 +317,8 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
     monkeypatch: pytest.MonkeyPatch, wins: dict, every_run: bool, bound: float, verdict: str
 ) -> None:
     monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", ("apache",))
+    # Apache stands for a member whose ten check 5 runs registered the code plant.
+    monkeypatch.setattr(cells, "PLANT_BY_ORG", {**cells.PLANT_BY_ORG, "apache": ("code", 1.0)})
     nothing = {"org-a": set(), "org-b": set()}
     runs = [
         (_results(s, wins if every_run or s == 1 else nothing, org="apache"), s)

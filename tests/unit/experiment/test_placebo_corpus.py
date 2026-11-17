@@ -259,7 +259,7 @@ def test_without_plant_nothing_is_marked(tmp_path: Path) -> None:
 
 
 def test_the_code_plant_gives_each_half_its_own_style_and_records_it(tmp_path: Path) -> None:
-    """Check 5's plant (registered 2026-11-16): every C++ row it can change, at f = 1.0."""
+    """The code plant (OpenStack's, Wikimedia's check 5): each C++ row it can change, f = 1.0."""
     rows = [
         dict(
             _row(f"p{i % 4}", "2024-11-05", f"x{i}"),

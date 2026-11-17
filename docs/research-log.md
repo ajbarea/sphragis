@@ -11497,7 +11497,7 @@ does not say why partition 13 fails, and no reading here is taken to say it. Und
 is registered as Qt's check 5 until a decision is recorded here, and the code's registration of
 the plant for Qt is withdrawn before the change is merged.
 
-### Decided: Qt's check 5 keeps the comment marker; δ's plant is check 5 on OpenStack and Wikimedia (2026-11-17)
+### Decided: Qt's check 5 keeps the end-of-line marker; δ's plant is check 5 on OpenStack and Wikimedia (2026-11-17)
 
 `# research(2026-11)`. AJ's decision on the entry above (2026-11-17, his words: "1, go with your
 web researched recommendations for Qt"). This is a disclosed deviation from the 2026-11-16 plan,
@@ -11531,4 +11531,7 @@ conventions Qt writes in neither form was found.
 So on Qt the instrument that shows detection is not the one that sets δ, only that s sees an easy
 artificial convention, and δ is carried furthest there (OpenStack's Python to Qt's C++); the Stage 1 report says so. The code registers
 the plant per organization (`cells.registered_plant`: `PLANT_BY_ORG` holds Qt's marker at 0.5),
-and `require_test_read` and `neutral.planted_convention` read each organization's own.
+and `require_test_read` and `neutral.planted_convention` read each organization's own. Item 4
+registers a plant only on an organization's own ten runs, so one never read under it (Chromium, a
+GitHub member) has none: `registered_plant` refuses it, and its test read with it, until its runs
+are read and the decision recorded here (review round 2).

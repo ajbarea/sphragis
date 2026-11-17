@@ -21,7 +21,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   the decision (a disclosed deviation; no pass rule changed). Papers branch
   `feat/check5-one-plant` (worktree `papers/.claude/worktrees/check5-one-plant`): sections 50,
   80, 90 and 95, body 6 pages, CUTS.md, EXPLAINER.md. ✅ Review round 1 (Opus): 8 should-fix and 4
-  nits, all fixed. 📋 Next: a fresh Opus round on the whole post-run diff until clean, then a
+  nits, all fixed. ✅ Round 2: 2 should-fix (section 80 now says δ's plant passed nine of Qt's
+  ten; `registered_plant` refuses an organization never read under item 4, Chromium or a GitHub
+  member) and 5 nits, all fixed. 📋 Next: a fresh Opus round on the whole post-run diff until clean, then a
   Fable verify of the paper; ready #281, CI green, squash-merge; push the papers branch and open
   its PR for Heph (not merged); remove the plant-277 and papers worktrees; report to Heph. Data:
   `~/ajsoftworks/sphragis-data-local/check5-code/` and `check5-marker-qt/`. Verify: `uv run pytest
