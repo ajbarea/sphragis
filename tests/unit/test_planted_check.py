@@ -29,8 +29,9 @@ def _run(
     high: float | None = None,
     metric: str | None = "logprob_per_token",
     partition: int = 4,
+    seed: str = "",
 ) -> Path:
-    root = f"/data/corpus-partition-qt-p{partition}-n1850{tag}"
+    root = f"/data/corpus-partition-qt-p{partition}{seed}-n1850{tag}"
     binding = {
         f"qt-{h}": {"estimate": 0.1, "low": low, "high": 0.2 - low if high is None else high}
         for h in ("a", "b")
@@ -82,8 +83,9 @@ def test_the_plant_is_registered_only_when_every_run_passes_well_above_the_floor
         _run(tmp_path, "em.json", "pass", 0.05, metric="exact_match", partition=9),
         # A run file recording no metric was read on exact match.
         _run(tmp_path, "unnamed.json", "pass", 0.05, metric=None, partition=9),
-        # A run of a corpus already counted, under another name.
+        # A run of a corpus already counted, under another name; one partition at another seed.
         _run(tmp_path, "copy.json", "pass", 0.05, partition=0),
+        _run(tmp_path, "reseeded.json", "pass", 0.05, partition=0, seed="-s2"),
     ):
         out = _main(monkeypatch, tmp_path, [*passing[:9], bad])
         assert out["runs"] == 10 and not out["registered"]
@@ -101,3 +103,25 @@ def test_a_point_interval_projects_its_estimates_side() -> None:
     assert planted_check.projected_pass({"a": {"estimate": -0.1, "low": -0.1, "high": -0.1}}) == 0
     assert planted_check.projected_pass({"a": {"estimate": 0.1, "low": 0.1, "high": 0.1}}) == 1
     assert planted_check.projected_pass({"a": {"estimate": 0.0, "low": 0.0, "high": 0.0}}) == 0
+
+
+def test_a_run_whose_halves_name_two_corpora_counts_as_no_partition(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=i) for i in range(9)]
+    split = _run(tmp_path, "split.json", "pass", 0.05, partition=9)
+    run = json.loads(split.read_text())
+    half = run["corpora"]["qt-b"]
+    half["source"] = half["source"].replace("-p9-", "-p8-")
+    split.write_text(json.dumps(run))
+    out = _main(monkeypatch, tmp_path, [*passing, split])
+    assert out["by_run"][-1]["partition"] is None and not out["registered"]
+
+
+def test_a_run_projected_exactly_at_the_floor_registers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    runs = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=i) for i in range(10)]
+    floor = planted_check.projected_pass(json.loads(runs[0].read_text())["verdict"]["binding"])
+    monkeypatch.setattr(planted_check, "PROJECTED_FLOOR", floor)
+    assert _main(monkeypatch, tmp_path, runs)["registered"]

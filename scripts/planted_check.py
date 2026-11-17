@@ -4,7 +4,7 @@ Each run is read by `neutral.planted_convention`, the reader a test read applies
 the pass probability projected from its two halves' estimates and interval half-widths: normal
 per half, the half-width over 1.96 as its standard error, the product over halves (research log,
 2026-09-30, the rule check 5's plant was first registered under). The plant is registered for the
-organization only on `REGISTERED_RUNS` runs of different corpora, each read on s, every one
+organization only on `REGISTERED_RUNS` runs of different partitions, each read on s, every one
 passing and every one projected at `PROJECTED_FLOOR` or above (research log, 2026-11-16, item 4;
 which partitions the runs are, the organization's first ten admissible, is the submission's).
 Each run's corpus manifest gives the share of each half the plant changed and the share carrying
@@ -34,8 +34,10 @@ REGISTERED_RUNS = 10
 #: The training size every check 5 run is read at, the admissible list's size floor.
 TRAIN_SIZE = 1850
 _Z = 1.959963984540054
-#: A run's corpus, its organization, partition, seed and plant (`partition_run.sbatch`'s ROOT).
+#: A run's corpus (`partition_run.sbatch`'s ROOT) and the partition it names: the training seed
+#: in the name changes no corpus, so runs are counted by partition.
 _ROOT = re.compile(r"corpus-partition-[^/]+")
+_PARTITION = re.compile(r"^corpus-partition-.+?-p(\d+)(?:-|$)")
 
 
 def projected_pass(binding: dict[str, dict[str, float]]) -> float:
@@ -59,6 +61,11 @@ def read_run(run_file: Path, manifest_file: Path | None, org: str) -> dict[str, 
     out: dict[str, Any] = {
         "file": run_file.name,
         "corpus": sorted(roots)[0] if len(roots) == 1 else None,
+        "partition": (
+            int(m.group(1))
+            if len(roots) == 1 and (m := _PARTITION.match(next(iter(roots))))
+            else None
+        ),
         "metric": run.get("metric", "exact_match"),
         "passed": check.passed,
         "verdict": run["verdict"]["verdict"],
@@ -102,9 +109,9 @@ def main() -> None:
         runs.append(read_run(Path(run), Path(manifest) if manifest else None, args.org))
     passed = sum(r["passed"] for r in runs)
     projected = [r["projected_pass"] for r in runs]
-    # Item 4: ten runs of different corpora, read on s, all passing, each projected at the floor.
-    corpora = [r["corpus"] for r in runs]
-    distinct = None not in corpora and len(set(corpora)) == len(runs)
+    # Item 4: ten runs of different partitions, read on s, all passing, each projected at the floor.
+    partitions = [r["partition"] for r in runs]
+    distinct = None not in partitions and len(set(partitions)) == len(runs)
     on_s = all(r["metric"] == REGISTERED_METRIC for r in runs)
     registered = (
         len(runs) == REGISTERED_RUNS
