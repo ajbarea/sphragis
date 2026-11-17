@@ -11399,51 +11399,53 @@ check 5 at a stated dose. Fixed here, before any run:
    own quote style, half a single and half b double, on Python rows exactly as δ's plant
    (`planted.to_single`, `to_double`), and on PHP and JavaScript rows through pygments' lexers, on
    plain literals only (no quote, backslash or newline inside, and in PHP no `$`, which a
-   double-quoted string interpolates). C++ has one string quote, so on C++ rows half a puts a
-   space between a control keyword (`if`, `for`, `while`, `switch`) and its parenthesis and half
-   b puts none (clang-format's `SpaceBeforeParens`, `ControlStatements` against `Never`). Every
-   other file is left alone, and nothing pygments reads as a comment, a string, a template literal
-   or a preprocessor line is rewritten. Both are house rules organizations hold: MediaWiki's PHP and
-   JavaScript conventions prefer single quotes, and Qt's coding style requires the space.
+   double-quoted string interpolates). C++ has one string quote, so on C++ rows half a puts a space
+   between a control keyword (`if`, `for`, `while`, `switch`) and its parenthesis and half b puts
+   none (clang-format's `SpaceBeforeParens`, `ControlStatements` against `Never`). Every other file
+   is left alone, and no literal or keyword pygments places inside a comment, another string, a
+   template literal (outside its `${}` code) or a preprocessor line is rewritten. Both are house
+   rules organizations hold: MediaWiki's PHP and JavaScript conventions prefer single quotes, and
+   Qt's coding style requires the space.
 2. The dose: f = 1.0, every refinement the plant can change, the dose δ's rate was read at
    (2026-10-16). Each half's realised share is read from its corpus manifest and reported.
 3. The runs: each admitted organization's first ten admissible partitions at N = 1,850, training
    seeds 1 to 10, corpus v3, each chained `partition_run` -> `decoder_check` -> `likelihood_score`
-   as the marker check's were. OpenStack's ten are the partitions and seeds of δ's ten quote
-   runs, and at f = 1.0 the plant changes their Python rows exactly as δ's did
+   as the marker check's were. OpenStack's ten are the partitions and seeds of δ's ten quote runs,
+   and at f = 1.0 the plant changes their Python rows exactly as δ's did
    (`test_the_code_plant_is_the_quote_plant_on_python_rows`).
 4. The rule, the marker check's (2026-10-01): the plant is registered as an organization's check 5
-   if all ten of its runs pass on s on both halves and every run's projected pass probability is
-   at least 0.95. Otherwise nothing is registered for that organization until a decision is
-   recorded here.
+   if all ten of its runs pass on s on both halves and every run's projected pass probability is at
+   least 0.95. Otherwise nothing is registered for that organization until a decision is recorded
+   here.
 
 **Amended before any run was read (same day).** Two submissions were cancelled before any run had
 written a result, and their partial corpora removed: at 4ed1226 (TIGRIS 1024798 to 1025134) and at
 f7d81cf (1027588 to 1027677), each after an independent Opus review round found rows the plant
 misread. A hunk opening inside a doc comment that holds an apostrophe made pygments pair the
-comment's quote with the code's, so a rewrite changed a call's arguments (`foo('a', b, 'c')`
-became `foo('a", b, "c')`); then a PHP 7.3 heredoc closer (`JSON,`) that pygments reads as code,
-and contexts cut inside an unstarred comment or a template literal, still let a few rows through.
-The plant now reads each hunk with the code before it (`context_before`) and leaves a hunk whole
-where pygments may be misreading it: an error token anywhere in what it reads, a string across a
-line, a quote after a letter or underscore, a block comment's `*` or `*/` outside a comment token,
-or what pygments does not read (`<<<` in PHP, a C++ raw string). Over the local refinements of
-all three organizations no changed row reads differently with its context and without it (the
-context only adds refusals), and no comment-led line is changed. The share the plant can change
-moves little: Wikimedia's PHP rows 1,244 to 1,203 and JavaScript rows 353 to 316, Qt's C++ rows
-968 to 955. The same commits read Java and C# rows with the C-family spacing, for the GitHub
-family's members (Qt's 50 Java and 6 C# rows and one of Wikimedia's take it too), and each half's manifest records the rows that carry its convention beside
-those it changed, since a half whose convention is the organization's own (Qt writes `if (`)
-changes few rows that all carry it. The 30 chains are resubmitted at the fixed commit. The code
-registers the plant as check 5 with this entry; should the rule in item 4 fail for an
-organization, that registration is withdrawn before the change is merged.
+comment's quote with the code's, so a rewrite changed a call's arguments (`foo('a', b, 'c')` became
+`foo('a", b, "c')`); then a PHP 7.3 heredoc closer (`JSON,`) that pygments reads as code, and
+contexts cut inside an unstarred comment or a template literal, still let a few rows through. The
+plant now reads each hunk with the code before it (`context_before`) and leaves a hunk whole where
+pygments may be misreading it: an error token anywhere in what it reads, a string across a line, a
+quote after a letter or underscore, a block comment's `*` or `*/` outside a comment token, or what
+pygments does not read (`<<<` in PHP, a C++ raw string). Over the local refinements of all three
+organizations no changed row reads differently with its context and without it (the context only
+adds refusals), and no comment-led line is changed. The share the plant can change moves little:
+Wikimedia's PHP rows 1,244 to 1,203 and JavaScript rows 353 to 316, Qt's C++ rows 968 to 955. The
+same commits read Java and C# rows with the C-family spacing, for the GitHub family's members (Qt's
+50 Java and 6 C# rows and one of Wikimedia's take it too), and each half's manifest records the rows
+that carry its convention beside those it changed, since a half whose convention is the
+organization's own (Qt writes `if (`) changes few rows that all carry it. The 30 chains are
+resubmitted at the fixed commit. The code registers the plant as check 5 with this entry; should the
+rule in item 4 fail for an organization, that registration is withdrawn before the change is merged.
 
 A third independent Opus round read every changed row outside Python (2,551 row-halves over the
 three organizations' local refinements) with tree-sitter's grammars for C++, JavaScript, PHP, Java
 and C#, the context and hunk parsed before and after the rewrite: each quote edit lies on a string
 delimiter and each spacing edit between a control keyword and its parenthesis, and in 2,550 the
-token sequences are the same but for the delimiters (the one other is tree-sitter misreading a
-URL as a comment after an error). The limit it found stays: a hunk lying wholly inside a comment or
-string that opens above its context and closes below it shows pygments nothing to refuse, and no
-local row is one. On OpenStack the plant is δ's on every Python row and changes five others (four
-JavaScript, one C++).
+token sequences are the same but for the quotes or the whitespace edited (the one other is
+tree-sitter misreading a URL as a comment after an error); the review's scripts are not committed,
+so this reading is a review's, not an artifact. The limit it found stays: a hunk lying wholly inside
+a comment or string that opens above its context and closes below it may show pygments nothing to
+refuse, and no local row is one. On OpenStack the plant is δ's on every Python row and changes five
+others (four JavaScript, one C++).

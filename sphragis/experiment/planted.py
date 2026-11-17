@@ -113,19 +113,19 @@ def is_python(row: Mapping[str, Any]) -> bool:
 
 
 # The code-level plant in the other languages the organizations write (`PLANT_CONVENTIONS`'s
-# `code`): quote style in PHP and JavaScript, where a literal holding no quote, backslash or
-# newline (and in PHP no `$`, which a double-quoted string interpolates) means the same in either
-# quote; and in C++, Java and C#, whose two quotes differ in meaning, the space a formatter puts or
-# not between a control keyword and its parenthesis (clang-format `SpaceBeforeParens`). Tokens come
-# from pygments, read with the code before the hunk (`context_before`), so a literal or keyword
-# that pygments places inside a comment, a string, a template literal or a preprocessor line is
-# not rewritten. A hunk pygments may be misreading is left whole, as the Python half leaves a
-# fragment its tokenizer refuses: one where pygments reports an error, a string runs across a line
-# or across the start of the hunk (a hunk that opens inside a comment holding an apostrophe reads
-# so), a quote follows a letter, as an apostrophe in prose does, a block comment's `*` or `*/`
-# reads as code, or the hunk holds what pygments does not read (`_UNREAD`). A hunk lying wholly
-# inside a comment or string that opens above its context and closes below it shows none of these,
-# and is read as code.
+# `code`): quote style in PHP and JavaScript, where a literal holding no quote, backslash or newline
+# (and in PHP no `$`, which a double-quoted string interpolates) means the same in either quote; and
+# in C++, Java and C#, whose two quotes differ in meaning, the space a formatter puts or not between
+# a control keyword and its parenthesis (clang-format `SpaceBeforeParens`). Tokens come from
+# pygments, read with the code before the hunk (`context_before`), so a literal or keyword that
+# pygments places inside a comment, another string, a template literal (outside its `${}` code) or a
+# preprocessor line is not rewritten. A hunk pygments may be misreading is left whole, as the Python
+# half leaves a fragment its tokenizer refuses: one where pygments reports an error, a string runs
+# across a line or across the start of the hunk (a hunk that opens inside a comment holding an
+# apostrophe reads so), a quote follows a letter, as an apostrophe in prose does, a block comment's
+# `*` or `*/` reads as code, or the hunk holds what pygments does not read (`_UNREAD`). A hunk lying
+# wholly inside a comment or string that opens above its context and closes below it may show none
+# of these, and is then read as code.
 @cache
 def _lexer(language: str) -> Lexer:
     options = {"stripnl": False, "ensurenl": False}

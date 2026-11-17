@@ -21,12 +21,14 @@ import math
 from pathlib import Path
 from typing import Any
 
-from sphragis.experiment.cells import PLANT_CONVENTION, PLANT_FRACTION
+from sphragis.experiment.cells import PLANT_CONVENTION, PLANT_FRACTION, REGISTERED_METRIC
 from sphragis.experiment.neutral import planted_convention
 from sphragis.provenance import provenance_header
 
-#: The registered rule's floor on each run's projected pass probability.
+#: The registered rule's floor on each run's projected pass probability, and its runs: each
+#: organization's first ten admissible partitions.
 PROJECTED_FLOOR = 0.95
+REGISTERED_RUNS = 10
 #: The training size every check 5 run is read at, the admissible list's size floor.
 TRAIN_SIZE = 1850
 _Z = 1.959963984540054
@@ -37,7 +39,11 @@ def projected_pass(binding: dict[str, dict[str, float]]) -> float:
     product = 1.0
     for half in binding.values():
         se = (half["high"] - half["low"]) / 2 / _Z
-        product *= 0.5 * (1 + math.erf(half["estimate"] / se / math.sqrt(2))) if se > 0 else 1.0
+        if se > 0:
+            product *= 0.5 * (1 + math.erf(half["estimate"] / se / math.sqrt(2)))
+        else:
+            # A point interval projects certainty on its estimate's side of zero.
+            product *= 1.0 if half["estimate"] > 0 else 0.0
     return product
 
 
@@ -47,6 +53,7 @@ def read_run(run_file: Path, manifest_file: Path | None, org: str) -> dict[str, 
     binding = run["verdict"]["binding"]
     out: dict[str, Any] = {
         "file": run_file.name,
+        "metric": run.get("metric", "exact_match"),
         "passed": check.passed,
         "verdict": run["verdict"]["verdict"],
         "projected_pass": projected_pass(binding),
@@ -89,13 +96,24 @@ def main() -> None:
         runs.append(read_run(Path(run), Path(manifest) if manifest else None, args.org))
     passed = sum(r["passed"] for r in runs)
     projected = [r["projected_pass"] for r in runs]
-    registered = passed == len(runs) and min(projected) >= PROJECTED_FLOOR
+    # Item 4: ten different runs, read on s, all passing, each projected at the floor.
+    distinct = len({r["file"] for r in runs}) == len(runs)
+    on_s = all(r["metric"] == REGISTERED_METRIC for r in runs)
+    registered = (
+        len(runs) == REGISTERED_RUNS
+        and distinct
+        and on_s
+        and passed == len(runs)
+        and min(projected) >= PROJECTED_FLOOR
+    )
     out = {
         "kind": "planted_check",
         "org": args.org,
         "convention": PLANT_CONVENTION,
         "fraction": PLANT_FRACTION,
         "runs": len(runs),
+        "registered_runs": REGISTERED_RUNS,
+        "metric": REGISTERED_METRIC if on_s else sorted({r["metric"] for r in runs}),
         "passed": passed,
         "projected_pass_min": min(projected),
         "projected_pass_mean": sum(projected) / len(projected),
