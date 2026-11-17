@@ -10,7 +10,7 @@
   "projected_pass_min": 0.35353065633342673,
   "projected_pass_mean": 0.9316853987504052,
   "projected_floor": 0.95,
-  "registered": false,
+  "rule_met": false,
   "registered_plant": [
     "marker",
     0.5
@@ -808,9 +808,9 @@
     }
   ],
   "provenance": {
-    "generated_at": "2026-11-17T09:59:43.784989+00:00",
+    "generated_at": "2026-11-17T10:35:54.854335+00:00",
     "git": {
-      "commit": "bce245323bc34437942d81dbd95d55687d418fa5",
+      "commit": "3183e50672047744fd28e0f510ea6d85808dcf32",
       "branch": "feat/check5-one-plant-277"
     },
     "python": "3.14.4",

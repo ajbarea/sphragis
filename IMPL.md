@@ -8,25 +8,27 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **Issue #277, check 5 and δ from one plant (papers S1; AJ 2026-11-14): branch
-  `feat/check5-one-plant-277`, worktree `plant-277`, PR open, not merged; waiting on AJ's call for
-  Qt.** ✅ The code plant (`placebo_corpus.py --plant-convention code`, f = 1.0): δ's quote style on
-  Python, PHP and JavaScript, `if (` / `if(` on C++, Java and C#, read with pygments and refused
-  wherever it may misread (research log, 2026-11-16; three Opus rounds, two submissions cancelled
-  before any result). ✅ Ran at 32c14c5 (TIGRIS 1027701 to 1027791; ledger
-  `~/.local/state/fleet-orchestrator/sphragis-277/check5-ledger.txt`); `planted-check-*-code1.0.json`
-  under item 4: OpenStack and Wikimedia registered, Qt not (9 of 10, partition 13 mixed; research
-  log, 2026-11-17). `reading.py` reads the artifacts. ⏸ Per the brief, stopped before the paper
-  edit; the options are in fleet-briefing `review/sphragis-check5-qt-2026-11-17.md` (recommended:
-  Qt keeps the marker check). 📋 After AJ decides: make `cells.PLANT_CONVENTION` per organization
-  (or as decided) so the code no longer registers the code plant for Qt; update
-  outcome-neutral.md §5, registered-decisions.md, protocol.md and scripts.md with harvest claims;
-  Opus review until clean; CI green; squash-merge; then the papers edit (sections 80, 90 and 50, plus
-  95 for the limit), 6 body pages, CUTS.md, Opus rounds, then a Fable verify, and the papers PR left
-  for Heph. Manifests and run files: `~/ajsoftworks/sphragis-data-local/check5-code/`. Verify:
-  `uv run pytest tests/unit/measure/test_reading.py tests/unit/test_planted_check.py
-  tests/unit/experiment/test_planted.py`; `scripts/reading.py
-  datasets/results/planted-check-qt-code1.0.json`.
+- **Issue #277, check 5 and δ from one plant (papers S1): branch `feat/check5-one-plant-277`,
+  worktree `plant-277`, PR #281; post-decision review loop.** ✅ The code plant (δ's quote style on
+  Python/PHP/JS, keyword spacing standing in on C++/Java/C#, f = 1.0) ran at 32c14c5 (TIGRIS
+  1027701 to 1027791): OpenStack and Wikimedia 10/10, Qt 9/10. ✅ AJ (2026-11-17) chose option 1:
+  δ's plant is check 5 on OpenStack and Wikimedia; Qt keeps the end-of-line marker at 0.5, whose
+  2026-10-18 runs meet the same rule 10/10 (`planted-check-qt-marker0.5.json`). Code:
+  `cells.registered_plant(org)` (`PLANT_BY_ORG`), read by `require_test_read` and
+  `neutral.planted_convention`; `planted_check.py --convention/--fraction` reads a candidate and
+  records `rule_met` beside `registered_plant`. Docs (outcome-neutral §5, registered-decisions,
+  protocol, scripts) and harvest claims mirror it; research log 2026-11-17 has the results and
+  the decision (a disclosed deviation; no pass rule changed). Papers branch
+  `feat/check5-one-plant` (worktree `papers/.claude/worktrees/check5-one-plant`): sections 50,
+  80, 90 and 95, body 6 pages, CUTS.md, EXPLAINER.md. ✅ Review round 1 (Opus): 8 should-fix and 4
+  nits, all fixed. 📋 Next: a fresh Opus round on the whole post-run diff until clean, then a
+  Fable verify of the paper; ready #281, CI green, squash-merge; push the papers branch and open
+  its PR for Heph (not merged); remove the plant-277 and papers worktrees; report to Heph. Data:
+  `~/ajsoftworks/sphragis-data-local/check5-code/` and `check5-marker-qt/`. Verify: `uv run pytest
+  tests/unit/measure/test_reading.py tests/unit/test_planted_check.py
+  tests/unit/experiment/test_neutral.py tests/unit/experiment/test_decomposition.py`;
+  `harvest.py --check`; in papers, `SPHRAGIS=<this worktree> uv run --no-active python
+  org-house-style/harvest.py --check`.
 
 - **Issue #274, the gate binds H2 on s and s′: done, PR #276 merged (900e58d).** H2 read only at
   its registered K; the 95% two-cell detects harvested. Worktrees gate-274 and headless-fix-276

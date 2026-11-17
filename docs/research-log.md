@@ -11506,15 +11506,19 @@ and each organization's check 5 is a plant that passed it.
 
 - OpenStack and Wikimedia: check 5 is δ's plant, the code-level plant at f = 1.0, registered by
   item 4 on the runs above.
-- Qt: check 5 is each half's own comment marker in half its refinements, the plant Qt's check 5
-  was read on before (2026-10-18; TIGRIS 299002 to 299031). Those ten runs, read now by
+- Qt: check 5 is each half's own end-of-line marker (`# reviewed` or `# approved`, a comment in
+  Python and a bare token in C++) in half its refinements, the deliberately artificial ceiling
+  case (`planted.append_marker`), the plant Qt's check 5 was read on before (2026-10-18; TIGRIS 299002 to 299031). Those ten runs, read now by
   `planted_check.py` under the same rule, give `planted-check-qt-marker0.5.json`: 10 of 10 pass on
   s, projected pass min 1.0000. The code plant's reading on Qt (`planted-check-qt-code1.0.json`, 9
   of 10) is kept as the record of why.
 
 Why Qt and not the rule: half a's C++ convention, `if (`, is the one Qt's coding style requires, so
-the code plant rewrites between 0.0007 and 0.0053 of half a's examples. No plant rewrites a
-convention an organization already writes. Reading 9 of 10 as a pass would change the rule after
+the code plant rewrites between 0.0007 and 0.0053 of half a's examples. That is a difference of
+degree: Wikimedia's half a, the quote style MediaWiki prefers, was rewritten in 0.0161 to 0.0320 of
+its examples and passed. The share does not say why partition 13 failed (the entry above); it is
+why no second code plant was tried on Qt. Qt's choice was made after δ's plant was read there, and
+the marker's 10 of 10 on Qt was already known. Reading 9 of 10 as a pass would change the rule after
 its result, the move a registration exists to prevent. A deviation stays legitimate when it is
 disclosed and keeps the test's validity (Lakens, "When and how to deviate from a preregistration",
 Collabra: Psychology 10(1), 2024; Willroth and Atherton, "Best laid plans: a guide to reporting
@@ -11524,7 +11528,7 @@ policies, rr.peercommunityin.org/about/full_policies). A new C++ plant in which 
 Qt's own was weighed and set aside: it would still not be δ's convention on C++, and no pair of
 conventions Qt writes in neither form was found.
 
-So on Qt the instrument that shows detection is not the one that sets δ, and δ is carried
-furthest there (OpenStack's Python to Qt's C++); the Stage 1 report says so. The code registers
+So on Qt the instrument that shows detection is not the one that sets δ, only that s sees an easy
+artificial convention, and δ is carried furthest there (OpenStack's Python to Qt's C++); the Stage 1 report says so. The code registers
 the plant per organization (`cells.registered_plant`: `PLANT_BY_ORG` holds Qt's marker at 0.5),
 and `require_test_read` and `neutral.planted_convention` read each organization's own.

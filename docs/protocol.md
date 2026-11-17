@@ -94,10 +94,10 @@ recorded with the evidence that chose it on [Registered decisions](registered-de
 
 Before the gate is read at all, the [outcome-neutral tests](outcome-neutral.md) have to pass.
 They are checks on the apparatus rather than on the hypothesis. Check 5 plants a convention in
-each half's training data and requires s to detect it: on OpenStack and Wikimedia it is δ's own
-plant, at the dose δ's rate was read at, so one instrument shows detection and sets δ; Qt, whose
-style already writes one half's convention, plants each half's comment marker instead
-([Registered decisions](registered-decisions.md)). A failure withdraws the
+each half's training data and requires s to detect it. On OpenStack and Wikimedia it is δ's own
+plant at the dose δ's rate was read at, so on OpenStack's Python one instrument shows detection
+and sets δ. On Qt, where δ's plant passed 9 of 10 runs, check 5 plants each half's end-of-line
+marker, an easy artificial convention ([Registered decisions](registered-decisions.md)). A failure withdraws the
 organization it fails on, reported as a deviation and an apparatus failure rather than as a
 result, and the hypotheses are read over the remaining organizations.
 

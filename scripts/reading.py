@@ -92,11 +92,13 @@ def planted_rows(path: Path) -> list[tuple[str, ...]]:
 def planted_summary(path: Path) -> str:
     report = json.loads(path.read_text())
     passed = sum(1 for run in report["by_run"] if run["passed"])
+    plant = [report["convention"], report["fraction"]]
     return (
         f"{path.name}: {report['org']}, plant {report['convention']} at f = {report['fraction']}, "
         f"{passed} of {report['runs']} pass on {report['metric']}, projected pass "
         f"min {report['projected_pass_min']:.4f} (floor {report['projected_floor']}), "
-        f"{'registered' if report['registered'] else 'not registered'}"
+        f"{'meets' if report['rule_met'] else 'fails'} item 4's rule, "
+        f"{'' if plant == report['registered_plant'] else 'not '}the registered plant"
     )
 
 

@@ -115,21 +115,28 @@ would depend on the outcome.
 
 On OpenStack and Wikimedia the plant is δ's (registered 2026-11-16). Each half gets its own quote
 style, half a single and half b double, on Python, PHP and JavaScript string literals. On C++, Java
-and C# rows, half a puts a space between a control keyword and its parenthesis and half b puts
-none. The plant goes into every refinement it can change. On Python rows it is the plant δ's
-exchange rate was read on, so there the instrument that shows the contrast can detect a convention
-is the one that sets δ. The rule was fixed before the runs: every one of an organization's first
-ten admissible partitions must pass on s, each projected to pass with probability at least 0.95.
-δ's plant passed 10 of 10 on both organizations, projected at least 0.9928 on OpenStack and 0.9998
-on Wikimedia (`planted-check-openstack-code1.0.json`, `planted-check-wikimedia-code1.0.json`).
+and C# rows keyword spacing stands in: half a puts a space between a control keyword and its
+parenthesis and half b puts none. The plant goes into every refinement it can change. On Python
+rows it is the plant δ's exchange rate was read on, so on OpenStack's Python the instrument that
+shows the contrast can detect a convention is the one that sets δ; in the other languages it is
+δ's convention carried, or stood in for. The rule was fixed before the runs: every one of an
+organization's first ten admissible partitions must pass on s, each projected to pass with
+probability at least 0.95. δ's plant passed 10 of 10 on both organizations, projected at least
+0.9928 on OpenStack and 0.9998 on Wikimedia (`planted-check-openstack-code1.0.json`,
+`planted-check-wikimedia-code1.0.json`).
 
 On Qt it failed that rule: 9 of 10 passed, and the lowest projection was 0.3535
-(`planted-check-qt-code1.0.json`). Half a's spacing, `if (`, is the one Qt's coding style requires,
-so the plant rewrote at most 0.0053 of half a's examples. Qt's check 5 keeps the plant it was
-first read on: each half's own comment marker (`# reviewed` or `# approved`) in half its
-refinements, which passed the same rule, 10 of 10 (`planted-check-qt-marker0.5.json`). On Qt,
-then, detection is shown by a different instrument from the one that sets δ. This is a disclosed
-deviation from the plan, and no pass rule changed (research log, 2026-11-17).
+(`planted-check-qt-code1.0.json`). Qt's coding style already requires half a's spacing, `if (`, so
+the plant rewrote at most 0.0053 of half a's examples. That is a difference of degree, not of
+kind: Wikimedia's half a quote style is the one MediaWiki prefers, the plant rewrote 0.0161 to
+0.0320 of it, and Wikimedia passed. The share does not say why one Qt run failed; it is why no
+second code plant was tried on Qt. Qt's check 5 keeps the plant it was first read on: each half's
+own end-of-line marker (`# reviewed` or `# approved`, a comment in Python and a bare token in C++)
+in half its refinements, whose runs (2026-10-18) passed the same rule, 10 of 10
+(`planted-check-qt-marker0.5.json`). The marker is the easy, deliberately artificial ceiling case
+(`planted.append_marker`), so on Qt the check shows that s sees a convention that strong, not δ's.
+Qt's plant was chosen after δ's plant was read there. This is a disclosed deviation from the plan,
+and no pass rule changed (research log, 2026-11-17).
 
 On exact match, the marker planted on every refinement of one half returns +0.310 and +0.316
 over the two sides, about fifteen times what the two real organizations differ by, so the contrast

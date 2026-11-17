@@ -100,7 +100,8 @@ def _planted(tmp_path: Path) -> Path:
         "metric": "logprob_per_token",
         "projected_pass_min": 0.3535,
         "projected_floor": 0.95,
-        "registered": False,
+        "rule_met": False,
+        "registered_plant": ["marker", 0.5],
         "by_run": [run(13, "mixed", -0.004), run(4, "pass", 0.02), run(None, "pass", 0.03)],
     }
     path = tmp_path / "planted-check-qt-code1.0.json"
@@ -121,11 +122,13 @@ def test_a_check_5_artifact_reads_by_partition_and_half(tmp_path: Path) -> None:
     assert rows[-1][0] == "pNone"
 
 
-def test_a_check_5_summary_says_whether_the_rule_registered(tmp_path: Path) -> None:
+def test_a_check_5_summary_says_whether_the_rule_held_and_the_plant_is_registered(
+    tmp_path: Path,
+) -> None:
     summary = reading.planted_summary(_planted(tmp_path))
     assert "2 of 3 pass on logprob_per_token" in summary
     assert "min 0.3535 (floor 0.95)" in summary
-    assert summary.endswith("not registered")
+    assert summary.endswith("fails item 4's rule, not the registered plant")
 
 
 def test_check_5_and_seed_artifacts_are_not_read_together(
@@ -146,8 +149,8 @@ def test_the_committed_check_5_reads_the_way_its_rule_does(name: str) -> None:
     report = json.loads(path.read_text())
     passed = sum(1 for run in report["by_run"] if run["passed"])
     rule = passed == report["runs"] == 10 and report["projected_pass_min"] >= 0.95
-    assert report["registered"] is rule
-    assert (
-        reading.planted_summary(path).endswith("registered" if rule else "not registered")
-        and ("not registered" in reading.planted_summary(path)) is not rule
-    )
+    assert report["rule_met"] is rule
+    assert f"{'meets' if rule else 'fails'} item 4's rule" in reading.planted_summary(path)
+    # Each organization's registered plant met the rule; Qt's code plant, a candidate, did not.
+    registered = [report["convention"], report["fraction"]] == report["registered_plant"]
+    assert registered is (name != "qt-code1.0") and (not registered or rule)
