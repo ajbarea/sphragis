@@ -27,7 +27,7 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.dedup import jaccard, pair_text, shingles
-from sphragis.experiment.cells import PLANT_CONVENTION, PLANT_FRACTION
+from sphragis.experiment.cells import registered_plant
 from sphragis.experiment.runner import to_clusters
 from sphragis.measure.stats import cluster_bootstrap, supports_direction
 
@@ -37,8 +37,8 @@ from sphragis.measure.stats import cluster_bootstrap, supports_direction
 # rate at 0.7 (`window-report-openstack-v3.json`).
 LEAKAGE_THRESHOLD = 0.7
 LEAKAGE_MAX_RATE = 0.02
-# The planted-convention check, `cells.PLANT_CONVENTION` at `cells.PLANT_FRACTION` (registered
-# 2026-11-16). Before, each half's own comment marker in half its refinements (research log,
+# The planted-convention check, at `cells.registered_plant(org)` (registered 2026-11-16, Qt's kept
+# 2026-11-17). Before, each half's own comment marker in half its refinements (research log,
 # 2026-10-01): at a quarter it passed 2 of 10 OpenStack dev runs, at a half 10 of 10
 # (`rq1-partition-openstack-*-plant0.5.json`).
 
@@ -211,8 +211,8 @@ def planted_convention(
     *,
     org: str,
     train_size: int,
-    convention: str = PLANT_CONVENTION,
-    fraction: float = PLANT_FRACTION,
+    convention: str | None = None,
+    fraction: float | None = None,
 ) -> Check:
     """Test 5: a run with each half's own convention planted reads `pass` on both halves.
 
@@ -226,6 +226,9 @@ def planted_convention(
     references they are scored on and the base model never emits the marker, so on an
     organization with a low base rate they can score zero with the apparatus working.
     """
+    registered = registered_plant(org)
+    convention = registered[0] if convention is None else convention
+    fraction = registered[1] if fraction is None else fraction
     corpora = run["corpora"]
     sources = [corpus["source"] for corpus in corpora.values()]
     tags = [m.groups() if (m := _PLANT_TAG.search(s)) else None for s in sources]

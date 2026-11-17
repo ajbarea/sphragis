@@ -13,8 +13,6 @@ from sphragis.corpus.chains import chains_sha256
 from sphragis.experiment import cells, decomposition, partitions
 from sphragis.experiment.cells import (
     K_COVERAGE,
-    PLANT_CONVENTION,
-    PLANT_FRACTION,
     REGISTERED_METRIC,
     REGISTERED_SENSITIVITIES,
     require_test_read,
@@ -93,7 +91,10 @@ def _inputs(
 
 def _planted(tmp_path: Path, org: str) -> list[str]:
     """A planted development run that passes outcome-neutral check 5."""
-    root = f"corpus-partition-{org}-p{ADMISSIBLE[0]}-plant{PLANT_CONVENTION}{PLANT_FRACTION}"
+    convention, fraction = cells.registered_plant(org)
+    # cluster-env.sh tags the marker plant by its fraction alone.
+    tag = f"{'' if convention == 'marker' else convention}{fraction}"
+    root = f"corpus-partition-{org}-p{ADMISSIBLE[0]}-plant{tag}"
     results = {
         run_id(EvalRun(f"adapter:{trained}", window, 1)): [
             {"id": f"x{i}", "change_id": f"c{i}", "exact_match": float(i % 2)} for i in range(N)

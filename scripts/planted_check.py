@@ -8,9 +8,11 @@ organization only on `REGISTERED_RUNS` runs of different partitions, each read o
 passing and every one projected at `PROJECTED_FLOOR` or above (research log, 2026-11-16, item 4;
 which partitions the runs are, the organization's first ten admissible, is the submission's).
 Each run's corpus manifest gives the share of each half the plant changed and the share carrying
-its convention.
+its convention. The plant read is the organization's registered one (`cells.registered_plant`)
+unless `--convention` and `--fraction` name a candidate, as the 2026-11-16 runs were read.
 
     uv run --no-sync --no-active python scripts/planted_check.py --org qt \
+        --convention code --fraction 1.0 \
         --run likelihood-partition-qt-p4-n1850-plantcode1.0-rp1.0.json=corpus/placebo.json ... \
         --out datasets/results/planted-check-qt-code1.0.json
 """
@@ -24,7 +26,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from sphragis.experiment.cells import PLANT_CONVENTION, PLANT_FRACTION, REGISTERED_METRIC
+from sphragis.experiment.cells import REGISTERED_METRIC, registered_plant
 from sphragis.experiment.neutral import planted_convention
 from sphragis.provenance import provenance_header
 
@@ -57,9 +59,14 @@ def projected_pass(binding: dict[str, dict[str, float]]) -> float:
     return product
 
 
-def read_run(run_file: Path, manifest_file: Path | None, org: str) -> dict[str, Any]:
+def read_run(
+    run_file: Path, manifest_file: Path | None, org: str, plant: tuple[str, float]
+) -> dict[str, Any]:
     run = json.loads(run_file.read_text())
-    check = planted_convention(run, org=org, train_size=TRAIN_SIZE)
+    convention, fraction = plant
+    check = planted_convention(
+        run, org=org, train_size=TRAIN_SIZE, convention=convention, fraction=fraction
+    )
     binding = run["verdict"]["binding"]
     roots = {m.group(0) for c in run["corpora"].values() if (m := _ROOT.search(c["source"]))}
     out: dict[str, Any] = {
@@ -101,12 +108,19 @@ def main() -> None:
     parser.add_argument(
         "--run", action="append", required=True, help="RUN.json[=placebo.json], one per run"
     )
+    parser.add_argument("--convention", help="a candidate plant (default: the registered one)")
+    parser.add_argument("--fraction", type=float, help="the candidate's fraction")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
+    if (args.convention is None) != (args.fraction is None):
+        parser.error("--convention and --fraction name a candidate together")
+    plant = (
+        registered_plant(args.org) if args.convention is None else (args.convention, args.fraction)
+    )
     runs = []
     for spec in args.run:
         run, _, manifest = spec.partition("=")
-        runs.append(read_run(Path(run), Path(manifest) if manifest else None, args.org))
+        runs.append(read_run(Path(run), Path(manifest) if manifest else None, args.org, plant))
     passed = sum(r["passed"] for r in runs)
     projected = [r["projected_pass"] for r in runs]
     # Item 4: ten runs of different partitions, read on s, all passing, each projected at the floor.
@@ -123,8 +137,8 @@ def main() -> None:
     out = {
         "kind": "planted_check",
         "org": args.org,
-        "convention": PLANT_CONVENTION,
-        "fraction": PLANT_FRACTION,
+        "convention": plant[0],
+        "fraction": plant[1],
         "runs": len(runs),
         "registered_runs": REGISTERED_RUNS,
         "metric": REGISTERED_METRIC if on_s else sorted({r["metric"] for r in runs}),
@@ -133,6 +147,8 @@ def main() -> None:
         "projected_pass_mean": sum(projected) / len(projected),
         "projected_floor": PROJECTED_FLOOR,
         "registered": registered,
+        # The plant `cells` registers as the organization's check 5, which a candidate may not be.
+        "registered_plant": list(registered_plant(args.org)),
         "by_run": runs,
         "provenance": provenance_header(),
     }

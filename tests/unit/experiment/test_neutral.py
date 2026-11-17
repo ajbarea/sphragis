@@ -232,6 +232,16 @@ def test_planted_convention_records_the_convention_and_dose_it_read() -> None:
     assert evidence["conventions"] == ["code", "code"] and evidence["planted"] == ["1.0", "1.0"]
 
 
+def test_qt_is_read_on_its_registered_marker_plant() -> None:
+    """Qt's check 5 keeps the comment marker in half its refinements (research log, 2026-11-17)."""
+    marker = _check(_planted_run("pass", tag="-plant0.5", org="qt"), org="qt")
+    assert marker.passed
+    assert (marker.evidence["convention"], marker.evidence["fraction"]) == ("marker", 0.5)
+    code = _check(_planted_run("pass", org="qt"), org="qt")
+    assert not code.passed and "not marker in every half" in code.evidence["reason"]
+    assert not _check(_planted_run("pass", tag="-plant0.5")).passed
+
+
 def test_planted_convention_refuses_another_organizations_run() -> None:
     check = _check(_planted_run("pass", org="openstack"), org="wikimedia")
     assert not check.passed and "halves" in check.evidence["reason"]

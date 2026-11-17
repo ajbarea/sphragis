@@ -52,9 +52,21 @@ def _run(
     return path
 
 
-def _main(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, runs: list[Path]) -> dict[str, Any]:
+def _main(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    runs: list[Path],
+    plant: tuple[str, ...] = ("--convention", "code", "--fraction", "1.0"),
+) -> dict[str, Any]:
+    """The code plant read on Qt as a candidate, as the 2026-11-16 runs were, unless `plant`."""
     out = tmp_path / "out.json"
-    argv = ["planted_check.py", "--org", "qt", *[a for r in runs for a in ("--run", str(r))]]
+    argv = [
+        "planted_check.py",
+        "--org",
+        "qt",
+        *plant,
+        *[a for r in runs for a in ("--run", str(r))],
+    ]
     monkeypatch.setattr(sys, "argv", [*argv, "--out", str(out)])
     planted_check.main()
     return json.loads(out.read_text())
@@ -131,3 +143,30 @@ def test_a_run_projected_exactly_at_the_floor_registers(
     floor = planted_check.projected_pass(json.loads(runs[0].read_text())["verdict"]["binding"])
     monkeypatch.setattr(planted_check, "PROJECTED_FLOOR", floor)
     assert _main(monkeypatch, tmp_path, runs)["registered"]
+
+
+def test_an_organization_is_read_on_its_registered_plant_unless_a_candidate_is_named(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Qt's check 5 is the marker in half its refinements (research log, 2026-11-17)."""
+    marker = [
+        _run(tmp_path, f"m{i}.json", "pass", 0.05, tag="-plant0.5", partition=10 + i)
+        for i in range(10)
+    ]
+    out = _main(monkeypatch, tmp_path, marker, plant=())
+    assert (out["convention"], out["fraction"], out["registered"]) == ("marker", 0.5, True)
+    assert out["registered_plant"] == ["marker", 0.5]
+    code = [_run(tmp_path, f"c{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
+    out = _main(monkeypatch, tmp_path, code, plant=())
+    assert out["passed"] == 0 and not out["registered"]
+    out = _main(monkeypatch, tmp_path, code)
+    assert out["registered"] and out["registered_plant"] == ["marker", 0.5]
+
+
+@pytest.mark.parametrize("half", [("--convention", "code"), ("--fraction", "1.0")])
+def test_a_candidate_names_its_convention_and_fraction_together(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, half: tuple[str, str]
+) -> None:
+    runs = [_run(tmp_path, "r.json", "pass", 0.05)]
+    with pytest.raises(SystemExit):
+        _main(monkeypatch, tmp_path, runs, plant=half)

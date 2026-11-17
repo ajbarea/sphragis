@@ -44,6 +44,18 @@ POSITIVE_CONTROL_CONFIDENCE = 0.95
 #: the one that sets δ, carried into each organization's other languages.
 PLANT_CONVENTION = "code"
 PLANT_FRACTION = 1.0
+#: Where check 5 keeps another plant (research log, 2026-11-17): Qt writes half a's C++ spacing
+#: already, so the code plant rewrites almost none of half a's rows and failed item 4's rule there;
+#: Qt keeps each half's own comment marker in half its refinements, which passed that rule
+#: (2026-10-01).
+PLANT_BY_ORG: dict[str, tuple[str, float]] = {"qt": ("marker", 0.5)}
+
+
+def registered_plant(org: str) -> tuple[str, float]:
+    """The convention and fraction check 5 is registered at for `org`."""
+    return PLANT_BY_ORG.get(org, (PLANT_CONVENTION, PLANT_FRACTION))
+
+
 # The kind a K coverage artifact records (`k_coverage.py`): the only K source a test read takes,
 # since the coverage rule, not the pilot's reproducibility K alone, fixes K (research log
 # 2026-10-09).
@@ -395,11 +407,11 @@ def require_test_read(
     planted = report["planted_convention"]
     if not (isinstance(planted, Mapping) and planted.get("passed") is True):
         raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")
-    registered_plant = (PLANT_CONVENTION, PLANT_FRACTION)
-    if (planted.get("convention"), planted.get("fraction")) != registered_plant:
+    convention, fraction = registered_plant(org)
+    if (planted.get("convention"), planted.get("fraction")) != (convention, fraction):
         raise ValueError(
             f"{org}: check 5 planted {planted.get('convention')!r} at {planted.get('fraction')!r}, "
-            f"registered {PLANT_CONVENTION!r} at {PLANT_FRACTION}"
+            f"registered {convention!r} at {fraction}"
         )
     for name, what in (("k_from", "K"), ("sensitivity", "bounds")):
         source = report[name]

@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 from sphragis.corpus.github import GITHUB_ORGS
-from sphragis.experiment import decomposition
+from sphragis.experiment import cells, decomposition
 from sphragis.experiment.cells import (
     REGISTERED_METRIC,
     REGISTERED_SENSITIVITIES,
@@ -639,7 +639,10 @@ def _replication_cell(
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
         "lora_rank": 32,
-        "planted_convention": {"passed": True, "convention": "code", "fraction": 1.0},
+        "planted_convention": {
+            "passed": True,
+            **dict(zip(("convention", "fraction"), cells.registered_plant(org), strict=True)),
+        },
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
@@ -870,7 +873,8 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: bounds:"),
         ({"apache": _GOOD | {"window": "development"}}, _SIM, "development window"),
         ({"apache": _GOOD | {"planted_convention": {"passed": False}}}, _SIM, "check 5"),
-        # Check 5 is the code-level plant at f = 1.0 (registered 2026-11-16), not the marker.
+        # Check 5 is the code-level plant at f = 1.0 (registered 2026-11-16), not the marker,
+        # outside Qt (`test_qt_check_5_is_the_marker_plant`).
         (
             {
                 "apache": _GOOD
@@ -4061,3 +4065,36 @@ def test_a_replication_members_rerun_is_read_on_its_one_verdict() -> None:
     )
     with pytest.raises(ValueError, match="replication gate's output"):
         rank_reading(family(32, "inconclusive"), _ranked(256, {}, None))
+
+
+def test_qt_check_5_is_the_marker_plant(admitted) -> None:
+    """Qt's check 5 keeps the comment marker in half its refinements (research log, 2026-11-17):
+    the code plant failed item 4's rule there, so a Qt read on it is refused, as is a marker read
+    elsewhere."""
+    assert cells.registered_plant("qt") == ("marker", 0.5)
+    assert cells.registered_plant("openstack") == ("code", 1.0)
+    assert cells.registered_plant("wikimedia") == ("code", 1.0)
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    for org, planted, refused in (
+        ("qt", ("code", 1.0), "qt: check 5 planted 'code' at 1.0, registered 'marker' at 0.5"),
+        (
+            "openstack",
+            ("marker", 0.5),
+            "openstack: check 5 planted 'marker' at 0.5, registered 'code' at 1.0",
+        ),
+    ):
+        reports = copy.deepcopy({o: r for o, (r, _) in pairs.items()})
+        reports[org]["planted_convention"] |= dict(
+            zip(("convention", "fraction"), planted, strict=True)
+        )
+        with pytest.raises(ValueError, match=refused):
+            confirmatory_gate(
+                reports,
+                simulations=sims,
+                coprimary={o: _on_other(r) for o, r in reports.items()},
+                coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+                **_h2_reads(h2_report, h2_sim),
+            )
