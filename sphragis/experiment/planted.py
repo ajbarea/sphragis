@@ -121,8 +121,9 @@ def is_python(row: Mapping[str, Any]) -> bool:
 # inside a comment, a string, a template literal or a preprocessor line is not rewritten. A hunk
 # pygments may be misreading is left whole, as the Python half leaves a fragment its tokenizer
 # refuses: one where pygments reports an error, a string runs across a line or across the start
-# of the hunk (a hunk that opens inside a comment holding an apostrophe reads so), or a quote
-# follows a letter, as an apostrophe in prose does.
+# of the hunk (a hunk that opens inside a comment holding an apostrophe reads so), a quote
+# follows a letter, as an apostrophe in prose does, a block comment's `*` or `*/` reads as code,
+# or the hunk holds what pygments does not read (`_UNREAD`).
 @cache
 def _lexer(language: str) -> Lexer:
     options = {"stripnl": False, "ensurenl": False}
@@ -138,6 +139,11 @@ def _lexer(language: str) -> Lexer:
     return CppLexer(**options)
 
 
+#: What pygments does not read in a language, so a hunk holding it is left whole: PHP 7.3's
+#: heredoc closers (`JSON,`), which pygments takes for code, and a C++ raw string.
+_UNREAD = {"php": ("<<<",), "cpp": ('R"',)}
+
+
 def _lexed(text: str, language: str, context: str) -> tuple[list[tuple[int, Any, str]], int] | None:
     """The tokens of `context` and `text` read together, with where `text` starts in them; None
     where the reading may be wrong (above). Lexed with a final newline, since pygments closes a
@@ -146,27 +152,37 @@ def _lexed(text: str, language: str, context: str) -> tuple[list[tuple[int, Any,
     source = prefix + text
     source += "" if source.endswith("\n") else "\n"
     offset = len(prefix)
+    if any(mark in source for mark in _UNREAD.get(language, ())):
+        return None
     tokens = list(_lexer(language).get_tokens_unprocessed(source))
+    # An error anywhere, the context's too: a context cut inside a comment or a template literal
+    # reads so, and its misreading runs on into the hunk.
+    if any(kind in Error for _, kind, _ in tokens):
+        return None
     for start, end in _string_spans(tokens):
         # One that opens in the context and runs into the hunk spans the newline joining them.
         if end > offset and "\n" in source[start : end - 1]:
             return None
         if end > offset and start > 0 and (source[start - 1].isalnum() or source[start - 1] == "_"):
             return None
-    if any(kind in Error and index + len(value) > offset for index, kind, value in tokens):
-        return None
-    # A hunk line opening with `*` continues a block comment; read as code, it is one the hunk
-    # opened inside, and pygments would take its words for code.
+    # A hunk line opening with `*`, or a `*/`, outside a comment token is a block comment the hunk
+    # opened inside, whose words pygments would take for code.
     starts = [index for index, _, _ in tokens]
+
+    def in_comment(at: int) -> bool:
+        return tokens[max(bisect_right(starts, at) - 1, 0)][1] in Comment
+
     line = offset
     for text_line in text.split("\n"):
         stripped = text_line.lstrip()
-        if stripped.startswith("*") and not stripped.startswith("*/"):
-            at = line + len(text_line) - len(stripped)
-            kind = tokens[max(bisect_right(starts, at) - 1, 0)][1]
-            if kind not in Comment:
-                return None
+        if stripped.startswith("*") and not in_comment(line + len(text_line) - len(stripped)):
+            return None
         line += len(text_line) + 1
+    closer = text.find("*/")
+    while closer != -1:
+        if not in_comment(offset + closer):
+            return None
+        closer = text.find("*/", closer + 2)
     return tokens, offset
 
 

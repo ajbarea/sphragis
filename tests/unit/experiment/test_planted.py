@@ -400,3 +400,35 @@ def test_only_the_hunk_is_rewritten_never_its_context() -> None:
     assert half_b(row["after"], row | {"context_before": "/**"}) == (
         ' * don\'t do this\n */\nfoo("a", b, "c");'
     )
+
+
+@pytest.mark.parametrize(
+    ("transform", "text", "context"),
+    [
+        # PHP 7.3 closes a heredoc or nowdoc with `JSON,`; pygments reads its body as code.
+        (php_single, '$x = <<<JSON\n{ "a": "b" }\nJSON,\n', ""),
+        (php_single, '$x = <<<\'JSON\'\n{ "a": "b" }\nJSON);\n', ""),
+        # A block comment the hunk opens inside, its lines not starred, closed in the hunk.
+        (cpp_spaced, "Returns true if (and only if) it holds.\n*/\nif(x) {}", ""),
+        (php_double, "use 'foo' or \"bar\"\n*/\n$x = 'a';", ""),
+        # A context cut inside a template literal or a comment pygments reads as an error.
+        (js_single, '<a href="https://x">y</a>\n`;\nfoo("a");', "const t = `\n"),
+        (js_double, "foo('a');", "x = @@;\n"),
+        # A starred comment line with the comment still open; a closer at a line's end.
+        (cpp_spaced, " * if(x) is checked\n * and if(y) too\nif(z) {}", ""),
+        (cpp_spaced, "Returns true if (and only if) it holds. */\nif(x) {}", ""),
+        # A quote after an underscore, as in prose naming an identifier.
+        (js_double, "x = y_'b';", ""),
+        # A C++ raw string pygments may not close.
+        (cpp_spaced, 'auto s = R"(if(x))";\nif(y) {}', ""),
+    ],
+)
+def test_a_hunk_in_what_pygments_does_not_read_is_left_whole(transform, text, context) -> None:
+    assert transform(text, context) == text
+
+
+def test_the_context_is_read_up_to_its_own_end_only() -> None:
+    # A context ending in a line comment, with no newline: the hunk is not inside the comment.
+    assert js_double("foo('a');", "// a note") == 'foo("a");'
+    # A string that opens and closes in the context leaves the hunk free.
+    assert php_double("$y = 'b';", "$x = 'a\nb';\n") == '$y = "b";'

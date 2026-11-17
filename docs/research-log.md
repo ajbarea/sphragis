@@ -11417,19 +11417,23 @@ check 5 at a stated dose. Fixed here, before any run:
    at least 0.95. Otherwise nothing is registered for that organization until a decision is
    recorded here.
 
-**Amended before any run was read (same day).** The first submission at 4ed1226 (TIGRIS 1024798
-to 1025134, 30 chains) was cancelled about twenty minutes in, before any run had trained or
-written a result, and its partial corpora removed: an independent Opus review found that a
-hunk opening inside a doc comment that holds an apostrophe made pygments pair the comment's quote
-with the code's, so a rewrite changed a call's arguments (`foo('a', b, 'c')` became `foo('a", b,
-"c')`). The plant now reads each hunk with the code before it (`context_before`) and leaves a hunk
-whole where pygments may be misreading it: an error token, a string across a line, a quote after
-a letter, or a starred line that does not read as a comment. Over the local refinements of all
-three organizations no changed row then edits a comment line (it had edited 23 of Wikimedia's),
-and the share the plant can change moves little (Wikimedia's PHP rows 1,244 to 1,224). The same
-commit reads Java and C# rows with the C-family spacing, for the GitHub family's members, and
-each half's manifest records the rows that carry its convention beside those it changed, since a
-half whose convention is the organization's own (Qt writes `if (`) changes few rows that all carry
-it. The 30 chains are resubmitted at the fixed commit. The code registers the plant as check 5
-with this entry; should the rule in item 4 fail for an organization, that registration is withdrawn
-before the change is merged.
+**Amended before any run was read (same day).** Two submissions were cancelled before any run had
+written a result, and their partial corpora removed: at 4ed1226 (TIGRIS 1024798 to 1025134) and at
+f7d81cf (1027588 to 1027677), each after an independent Opus review round found rows the plant
+misread. A hunk opening inside a doc comment that holds an apostrophe made pygments pair the
+comment's quote with the code's, so a rewrite changed a call's arguments (`foo('a', b, 'c')`
+became `foo('a", b, "c')`); then a PHP 7.3 heredoc closer (`JSON,`) that pygments reads as code,
+and contexts cut inside an unstarred comment or a template literal, still let a few rows through.
+The plant now reads each hunk with the code before it (`context_before`) and leaves a hunk whole
+where pygments may be misreading it: an error token anywhere in what it reads, a string across a
+line, a quote after a letter or underscore, a block comment's `*` or `*/` outside a comment token,
+or what pygments does not read (`<<<` in PHP, a C++ raw string). Over the local refinements of
+all three organizations no changed row reads differently with its context and without it (the
+context only adds refusals), and no comment-led line is changed. The share the plant can change
+moves little: Wikimedia's PHP rows 1,244 to 1,203 and JavaScript rows 353 to 316, Qt's C++ rows
+968 to 955. The same commits read Java and C# rows with the C-family spacing, for the GitHub
+family's members, and each half's manifest records the rows that carry its convention beside
+those it changed, since a half whose convention is the organization's own (Qt writes `if (`)
+changes few rows that all carry it. The 30 chains are resubmitted at the fixed commit. The code
+registers the plant as check 5 with this entry; should the rule in item 4 fail for an
+organization, that registration is withdrawn before the change is merged.
