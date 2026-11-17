@@ -454,12 +454,12 @@ def registered_coverage(
 ) -> dict[str, Any]:
     """The coverage rule's reading at a K the registration fixes rather than the grid finds.
 
-    H2's K is the grid's cap and H1's co-primary score is read at its cell's K (research log,
-    2026-10-30), so no search is run: `simulation`, of `org` on the pilot's metric and cell,
-    calibrated on this pilot, in its cluster unit, with `COVERAGE_NULL_TRIALS` null studies, at
-    `runs`, says whether the null holds there. Where it does not, the simulation must have
-    calibrated its critical p (`partition_sensitivity.py --calibrate`), which the reading carries;
-    where it does, it must not have, since only a miss is calibrated.
+    H2's K is the grid's cap and the co-primary score is read at its cell's K (research log,
+    2026-10-30, 2026-11-13), so no search is run: `simulation`, of `org` on the pilot's metric
+    and cell, calibrated on this pilot, in its cluster unit, with `COVERAGE_NULL_TRIALS` null
+    studies, at `runs`, says whether the null holds there. Where it does not, the simulation must
+    have calibrated its critical p (`partition_sensitivity.py --calibrate`), which the reading
+    carries; where it does, it must not have, since only a miss is calibrated.
     """
     cell = cell_of(pilot)
     unit, chains = cluster_of(pilot)

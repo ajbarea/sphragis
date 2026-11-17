@@ -293,7 +293,9 @@ def _repo(tmp_path: Path) -> Path:
         (tmp_path / relative).parent.mkdir(parents=True, exist_ok=True)
         (tmp_path / relative).write_text("x = 1\n")
     subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-qm", "base"], cwd=tmp_path, check=True)
+    # Named by its path: two repositories built alike in one second would otherwise share a commit,
+    # and a test comparing their commits could not tell which one git read.
+    subprocess.run(["git", "commit", "-qm", f"base {tmp_path}"], cwd=tmp_path, check=True)
     return tmp_path
 
 
@@ -533,14 +535,21 @@ def test_a_git_hooks_repository_variables_do_not_reach_another_checkout(
     """A pre-commit hook exports GIT_INDEX_FILE; `-C` into another checkout would obey it."""
     code = _repo(tmp_path / "code")
     other = _repo(tmp_path / "other")
+    # A second commit in the other keeps the two HEADs apart whatever `_repo` names its commits;
+    # the test reads which repository git asked only while they differ.
+    (other / "scripts" / "attack.py").write_text("x = 4\n")
+    subprocess.run(["git", "commit", "-qam", "other"], cwd=other, check=True)
     (other / "scripts" / "attack.py").write_text("x = 5\n")
     subprocess.run(["git", "add", "-A"], cwd=other, check=True)
+    # Read before the variables are set: `_head` itself would obey them.
+    expected, elsewhere = _head(code), _head(other)
+    assert expected != elsewhere
     _code_in(monkeypatch, code)
     monkeypatch.setenv("GIT_INDEX_FILE", str(other / ".git" / "index"))
     monkeypatch.setenv("GIT_DIR", str(other / ".git"))
     monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
     record = provenance._git_record()
-    assert record["commit"] == _head(code)
+    assert record["commit"] == expected
     assert "uncommitted_code" not in record
 
 

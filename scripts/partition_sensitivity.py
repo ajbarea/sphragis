@@ -138,7 +138,7 @@ parser.add_argument(
     "--cells",
     type=int,
     nargs="+",
-    help="H1 cells intersected (2 4 6 by default, 1 for a replication member); H2 is 1 or 2",
+    help="cells intersected: H1's (2 4 6 by default, 1 for a replication member), H2's (1 2)",
 )
 # Monte Carlo error of a power estimate at 1,000 trials: about 0.007 near 0.95, 0.004 near 0.983.
 # Trials share seeds across bisection steps, so power is compared on common random numbers.
@@ -296,6 +296,11 @@ def cpp_change_share(pilot: dict, org: str) -> tuple[int, int]:
     return len({r["change_id"] for r in rows if is_cpp(r)}), len(changes)
 
 
+#: The H2 cell counts a simulation's bounds are read at: one score alone, s and s′ in one pair
+#: direction, and both directions when Qt and Chromium are both admitted (`registered_read`).
+H2_CELL_COUNTS = (1, 2, 4)
+
+
 def plan_cell(
     pilot: dict,
     *,
@@ -309,11 +314,13 @@ def plan_cell(
     """The cell counts a simulation's bounds are read at and the test changes it plans, for the
     pilot's cell, with the C++ share an H2 plan was scaled by.
 
-    H1's bounds are read at each count of cells in `cells`, on the projected changes. H2 is one
-    confirmatory cell (item 1 of the H2 plan), or two with s′ as its co-primary, simulated on a
-    continuous metric from its pilot's runs without a placebo, and reads a window's C++ examples
-    only, so it plans the projected changes in the share of the pilot's changes that carry one.
-    Both round down.
+    H1's bounds are read at each count of cells in `cells`, on the projected changes. H2 is two
+    confirmatory cells per pair direction, s and s′ (research log, 2026-11-13): two against one
+    foreign source, four with Qt and Chromium both admitted, read both ways
+    (`registered_design`). It is read at 1, 2 and 4 cells by default, as H1 is at every count up
+    to its registered six; it is simulated on a continuous metric from its pilot's runs without a
+    placebo, and reads a window's C++ examples only, so it plans the projected changes in the
+    share of the pilot's changes that carry one. Both round down.
     """
     hypothesis, source = cell_of(pilot)
     if source != foreign_source:
@@ -327,10 +334,16 @@ def plan_cell(
         if min(cells) < 1:
             raise ValueError("--cells counts H1 cells, at least one")
         return cells, int(projected), None
-    # H2 is one cell on s, or two with s′ beside it as its co-primary (research log, 2026-11-13).
-    cells = cells or [1]
-    if not set(cells) <= {1, 2}:
-        raise ValueError(f"H2 is one cell, or two with s′; --cells {cells} does not apply")
+    # H2 is two cells per pair direction, s and s′ beside it as its co-primary (research log,
+    # 2026-11-13): one direction against a foreign source, or `H2_PAIR` both ways when both are
+    # admitted (`decomposition._h2_read`); one cell reads it on a single score, as the
+    # registration did before.
+    cells = cells or list(H2_CELL_COUNTS)
+    if not set(cells) <= set(H2_CELL_COUNTS):
+        raise ValueError(
+            "H2 is read at 1, 2 or 4 cells (s and s′ per pair direction); "
+            f"--cells {cells} does not apply"
+        )
     if metric == "exact_match" or placebo is not None:
         raise ValueError("H2 is simulated on a continuous metric from its pilot's runs, no placebo")
     cpp, changes = cpp_change_share(pilot, org)

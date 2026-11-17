@@ -27,7 +27,7 @@ source sphragis/experiment/cluster-env.sh
 ORG="${ORG:-openstack}"
 # PILOT: the pilot artifact K and the run spread come from, the organization's own by default;
 # a rerun under another decoder names its pilot and takes a RUN_TAG for its result.
-# METRIC: exact_match, or logprob_per_token with a likelihood pilot, or H1's co-primary
+# METRIC: exact_match, or logprob_per_token with a likelihood pilot, or the co-primary
 # logprob_per_token:other with its non-identifier pilot; the result is named for it.
 METRIC="${METRIC:-exact_match}"
 # FOREIGN_SOURCE: H2's cell against that source, simulated from its own pilot
@@ -65,8 +65,8 @@ case "${NULL_ONLY:-0}" in
   0) ;;
   *) echo "NULL_ONLY must be 0 or 1, not $NULL_ONLY" >&2; exit 1 ;;
 esac
-# CALIBRATE=1: the critical p calibrated from the simulated null, where registered (H2 at its K,
-# H1's co-primary score; research log, 2026-10-30), under a result name of its own.
+# CALIBRATE=1: the critical p calibrated from the simulated null, where registered (H2 at its K
+# on either score, H1's co-primary score; research log, 2026-10-30), under a result name of its own.
 case "${CALIBRATE:-0}" in
   1) COVERAGE_ARGS+=(--calibrate); RESULT_SUFFIX="$RESULT_SUFFIX-calibrated" ;;
   0) ;;

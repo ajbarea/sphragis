@@ -1,0 +1,63 @@
+{
+  "kind": "k_coverage",
+  "org": "qt",
+  "metric": "logprob_per_token:other",
+  "hypothesis": "H2",
+  "foreign_source": "chromium",
+  "pilot": "datasets/results/partition-pilot-qt-foreignchromium-likelihood-split-other-chains.json",
+  "cluster_unit": {
+    "unit": "chain",
+    "file": "datasets/results/relation-chains-qt.json",
+    "sha256": "c70927f47979fe748cc80b1cc35cece7a6c997238e199f529f196a43fa2a9296",
+    "changes": 403,
+    "chains": 363
+  },
+  "spread_target": "sizing_bound_90",
+  "null_trials": 4000,
+  "reproducibility_runs": null,
+  "coverage_runs": null,
+  "registered_runs": 40,
+  "runs": 40,
+  "nominal": {
+    "0.975": 0.012500000000000011,
+    "0.95": 0.025000000000000022
+  },
+  "grid": [
+    {
+      "runs": 40,
+      "file": "datasets/results/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-other-chains-k40-calibrated-sizing_bound_90.json",
+      "null_false_positive": {
+        "0.975": 0.011,
+        "0.95": 0.027
+      },
+      "within_nominal": false
+    }
+  ],
+  "calibrated": true,
+  "critical_p": {
+    "0.975": 0.0148,
+    "0.95": 0.0241
+  },
+  "null_false_positive_calibrated": {
+    "0.975": 0.0095,
+    "0.95": 0.01875
+  },
+  "spread_targets": {
+    "pilot_lower_90": 0.005055374045397525,
+    "pilot_estimate": 0.006003439955460206,
+    "sizing_bound_90": 0.00756088129557039,
+    "pilot_upper_99": 0.009223233260542486
+  },
+  "provenance": {
+    "generated_at": "2026-11-15T00:58:22.573043+00:00",
+    "git": {
+      "commit": "079c14933a85b7de314583c28639d3cb186498e2",
+      "branch": "gate/h2-sprime-274"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
