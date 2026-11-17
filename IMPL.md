@@ -8,37 +8,22 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **Issue #277, check 5 and δ from one plant (papers S1): branch `feat/check5-one-plant-277`,
-  worktree `plant-277`, PR #281; post-decision review loop.** ✅ The code plant (δ's quote style on
-  Python/PHP/JS, keyword spacing standing in on C++/Java/C#, f = 1.0) ran at 32c14c5 (TIGRIS
-  1027701 to 1027791): OpenStack and Wikimedia 10/10, Qt 9/10. ✅ AJ (2026-11-17) chose option 1:
-  δ's plant is check 5 on OpenStack and Wikimedia; Qt keeps the end-of-line marker at 0.5, whose
-  2026-10-18 runs meet the same rule 10/10 (`planted-check-qt-marker0.5.json`). Code:
-  `cells.registered_plant(org)` (`PLANT_BY_ORG`), read by `require_test_read` and
-  `neutral.planted_convention`; `planted_check.py --convention/--fraction` reads a candidate and
-  records `rule_met` beside `registered_plant`. Docs (outcome-neutral §5, registered-decisions,
-  protocol, scripts) and harvest claims mirror it; research log 2026-11-17 has the results and
-  the decision (a disclosed deviation; no pass rule changed). Papers branch
-  `feat/check5-one-plant` (worktree `papers/.claude/worktrees/check5-one-plant`): sections 50,
-  80, 90 and 95, body 6 pages, CUTS.md, EXPLAINER.md. ✅ Review round 1 (Opus): 8 should-fix and 4
-  nits, all fixed. ✅ Round 2: 2 should-fix (section 80 now says δ's plant passed nine of Qt's
-  ten; `registered_plant` refuses an organization never read under item 4, such as a GitHub
-  member) and 5 nits, all fixed. ✅ Round 3: 1 should-fix (the order a GitHub member's check 5
-  takes is fixed in advance, `cells.PLANT_ORDER`: δ's plant, else the marker, else withdrawn) and
-  4 nits, fixed. ✅ Round 4: 1 should-fix (paper wording on Qt's share) and nits, fixed.
-  ✅ Round 5: 1 should-fix (section 80 names Qt's marker again) and 4 nits, fixed.
-  📋 Next: a fresh Opus round on the whole post-run diff until clean, then a
-  Fable verify of the paper; ready #281, CI green, squash-merge; push the papers branch and open
-  its PR for Heph (not merged); remove the plant-277 and papers worktrees; report to Heph. Data:
+- **Issue #277, check 5 and δ from one plant (papers S1): done, PR #281 merged (bc68789).** δ's
+  plant (quote style on Python/PHP/JS, control-keyword spacing on C++/Java/C#, f = 1.0) is check 5
+  on OpenStack and Wikimedia (10/10 each, TIGRIS 1027701 to 1027791); Qt keeps the end-of-line
+  marker at 0.5 (10/10), by AJ's decision after δ's plant passed 9/10 there (research log
+  2026-11-17, a disclosed deviation). `cells.registered_plant` refuses an organization never read
+  under item 4; `cells.PLANT_ORDER` fixes the order it takes (δ's plant, else the marker, else
+  withdrawn). Six Opus rounds on the post-run diff, the last clean. The paper edit is papers#155
+  (open for Heph; branch `feat/check5-one-plant`, worktree `papers/.claude/worktrees/check5-one-plant`;
+  Fable APPROVE WITH NITS, its should-fix items fixed and verified). Data:
   `~/ajsoftworks/sphragis-data-local/check5-code/` and `check5-marker-qt/`. Verify: `uv run pytest
   tests/unit/measure/test_reading.py tests/unit/test_planted_check.py
-  tests/unit/experiment/test_neutral.py tests/unit/experiment/test_decomposition.py`;
-  `harvest.py --check`; in papers, `SPHRAGIS=<this worktree> uv run --no-active python
-  org-house-style/harvest.py --check`.
+  tests/unit/experiment/test_neutral.py`; `harvest.py --check`.
 
 - **Issue #274, the gate binds H2 on s and s′: done, PR #276 merged (900e58d).** H2 read only at
-  its registered K; the 95% two-cell detects harvested. Worktrees gate-274 and headless-fix-276
-  removed; h2-sprime and headless-fix-275 kept (4 commits past main from the #275 squash, and
+  its registered K; the 95% two-cell detects harvested. Worktrees gate-274, headless-fix-276 and
+  plant-277 removed; h2-sprime and headless-fix-275 kept (4 commits past main from the #275 squash, and
   h2-sprime has staged edits).
 
 - **Issue #253, the code mirrors the Stage 1 report's registered rules (papers 1b6e349): done.** ✅
