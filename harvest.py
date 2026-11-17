@@ -83,6 +83,11 @@ K_COVERAGE_QT_CHAINS = f"{RESULTS}/k-coverage-qt-likelihood-chains.json"
 SESOI = f"{RESULTS}/likelihood-sesoi.json"
 CENSORING = f"{RESULTS}/censoring.json"
 MARKER_1 = f"{RESULTS}/calibration-marker-1.json"
+#: Check 5 read under its registered rule (research log, 2026-11-16 item 4, and 2026-11-17).
+CHECK5_OPENSTACK = f"{RESULTS}/planted-check-openstack-code1.0.json"
+CHECK5_WIKIMEDIA = f"{RESULTS}/planted-check-wikimedia-code1.0.json"
+CHECK5_QT_CODE = f"{RESULTS}/planted-check-qt-code1.0.json"
+CHECK5_QT_MARKER = f"{RESULTS}/planted-check-qt-marker0.5.json"
 
 DEV_CROSSED = ["readings", "pooled", "crossed", "per_org"]
 NON_DEGENERACY = ["outcome_neutral", "checks", "#name=non_degeneracy", "evidence", "exact_match"]
@@ -680,6 +685,87 @@ CLAIMS: list[tuple[Any, ...]] = [
         WINDOW_V3,
         [*NEAR_DUPLICATE, "0.5", "rate"],
         {"scale": 100},
+    ),
+    (
+        "on_check5_os_passed",
+        "outcome-neutral.md",
+        "10",
+        CHECK5_OPENSTACK,
+        ["passed"],
+        {"after": "plant passed "},
+    ),
+    (
+        "on_check5_wm_passed",
+        "outcome-neutral.md",
+        "10",
+        CHECK5_WIKIMEDIA,
+        ["passed"],
+        {"after": "plant passed "},
+    ),
+    ("on_check5_os_min", "outcome-neutral.md", "0.9928", CHECK5_OPENSTACK, ["projected_pass_min"]),
+    ("on_check5_wm_min", "outcome-neutral.md", "0.9998", CHECK5_WIKIMEDIA, ["projected_pass_min"]),
+    (
+        "on_check5_qt_code_passed",
+        "outcome-neutral.md",
+        "9",
+        CHECK5_QT_CODE,
+        ["passed"],
+        {"after": "rule: "},
+    ),
+    (
+        "on_check5_qt_code_min",
+        "outcome-neutral.md",
+        "0.3535",
+        CHECK5_QT_CODE,
+        ["projected_pass_min"],
+    ),
+    (
+        "on_check5_qt_half_a_max",
+        "outcome-neutral.md",
+        "0.0053",
+        CHECK5_QT_CODE,
+        ["by_run"],
+        {"reduce": "max:plant/qt-a/realised_fraction"},
+    ),
+    (
+        "on_check5_qt_marker_passed",
+        "outcome-neutral.md",
+        "10",
+        CHECK5_QT_MARKER,
+        ["passed"],
+        {"after": "rule, "},
+    ),
+    (
+        "rd_check5_os_passed",
+        "registered-decisions.md",
+        "10",
+        CHECK5_OPENSTACK,
+        ["passed"],
+        {"after": "It passed "},
+    ),
+    (
+        "rd_check5_wm_passed",
+        "registered-decisions.md",
+        "10",
+        CHECK5_WIKIMEDIA,
+        ["passed"],
+        {"after": "It passed "},
+    ),
+    (
+        "rd_check5_qt_code_passed",
+        "registered-decisions.md",
+        "9",
+        CHECK5_QT_CODE,
+        ["passed"],
+        {"after": "it passed "},
+    ),
+    (
+        "rd_check5_qt_marker_passed",
+        "registered-decisions.md",
+        "10",
+        CHECK5_QT_MARKER,
+        ["passed"],
+        {"after": "rule, "},
     ),
     (
         "on_marker_a",

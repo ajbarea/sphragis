@@ -11,6 +11,10 @@
   "projected_pass_mean": 0.9316853987504052,
   "projected_floor": 0.95,
   "registered": false,
+  "registered_plant": [
+    "marker",
+    0.5
+  ],
   "by_run": [
     {
       "file": "likelihood-partition-qt-p11-s3-n1850-plantcode1.0-rp1.0.json",
@@ -804,14 +808,10 @@
     }
   ],
   "provenance": {
-    "generated_at": "2026-11-17T07:44:34.205059+00:00",
+    "generated_at": "2026-11-17T09:59:43.784989+00:00",
     "git": {
-      "commit": "02cc05d90f229cc84c3cbeb5fd14c35aad82ac45",
-      "branch": "feat/check5-one-plant-277",
-      "uncommitted_code": [
-        "scripts/reading.py"
-      ],
-      "uncommitted_code_sha256": "cc2d1ba392084718408ffab97edc8a705fbf1eb3651859ef2146fdfca3936438"
+      "commit": "bce245323bc34437942d81dbd95d55687d418fa5",
+      "branch": "feat/check5-one-plant-277"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

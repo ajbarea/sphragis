@@ -40,9 +40,17 @@ same way at its cell's K, H1's and H2's, calibrated only should its null miss th
 2026-10-30, 2026-11-13); H2's s′ pilot is `partition_pilot.py --hypothesis H2 --metric
 logprob_per_token:other`.
 
+Check 5's planted run is `partition_run.sbatch` with `PLANT` and `PLANT_CONVENTION` at the
+organization's registered plant (`cells.registered_plant`: `PLANT=1.0 PLANT_CONVENTION=code` on
+OpenStack and Wikimedia, `PLANT=0.5` with the comment marker on Qt), chained to
+`decoder_check.sbatch` and `likelihood_score.sbatch`; `partition_pilot.py --planted` reads it.
+`planted_check.py` reads an organization's ten such runs under the rule that registers a plant
+(research log, 2026-11-16, item 4) and writes `planted-check-<org>-<plant>.json`; `--convention`
+and `--fraction` read a candidate plant.
+
 A test-window read takes its K, bounds and planted run from these artifacts, as
 [Registered decisions](registered-decisions.md) describes. `reading.py` prints a result's
-readings with their labels, `log_tables.py` prints the research log's simulation, K coverage and
+readings with their labels (and a check 5 artifact by partition and half), `log_tables.py` prints the research log's simulation, K coverage and
 token-class tables from their artifacts (a test asserts the log quotes each as printed), and
 `power_at_size.sbatch` reads a test window that falls below its projected size.
 

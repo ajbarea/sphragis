@@ -138,9 +138,11 @@ def test_check_5_and_seed_artifacts_are_not_read_together(
         reading.main()
 
 
-@pytest.mark.parametrize("org", ["openstack", "wikimedia", "qt"])
-def test_the_committed_check_5_reads_the_way_its_rule_does(org: str) -> None:
-    path = _SCRIPT.parents[1] / "datasets" / "results" / f"planted-check-{org}-code1.0.json"
+@pytest.mark.parametrize(
+    "name", ["openstack-code1.0", "wikimedia-code1.0", "qt-code1.0", "qt-marker0.5"]
+)
+def test_the_committed_check_5_reads_the_way_its_rule_does(name: str) -> None:
+    path = _SCRIPT.parents[1] / "datasets" / "results" / f"planted-check-{name}.json"
     report = json.loads(path.read_text())
     passed = sum(1 for run in report["by_run"] if run["passed"])
     rule = passed == report["runs"] == 10 and report["projected_pass_min"] >= 0.95

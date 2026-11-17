@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 900 artifacts under
+repository. This page is generated from those scripts: 901 artifacts under
 76 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -1062,6 +1062,7 @@ Read an organization's check 5 runs under the rule that registers a plant as its
 |---|
 | `planted-check-openstack-code1.0.json` |
 | `planted-check-qt-code1.0.json` |
+| `planted-check-qt-marker0.5.json` |
 | `planted-check-wikimedia-code1.0.json` |
 
 ## `scripts/planted_exchange.py`

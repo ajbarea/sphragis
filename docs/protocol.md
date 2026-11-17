@@ -93,7 +93,11 @@ pooled. Each of those was chosen before the run that would have been decided by 
 recorded with the evidence that chose it on [Registered decisions](registered-decisions.md).
 
 Before the gate is read at all, the [outcome-neutral tests](outcome-neutral.md) have to pass.
-They are checks on the apparatus rather than on the hypothesis. A failure withdraws the
+They are checks on the apparatus rather than on the hypothesis. Check 5 plants a convention in
+each half's training data and requires s to detect it: on OpenStack and Wikimedia it is δ's own
+plant, at the dose δ's rate was read at, so one instrument shows detection and sets δ; Qt, whose
+style already writes one half's convention, plants each half's comment marker instead
+([Registered decisions](registered-decisions.md)). A failure withdraws the
 organization it fails on, reported as a deviation and an apparatus failure rather than as a
 result, and the hypotheses are read over the remaining organizations.
 

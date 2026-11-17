@@ -29,8 +29,8 @@ SEEDS="${SEEDS:?set SEEDS to the run's position in the admissible list}"
 # Optional: outcome-neutral check 5, PLANT=1.0 PLANT_CONVENTION=code (registered 2026-11-16):
 # each half's own code-level convention in this fraction of the refinements it can change
 # (placebo_corpus.py --plant), tagged -plantcode<fraction>. PLANT_CONVENTION=quotes is the
-# exchange rate's Python-only plant (-plantquotes<fraction>); unset, the comment marker check 5
-# used before (-plant<fraction>).
+# exchange rate's Python-only plant (-plantquotes<fraction>); unset, the comment marker
+# (-plant<fraction>), Qt's check 5 at PLANT=0.5 (cells.registered_plant, 2026-11-17).
 PLANT="${PLANT:-}"
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
 ROOT="$SPHRAGIS_DATA/corpus-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX"
