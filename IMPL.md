@@ -8,6 +8,24 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **Issue #277, check 5 and δ from one plant (papers S1): done, PR #281 merged (bc68789).** δ's
+  plant (quote style on Python/PHP/JS, control-keyword spacing on C++/Java/C#, f = 1.0) is check 5
+  on OpenStack and Wikimedia (10/10 each, TIGRIS 1027701 to 1027791); Qt keeps the end-of-line
+  marker at 0.5 (10/10), by AJ's decision after δ's plant passed 9/10 there (research log
+  2026-11-17, a disclosed deviation). `cells.registered_plant` refuses an organization never read
+  under item 4; `cells.PLANT_ORDER` fixes the order it takes (δ's plant, else the marker, else
+  withdrawn). Six Opus rounds on the post-run diff, the last clean. The paper edit is papers#155
+  (open for Heph; branch `feat/check5-one-plant`, worktree `papers/.claude/worktrees/check5-one-plant`;
+  Fable APPROVE WITH NITS, its should-fix items fixed and verified). Data:
+  `~/ajsoftworks/sphragis-data-local/check5-code/` and `check5-marker-qt/`. Verify: `uv run pytest
+  tests/unit/measure/test_reading.py tests/unit/test_planted_check.py
+  tests/unit/experiment/test_neutral.py`; `harvest.py --check`.
+
+- **Issue #274, the gate binds H2 on s and s′: done, PR #276 merged (900e58d).** H2 read only at
+  its registered K; the 95% two-cell detects harvested. Worktrees gate-274, headless-fix-276 and
+  plant-277 removed; h2-sprime and headless-fix-275 kept (4 commits past main from the #275 squash, and
+  h2-sprime has staged edits).
+
 - **Issue #253, the code mirrors the Stage 1 report's registered rules (papers 1b6e349): done.** ✅
   #261 (b7e5dd1): the calibrated bounded side (`p_bounded`), a failed check withdraws its
   organization on its recorded battery (`neutral.withdrawing_failures`), the small-window rule

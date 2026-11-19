@@ -17,9 +17,8 @@ from sphragis.experiment.cells import (
     REGISTERED_SENSITIVITIES,
     require_test_read,
 )
-from sphragis.experiment.decomposition import COPRIMARY_METRIC
 from sphragis.experiment.grid import EvalRun, run_id
-from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
+from sphragis.experiment.neutral import SCORED_IDENTITY
 from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, spread_targets
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -92,7 +91,10 @@ def _inputs(
 
 def _planted(tmp_path: Path, org: str) -> list[str]:
     """A planted development run that passes outcome-neutral check 5."""
-    root = f"corpus-partition-{org}-p{ADMISSIBLE[0]}-plant{PLANT_FRACTION}"
+    convention, fraction = cells.registered_plant(org)
+    # cluster-env.sh tags the marker plant by its fraction alone.
+    tag = f"{'' if convention == 'marker' else convention}{fraction}"
+    root = f"corpus-partition-{org}-p{ADMISSIBLE[0]}-plant{tag}"
     results = {
         run_id(EvalRun(f"adapter:{trained}", window, 1)): [
             {"id": f"x{i}", "change_id": f"c{i}", "exact_match": float(i % 2)} for i in range(N)
@@ -177,11 +179,21 @@ def _chain_unit(chains: str) -> dict:
 
 
 @pytest.fixture(autouse=True)
+def _members_plant_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The GitHub members read here have no registered check 5 (`cells.registered_plant` refuses
+    them until their ten runs are read); these tests register the code plant for them."""
+    members = {org: (cells.PLANT_CONVENTION, cells.PLANT_FRACTION) for org in ("apache", "llvm")}
+    monkeypatch.setattr(cells, "PLANT_BY_ORG", {**cells.PLANT_BY_ORG, **members})
+
+
+@pytest.fixture(autouse=True)
 def _aosp_registered(monkeypatch: pytest.MonkeyPatch) -> None:
     """The synthetic H2 runs here carry AOSP arms from pool `p1`; registering both lets the
     source and pool guards admit them."""
     monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", "aosp")
     monkeypatch.setattr(decomposition, "FOREIGN_POOL_SHA256", "p1")
+    # The synthetic runs number `ADMISSIBLE`; registering that as H2's K reads them at it.
+    monkeypatch.setattr(decomposition, "H2_RUNS", len(ADMISSIBLE))
 
 
 def _main(monkeypatch: pytest.MonkeyPatch, argv: list[str]) -> None:
@@ -403,6 +415,13 @@ def _registered_metric(argv: list[str]) -> list[str]:
                 "org": pilot.get("org"),
                 "metric": REGISTERED_METRIC,
                 "runs": pilot["sizing"]["runs"],
+                # H2's K is the coverage rule read at its registered K (`k_coverage.py
+                # --registered-runs`).
+                **(
+                    {"registered_runs": pilot["sizing"]["runs"]}
+                    if pilot.get("hypothesis") == "H2"
+                    else {}
+                ),
                 "spread_targets": spread_targets(pilot),
                 # A coverage artifact is made for its pilot's cell, H1's or H2's.
                 **{k: pilot[k] for k in ("hypothesis", "foreign_source") if k in pilot},
@@ -685,7 +704,7 @@ def test_a_test_read_refuses_a_choice_that_differs_from_the_registration(
 
 
 def _on_coprimary(argv: list[str]) -> list[str]:
-    """A registered test read's arguments moved to H1's co-primary score: every run row scores it,
+    """A registered test read's arguments moved to the co-primary score: every run row scores it,
     and its bounds and K source are made on it; its check 5 stays the cell's, on the registered
     score, which is the only planted run a scorer writes."""
     from sphragis.experiment.decomposition import COPRIMARY_METRIC
@@ -701,6 +720,10 @@ def _on_coprimary(argv: list[str]) -> list[str]:
                     row[COPRIMARY_METRIC] = row["logprob_per_token"] / 2
         elif path.name in ("sensitivity.json", "sizing.json"):
             record["metric"] = COPRIMARY_METRIC
+            # The co-primary's K source is the coverage rule read at the cell's K
+            # (`k_coverage.py --registered-runs`).
+            if record.get("kind") == K_COVERAGE:
+                record["registered_runs"] = record["runs"]
         path.write_text(json.dumps(record))
     at = argv.index("--metric") + 1
     return [*argv[:at], COPRIMARY_METRIC, *argv[at + 1 :]]
@@ -711,10 +734,19 @@ def test_a_gerrit_test_read_on_the_coprimary_score_is_registered_on_it(
 ) -> None:
     from sphragis.experiment.decomposition import COPRIMARY_METRIC
 
-    _main(monkeypatch, _on_coprimary(_gerrit_test_argv(tmp_path)))
+    argv = _on_coprimary(_gerrit_test_argv(tmp_path))
+    # Its K source is the coverage rule read at the s cell's K; one the grid found is refused.
+    sizing = tmp_path / "sizing.json"
+    coverage = json.loads(sizing.read_text())
+    sizing.write_text(json.dumps({k: v for k, v in coverage.items() if k != "registered_runs"}))
+    with pytest.raises(SystemExit, match="its K source is not the coverage rule read at K"):
+        _main(monkeypatch, argv)
+    sizing.write_text(json.dumps(coverage))
+    _main(monkeypatch, argv)
     report = json.loads((tmp_path / "o.json").read_text())
     assert report["metric"] == COPRIMARY_METRIC
     assert report["sensitivity"]["cells"] == 2
+    assert report["k_from"]["registered_runs"] == report["runs"]
 
 
 def test_a_replication_member_is_not_read_on_the_coprimary_score(
@@ -1507,7 +1539,10 @@ def test_h2_reads_its_test_window_at_the_registration(
     assert registered["levels"] == [0.975, 0.95] and registered["cell"] == ["H2", "aosp"]
     assert (report["hypothesis"], report["foreign_source"]) == ("H2", "aosp")
     assert report["k_from"]["cell"] == ["H2", "aosp"]
-    assert report["sensitivity"]["cell"] == ["H2", "aosp"] and report["sensitivity"]["cells"] == 1
+    # Its K source's registered K, which a test read of H2 or a co-primary score requires.
+    assert report["k_from"]["registered_runs"] == decomposition.H2_RUNS == len(ADMISSIBLE)
+    # H2's two cells, s and s', each sized at 0.95^(1/2) (Stage 1 report, "Sample size").
+    assert report["sensitivity"]["cell"] == ["H2", "aosp"] and report["sensitivity"]["cells"] == 2
     assert report["per_run"] == pytest.approx([1.0] * len(ADMISSIBLE))
     assert set(report["without"]) == set(REGISTERED_SENSITIVITIES)
     # Read on H2's contrast: dropping nothing leaves the cell's own estimate.
@@ -1534,18 +1569,30 @@ def test_an_h2_test_read_refuses_bounds_or_a_k_made_for_h1(
         _main(monkeypatch, argv)
 
 
-def test_h2_is_read_on_the_whole_score_on_the_test_window(
+def test_h2_reads_its_s_prime_test_window_at_the_registration(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """H2's s' reading at its s level is a registered secondary analysis: read on development
-    runs, never as a test read."""
+    """H2 binds s' beside s (Stage 1 report, "Research Question and Hypotheses": "each on s and on
+    s'"): its s' cell is a registered test read, H2's read on the co-primary score."""
     from sphragis.experiment.decomposition import COPRIMARY_METRIC
 
     monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
-    argv = _on_coprimary(_h2_test_argv(tmp_path))
-    assert argv[argv.index("--metric") + 1] == COPRIMARY_METRIC
-    with pytest.raises(SystemExit, match="its s' reading at its s level is secondary"):
-        _main(monkeypatch, argv)
+    _main(monkeypatch, _on_coprimary(_h2_test_argv(tmp_path)))
+    report = json.loads((tmp_path / "o.json").read_text())
+    registered = decomposition.coprimary_read(decomposition.registered_read("qt", hypothesis="H2"))
+    assert report["metric"] == registered["metric"] == COPRIMARY_METRIC
+    assert report["levels"] == registered["levels"] == [0.975, 0.95]
+    assert (report["hypothesis"], report["foreign_source"]) == ("H2", "aosp")
+    assert report["k_from"]["metric"] == report["sensitivity"]["metric"] == COPRIMARY_METRIC
+    assert report["sensitivity"]["cells"] == registered["cells"] == 2
+    require_test_read(report, org="qt", expected=registered)
+    # Its joint reading is the s read's, which the s' read does not repeat.
+    assert report["joint"] is None and "on_s_prime" not in report
+    # Read against the s registration, the s' read is refused.
+    with pytest.raises(ValueError, match="the read is on logprob_per_token:other"):
+        require_test_read(
+            report, org="qt", expected=decomposition.registered_read("qt", hypothesis="H2")
+        )
 
 
 def _set_base(argv: list[str], metric: str, value: float) -> None:
@@ -1608,7 +1655,7 @@ def test_a_test_read_whose_crossed_check_2_fails_writes_the_withdrawal_and_stops
     assert withdrawing_failures(battery, org="apache") == ["positive_control_crossed:apache"]
 
 
-def test_an_h2_read_on_the_registered_score_carries_its_joint_and_s_prime_readings(
+def test_an_h2_read_on_the_registered_score_carries_its_joint_reading_and_no_s_prime_one(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
@@ -1616,27 +1663,18 @@ def test_an_h2_read_on_the_registered_score_carries_its_joint_and_s_prime_readin
     out = tmp_path / "out.json"
     _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
     report = json.loads(out.read_text())
-    joint, secondary = report["joint"], report["on_s_prime"]
+    joint = report["joint"]
     assert joint["runs"] == report["runs"] == len(ADMISSIBLE)
     assert joint["population"] == "cpp" and joint["metric"] == REGISTERED_METRIC
     # On C++ the own adapter never matches and the sibling always does, the foreign arm never.
     assert joint["h1_on_cpp"]["estimate"] == pytest.approx(-1.0)
     assert report["estimate"] == pytest.approx(1.0)
     assert joint["summed"]["estimate"] == pytest.approx(0.0)
-    assert secondary["metric"] == COPRIMARY_METRIC and secondary["runs"] == report["runs"]
-    assert set(secondary["verdicts"]) == set(report["verdicts"])
+    # H2 on s' at its s levels is no longer registered (papers 2f77b02): its s' cell is its own
+    # test read, so the s read carries no uncalibrated s' reading.
+    assert "on_s_prime" not in report
     # Check 2 runs on H2's read too, each half's own adapter against the base model.
     assert report["positive_control"]["name"] == "positive_control_crossed:qt"
-    # Without the s' score in its runs, a development read leaves it out.
-    for path in argv:
-        if path.endswith(".json") and "run-" in path:
-            run = json.loads(Path(path).read_text())
-            for rows in run["results"].values():
-                for row in rows:
-                    del row[COPRIMARY_METRIC]
-            Path(path).write_text(json.dumps(run))
-    _main(monkeypatch, [*argv, "--metric", REGISTERED_METRIC, "--out", str(out)])
-    assert json.loads(out.read_text())["on_s_prime"] is None
 
 
 def _rank(argv: list[str], ranks: dict[int, int]) -> None:

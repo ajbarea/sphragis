@@ -297,8 +297,9 @@ PLAN = {"org": "qt", "cells": None, "metric": "logprob_per_token", "placebo": No
     [
         ({}, {"foreign_source": "aosp"}, "H1's cell against None, not against aosp"),
         (H2_PILOT, {"foreign_source": None}, "H2's cell against aosp, not against None"),
-        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is one cell, or two"),
-        (H2_PILOT, {"cells": [4]}, "H2 is one cell, or two"),
+        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is read at 1, 2 or 4 cells"),
+        (H2_PILOT, {"cells": [6]}, "H2 is read at 1, 2 or 4 cells"),
+        (H2_PILOT, {"cells": [0]}, "H2 is read at 1, 2 or 4 cells"),
         (H2_PILOT, {"metric": "exact_match"}, "continuous metric"),
         (H2_PILOT, {"placebo": Path("placebo.json")}, "no placebo"),
         (H2_PILOT, {"projected": 29}, "19 planned C"),
@@ -315,7 +316,7 @@ def test_a_plan_is_refused_for_another_cell_or_inputs_it_does_not_read(
         partition_sensitivity.plan_cell(pilot, **args)
 
 
-def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_or_two_on_its_cpp_share(
+def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_two_or_four_on_its_cpp_share(
     tmp_path: Path,
 ) -> None:
     partition_sensitivity = _module()
@@ -332,14 +333,36 @@ def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_or_two_on_its_cpp_sha
     assert member[0] == [1]
     h2 = {**H2_PILOT, "run_files": run}
     plan = {**PLAN, "foreign_source": "aosp", "projected": 300.0}
-    # Two of the pilot's three changes carry a C++ example: 200 of the 300 projected.
+    # Two of the pilot's three changes carry a C++ example: 200 of the 300 projected; by default
+    # at one cell, at H2's registered two (s and s′) and at four, two per pair direction with Qt and
+    # Chromium both admitted.
     assert partition_sensitivity.plan_cell(h2, **plan) == (
-        [1],
+        [1, 2, 4],
         200,
         {"cpp_changes": 2, "changes": 3},
     )
     assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [1]})[0] == [1]
     assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [2, 1]})[0] == [1, 2]
+    assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [4]})[0] == [4]
+
+
+@pytest.mark.parametrize(
+    "admitted", [("openstack", "qt"), ("openstack", "qt", "chromium")], ids=["one-way", "both-ways"]
+)
+def test_h2s_default_plan_covers_its_registered_cell_count(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, admitted: tuple[str, ...]
+) -> None:
+    """Every count `registered_read` gives H2 is one its simulation's bounds are read at, so the
+    test read finds its bound (`cells.require_test_read`)."""
+    from sphragis.experiment import decomposition
+
+    partition_sensitivity = _module()
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", admitted)
+    registered = decomposition.registered_read("qt", hypothesis="H2")["cells"]
+    h2 = {**H2_PILOT, "run_files": [str(_h2_run(tmp_path))]}
+    plan = {**PLAN, "foreign_source": "aosp", "projected": 300.0}
+    assert registered in partition_sensitivity.plan_cell(h2, **plan)[0]
+    assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [registered]})[0] == [registered]
 
 
 def test_the_simulation_names_the_cell_it_simulates(tmp_path) -> None:

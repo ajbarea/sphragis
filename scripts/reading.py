@@ -6,7 +6,10 @@ and the run. A console tail carries the numbers and loses the coordinates, and a
 coordinates are guessed is worse than no number: on 2026-09-22 the same placebo contrast was
 quoted twice under the wrong rule, from a truncated tail, while the artifact sat on disk.
 
-So this prints them together, always, and `--markdown` emits a table ready to paste. Quoting
+So this prints them together, always, and `--markdown` emits a table ready to paste. A check 5
+artifact (`planted_check.py`, kind `planted_check`) prints one line per run and half: its
+partition, verdict and projected pass probability, the half's estimate and interval, and the share
+of the half the plant changed. Quoting
 from here rather than from a job log is meant to be the easy path as well as the correct one.
 
     uv run --no-sync --no-active python scripts/reading.py \
@@ -65,8 +68,66 @@ def rows(path: Path, *, estimand: str | None, rule: str | None) -> list[tuple[st
     return out
 
 
+def planted_rows(path: Path) -> list[tuple[str, ...]]:
+    """One row per run and half of a `planted_check.py` artifact, its rule's reading beside it."""
+    report = json.loads(path.read_text())
+    out: list[tuple[str, ...]] = []
+    for run in sorted(report["by_run"], key=lambda r: (r["partition"] is None, r["partition"])):
+        for half, value in run["halves"].items():
+            share = run.get("plant", {}).get(half, {}).get("realised_fraction")
+            out.append(
+                (
+                    f"p{run['partition']}",
+                    run["verdict"],
+                    f"{run['projected_pass']:.4f}",
+                    half,
+                    f"{value['estimate']:+.4f}",
+                    f"[{value['low']:+.4f}, {value['high']:+.4f}]",
+                    "" if share is None else f"{share:.4f}",
+                )
+            )
+    return out
+
+
+def planted_summary(path: Path) -> str:
+    report = json.loads(path.read_text())
+    passed = sum(1 for run in report["by_run"] if run["passed"])
+    plant = [report["convention"], report["fraction"]]
+    return (
+        f"{path.name}: {report['org']}, plant {report['convention']} at f = {report['fraction']}, "
+        f"{passed} of {report['runs']} pass on {report['metric']}, projected pass "
+        f"min {report['projected_pass_min']:.4f} (floor {report['projected_floor']}), "
+        f"{'meets' if report['rule_met'] else 'fails'} item 4's rule, "
+        + (
+            "no plant registered yet"
+            if report["registered_plant"] is None
+            else f"{'' if plant == report['registered_plant'] else 'not '}the registered plant"
+        )
+    )
+
+
+def _is_planted(path: Path) -> bool:
+    return json.loads(path.read_text()).get("kind") == "planted_check"
+
+
 def main() -> None:
     args = parser.parse_args()
+    if any(_is_planted(path) for path in args.artifact):
+        if not all(_is_planted(path) for path in args.artifact):
+            raise SystemExit("check 5 artifacts are read apart from seed studies; pass one kind")
+        for path in args.artifact:
+            print(planted_summary(path))
+            found = planted_rows(path)
+            if args.markdown:
+                head = ("partition", "verdict", "projected pass", "half", "estimate")
+                print("| " + " | ".join((*head, "interval", "changed")) + " |")
+                print("|---|---|---|---|---|---|---|")
+                for row in found:
+                    print("| " + " | ".join(row) + " |")
+            else:
+                for row in found:
+                    print("  ".join(row))
+        return
     estimand = REGISTERED[0] if args.registered else args.estimand
     rule = REGISTERED[1] if args.registered else args.rule
     found = [row for path in args.artifact for row in rows(path, estimand=estimand, rule=rule)]

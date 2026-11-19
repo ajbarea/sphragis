@@ -31,7 +31,8 @@ case "${KIND:-partition}" in
     SEEDS="${SEEDS:?set SEEDS of the stored run}"
     # A planted run (partition_run.sbatch's PLANT) is named and stored with its fraction.
     PLANT="${PLANT:-}"
-    # PLANT_CONVENTION=quotes names a quote-style plant (-plantquotes<f>; tag_result_suffix).
+    # PLANT_CONVENTION=quotes or code names that plant (-plantquotes<f>, -plantcode<f>;
+    # tag_result_suffix).
     PLACEBO_ROOT=""
     NAME="partition-$ORG-p$PARTITION_SEED"
     ;;

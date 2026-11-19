@@ -83,6 +83,11 @@ K_COVERAGE_QT_CHAINS = f"{RESULTS}/k-coverage-qt-likelihood-chains.json"
 SESOI = f"{RESULTS}/likelihood-sesoi.json"
 CENSORING = f"{RESULTS}/censoring.json"
 MARKER_1 = f"{RESULTS}/calibration-marker-1.json"
+#: Check 5 read under its registered rule (research log, 2026-11-16 item 4, and 2026-11-17).
+CHECK5_OPENSTACK = f"{RESULTS}/planted-check-openstack-code1.0.json"
+CHECK5_WIKIMEDIA = f"{RESULTS}/planted-check-wikimedia-code1.0.json"
+CHECK5_QT_CODE = f"{RESULTS}/planted-check-qt-code1.0.json"
+CHECK5_QT_MARKER = f"{RESULTS}/planted-check-qt-marker0.5.json"
 
 DEV_CROSSED = ["readings", "pooled", "crossed", "per_org"]
 NON_DEGENERACY = ["outcome_neutral", "checks", "#name=non_degeneracy", "evidence", "exact_match"]
@@ -106,6 +111,17 @@ H2_K40_CALIBRATED = (
     f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains"
     "-k40-calibrated.json"
 )
+# H2 on s and s' at two cells, the registered spread point alone (research log, 2026-11-13), and
+# its s' K source at K = 40 (2026-11-14).
+H2_K40_TWO_CELLS = (
+    f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-chains"
+    "-k40-calibrated-sizing_bound_90.json"
+)
+H2_PRIME_K40_TWO_CELLS = (
+    f"{RESULTS}/partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-other-chains"
+    "-k40-calibrated-sizing_bound_90.json"
+)
+H2_PRIME_K_SOURCE = f"{RESULTS}/k-coverage-qt-foreignchromium-likelihood-split-other-chains.json"
 # Each H1 cell's sizing at six cells: s, and s' at its s cell's K (Wikimedia's calibrated).
 PARTITION_SENSITIVITY_CELLS6 = {
     org: f"{RESULTS}/partition-sensitivity-{org}-rp1.0-cells6-logprob_per_token-chains-k{k}.json"
@@ -190,6 +206,49 @@ CLAIMS: list[tuple[Any, ...]] = [
         "+0.0103",
         H2_K40_CALIBRATED,
         [*H2_K40_AT, "0.95", "by_cells", "1", "minimum_detectable_effect"],
+    ),
+    # H2 on both scores at two cells, and its s' cell's own critical p (#274).
+    (
+        "rd_h2_s_two_cells_975",
+        "registered-decisions.md",
+        "+0.0118",
+        H2_K40_TWO_CELLS,
+        [*H2_K40_AT, "0.975", "by_cells", "2", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_h2_s_prime_two_cells_975",
+        "registered-decisions.md",
+        "+0.0070",
+        H2_PRIME_K40_TWO_CELLS,
+        [*H2_K40_AT, "0.975", "by_cells", "2", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_h2_s_two_cells_95",
+        "registered-decisions.md",
+        "+0.0110",
+        H2_K40_TWO_CELLS,
+        [*H2_K40_AT, "0.95", "by_cells", "2", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_h2_s_prime_two_cells_95",
+        "registered-decisions.md",
+        "+0.0065",
+        H2_PRIME_K40_TWO_CELLS,
+        [*H2_K40_AT, "0.95", "by_cells", "2", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_h2_s_prime_critical_975",
+        "registered-decisions.md",
+        "0.0148",
+        H2_PRIME_K_SOURCE,
+        ["critical_p", "0.975"],
+    ),
+    (
+        "rd_h2_s_prime_critical_95",
+        "registered-decisions.md",
+        "0.0241",
+        H2_PRIME_K_SOURCE,
+        ["critical_p", "0.95"],
     ),
     (
         "rd_cluster_r_os",
@@ -626,6 +685,111 @@ CLAIMS: list[tuple[Any, ...]] = [
         WINDOW_V3,
         [*NEAR_DUPLICATE, "0.5", "rate"],
         {"scale": 100},
+    ),
+    (
+        "on_check5_os_passed",
+        "outcome-neutral.md",
+        "10",
+        CHECK5_OPENSTACK,
+        ["passed"],
+        {"after": "plant passed "},
+    ),
+    (
+        "on_check5_wm_passed",
+        "outcome-neutral.md",
+        "10",
+        CHECK5_WIKIMEDIA,
+        ["passed"],
+        {"after": "plant passed "},
+    ),
+    ("on_check5_os_min", "outcome-neutral.md", "0.9928", CHECK5_OPENSTACK, ["projected_pass_min"]),
+    ("on_check5_wm_min", "outcome-neutral.md", "0.9998", CHECK5_WIKIMEDIA, ["projected_pass_min"]),
+    (
+        "on_check5_qt_code_passed",
+        "outcome-neutral.md",
+        "9",
+        CHECK5_QT_CODE,
+        ["passed"],
+        {"after": "rule: "},
+    ),
+    (
+        "on_check5_qt_code_min",
+        "outcome-neutral.md",
+        "0.3535",
+        CHECK5_QT_CODE,
+        ["projected_pass_min"],
+    ),
+    (
+        "on_check5_qt_half_a_max",
+        "outcome-neutral.md",
+        "0.0053",
+        CHECK5_QT_CODE,
+        ["by_run"],
+        {"reduce": "max:plant/qt-a/realised_fraction"},
+    ),
+    (
+        "on_check5_wm_half_a_min",
+        "outcome-neutral.md",
+        "0.0161",
+        CHECK5_WIKIMEDIA,
+        ["by_run"],
+        {"reduce": "min:plant/wikimedia-a/realised_fraction"},
+    ),
+    (
+        "on_check5_wm_half_a_max",
+        "outcome-neutral.md",
+        "0.0320",
+        CHECK5_WIKIMEDIA,
+        ["by_run"],
+        {"reduce": "max:plant/wikimedia-a/realised_fraction"},
+    ),
+    (
+        "pr_check5_qt_code_passed",
+        "protocol.md",
+        "9",
+        CHECK5_QT_CODE,
+        ["passed"],
+        {"after": "plant passed "},
+    ),
+    (
+        "on_check5_qt_marker_passed",
+        "outcome-neutral.md",
+        "10",
+        CHECK5_QT_MARKER,
+        ["passed"],
+        {"after": "rule, "},
+    ),
+    (
+        "rd_check5_os_passed",
+        "registered-decisions.md",
+        "10",
+        CHECK5_OPENSTACK,
+        ["passed"],
+        {"after": "It passed "},
+    ),
+    (
+        "rd_check5_wm_passed",
+        "registered-decisions.md",
+        "10",
+        CHECK5_WIKIMEDIA,
+        ["passed"],
+        {"after": "It passed "},
+    ),
+    (
+        "rd_check5_qt_code_passed",
+        "registered-decisions.md",
+        "9",
+        CHECK5_QT_CODE,
+        ["passed"],
+        {"after": "it passed "},
+    ),
+    (
+        "rd_check5_qt_marker_passed",
+        "registered-decisions.md",
+        "10",
+        CHECK5_QT_MARKER,
+        ["passed"],
+        {"after": "rule, "},
     ),
     (
         "on_marker_a",

@@ -11354,3 +11354,190 @@ Both two-cell detects are below δ (0.0161) and s′'s null holds nominal at 97.
 0.027, calibrated 0.01875), so option 1 applies: s′ binds H2 beside s (papers B1 PR). The gate code
 still reads H2 on s alone; it must bind s′ for H2 before the seal (follow-up issue). The four-point s′
 run (1002824) is a record and changes nothing here.
+
+### The gate binds H2 on s and s′; H2's s′ K source at K = 40 (2026-11-14)
+
+`# research(2026-11)`. Issue #274, after the Stage 1 report's B1 change (papers 2f77b02: "each on s
+and on s′"; H2's two cells at 0.95^(1/2)). `confirmatory_gate` now reads H2's s′ cell beside its s
+cell, from its own test read (`partition_pilot.py --hypothesis H2 --metric logprob_per_token:other`,
+registered by `coprimary_read(registered_read("qt", hypothesis="H2"))`, two cells per pair direction:
+two against Chromium's pool, four were Qt and Chromium both admitted), and H2 passes only when every
+cell passes at its Holm level. An s cell supported where its s′ cell is not reads as names for H2 as
+for H1 (`h2_names`). The report no longer registers "H2 on s′ at its s level", so H2's s read no
+longer computes that uncalibrated reading (`on_s_prime`) and the gate carries none; the development
+pilots read before keep it as a record. `partition_sensitivity.py` reads H2's bounds at 1, 2 and 4
+cells.
+
+H2's s′ K source is the 2026-11-13 s′ simulation at the sizing bound read at K = 40
+(`k_coverage.py --registered-runs 40` on `partition-pilot-qt-foreignchromium-likelihood-split-other-chains.json`
+and `partition-sensitivity-qt-rp1.0-foreignchromium-logprob_per_token-other-chains-k40-calibrated-sizing_bound_90.json`;
+no new simulation): `k-coverage-qt-foreignchromium-likelihood-split-other-chains.json`. Its null holds
+at 97.5% and misses at 95%, so its critical p is calibrated, 0.0148 and 0.0241 at the two levels
+(the 97.5% one above α, so the interval decides there), with calibrated rates 0.0095 and 0.01875 on
+the second null half. H2's s K source keeps 0.0121 and 0.0255. The s′ cell reads its own; a test read
+of s′ refuses a K source made on s.
+
+On the 95% interval the same two-cell simulations detect +0.0110 (s) and +0.0065 (s′), both below
+δ, beside the 97.5% figures of 2026-11-13 (`by_level` 0.95 of the two `-sizing_bound_90`
+artifacts; PR #276 review, 2026-11-16).
+
+The gate now holds H2 to its registered K (PR #276 review, 2026-11-16): `registered_read(org,
+hypothesis="H2")` registers K = 40, and a test read of H2 on either score, or of any co-primary
+score, is refused unless its K source records the coverage rule read at the read's own K
+(`registered_runs`, which `partition_pilot.py` now copies into `k_from`). Before, an uncalibrated
+H2 read at another K, with a K source and a simulation at that K, passed the gate. The committed K
+sources all record it: H2's two at 40, and each H1 co-primary at its s cell's K.
+
+### Planned before any run: check 5 on δ's plant, in each organization's languages (2026-11-16)
+
+`# research(2026-11)`. Issue #277, after the Stage 1 review's S1 (2026-11-12): check 5 planted a
+comment marker and δ's rate was read on a quote-style plant, so the instrument that showed
+detection was not the one that set δ. AJ's decision (2026-11-14): register the code-level plant as
+check 5 at a stated dose. Fixed here, before any run:
+
+1. The plant (`placebo_corpus.py --plant-convention code`, tagged `-plantcode<f>`): each half its
+   own quote style, half a single and half b double, on Python rows exactly as δ's plant
+   (`planted.to_single`, `to_double`), and on PHP and JavaScript rows through pygments' lexers, on
+   plain literals only (no quote, backslash or newline inside, and in PHP no `$`, which a
+   double-quoted string interpolates). C++ has one string quote, so on C++ rows half a puts a space
+   between a control keyword (`if`, `for`, `while`, `switch`) and its parenthesis and half b puts
+   none (clang-format's `SpaceBeforeParens`, `ControlStatements` against `Never`). Every other file
+   is left alone, and no literal or keyword pygments places inside a comment, another string, a
+   template literal (outside an interpolation's code, `${}` in JavaScript and `{$}` in PHP) or a
+   preprocessor line is rewritten. Both are house rules organizations hold: MediaWiki's PHP and
+   JavaScript conventions prefer single quotes, and Qt's coding style requires the space.
+2. The dose: f = 1.0, every refinement the plant can change, the dose δ's rate was read at
+   (2026-10-16). Each half's realised share is read from its corpus manifest and reported.
+3. The runs: each admitted organization's first ten admissible partitions at N = 1,850, training
+   seeds 1 to 10, corpus v3, each chained `partition_run` -> `decoder_check` -> `likelihood_score`
+   as the marker check's were. OpenStack's ten are the partitions and seeds of δ's ten quote runs,
+   and at f = 1.0 the plant changes their Python rows exactly as δ's did
+   (`test_the_code_plant_is_the_quote_plant_on_python_rows`).
+4. The rule, the marker check's (2026-10-01): the plant is registered as an organization's check 5
+   if all ten of its runs pass on s on both halves and every run's projected pass probability is at
+   least 0.95. Otherwise nothing is registered for that organization until a decision is recorded
+   here.
+
+**Amended before any run was read (same day).** Two submissions were cancelled before any run had
+written a result, and their partial corpora removed: at 4ed1226 (TIGRIS 1024798 to 1025134) and at
+f7d81cf (1027588 to 1027677), each after an independent Opus review round found rows the plant
+misread. A hunk opening inside a doc comment that holds an apostrophe made pygments pair the
+comment's quote with the code's, so a rewrite changed a call's arguments (`foo('a', b, 'c')` became
+`foo('a", b, "c')`); then a PHP 7.3 heredoc closer (`JSON,`) that pygments reads as code, and
+contexts cut inside an unstarred comment or a template literal, still let a few rows through. The
+plant now reads each hunk with the code before it (`context_before`) and leaves a hunk whole where
+pygments may be misreading it: an error token anywhere in what it reads, a string across a line, a
+quote after a letter or underscore, a block comment's `*` or `*/` outside a comment token, or what
+pygments does not read (`<<<` in PHP, a C++ raw string). Over the local refinements of all three
+organizations no changed row reads differently with its context and without it (the context only
+adds refusals), and no comment-led line is changed. The share the plant can change moves little:
+Wikimedia's PHP rows 1,244 to 1,203 and JavaScript rows 353 to 316, Qt's C++ rows 968 to 955. The
+same commits read Java and C# rows with the C-family spacing, for the GitHub family's members (Qt's
+50 Java and 6 C# rows and one of Wikimedia's take it too), and each half's manifest records the rows
+that carry its convention beside those it changed, since a half whose convention is the
+organization's own (Qt writes `if (`) changes few rows that all carry it. The 30 chains are
+resubmitted at the fixed commit. The code registers the plant as check 5 with this entry; should the
+rule in item 4 fail for an organization, that registration is withdrawn before the change is merged.
+
+A third independent Opus round read every changed row outside Python (2,551 row-halves over the
+three organizations' local refinements) with tree-sitter's grammars for C++, JavaScript, PHP, Java
+and C#, the context and hunk parsed before and after the rewrite: each quote edit lies on a string
+delimiter and each spacing edit between a control keyword and its parenthesis, and in 2,550 the
+token sequences are the same but for the quotes or the whitespace edited (the one other is
+tree-sitter misreading a URL as a comment after an error); the review's scripts are not committed,
+so this reading is a review's, not an artifact. The limit it found stays: a hunk lying wholly inside
+a comment or string that opens above its context and closes below it may show pygments nothing to
+refuse, and no local row is one. On OpenStack the plant is δ's on every Python row and changes five
+others (four JavaScript, one C++).
+
+### Check 5 on δ's plant: registered on OpenStack and Wikimedia, not on Qt (2026-11-17)
+
+`# research(2026-11)`. The 30 chains the entry above fixes ran at 32c14c5 (TIGRIS 1027701 to
+1027791, each organization's ten `partition_run`, `decoder_check` and `likelihood_score` jobs
+chained on `afterok`; `likelihood-partition-*-plantcode1.0-rp1.0.json`). `scripts/planted_check.py`
+reads each organization's ten under item 4 (`planted-check-{openstack,wikimedia,qt}-code1.0.json`),
+and `scripts/reading.py` prints them:
+
+- OpenStack: 10 of 10 pass on s, projected pass min 0.9928 (floor 0.95). Registered.
+- Wikimedia: 10 of 10 pass on s, projected pass min 0.9998. Registered.
+- Qt: 9 of 10 pass on s, projected pass min 0.3535. **Not registered.** Partition 13 reads mixed:
+  half b passes, and half a's estimate is −0.0043 [−0.0270, +0.0177].
+
+Qt's table, from `reading.py --markdown` ("changed" is the share of the half's training examples
+the plant rewrote, from its corpus manifest):
+
+| partition | verdict | projected pass | half | estimate | interval | changed |
+|---|---|---|---|---|---|---|
+| p4 | pass | 0.9888 | qt-a | +0.0203 | [+0.0041, +0.0389] | 0.0017 |
+| p4 | pass | 0.9888 | qt-b | +0.0784 | [+0.0463, +0.1159] | 0.0944 |
+| p7 | pass | 0.9923 | qt-a | +0.0241 | [+0.0052, +0.0442] | 0.0039 |
+| p7 | pass | 0.9923 | qt-b | +0.0481 | [+0.0291, +0.0694] | 0.1146 |
+| p11 | pass | 0.9998 | qt-a | +0.0553 | [+0.0355, +0.0803] | 0.0053 |
+| p11 | pass | 0.9998 | qt-b | +0.0513 | [+0.0237, +0.0814] | 0.1158 |
+| p12 | pass | 0.9999 | qt-a | +0.0341 | [+0.0168, +0.0520] | 0.0013 |
+| p12 | pass | 0.9999 | qt-b | +0.0727 | [+0.0494, +0.0993] | 0.1005 |
+| p13 | mixed | 0.3535 | qt-a | -0.0043 | [-0.0270, +0.0177] | 0.0007 |
+| p13 | mixed | 0.3535 | qt-b | +0.0449 | [+0.0259, +0.0640] | 0.0909 |
+| p16 | pass | 0.9999 | qt-a | +0.0344 | [+0.0164, +0.0529] | 0.0022 |
+| p16 | pass | 0.9999 | qt-b | +0.0582 | [+0.0360, +0.0840] | 0.1055 |
+| p18 | pass | 0.9989 | qt-a | +0.0307 | [+0.0113, +0.0505] | 0.0032 |
+| p18 | pass | 0.9989 | qt-b | +0.0735 | [+0.0504, +0.0986] | 0.1000 |
+| p19 | pass | 0.9845 | qt-a | +0.0222 | [+0.0020, +0.0423] | 0.0019 |
+| p19 | pass | 0.9845 | qt-b | +0.0584 | [+0.0379, +0.0824] | 0.0902 |
+| p20 | pass | 0.9994 | qt-a | +0.0581 | [+0.0426, +0.0747] | 0.0035 |
+| p20 | pass | 0.9994 | qt-b | +0.0528 | [+0.0232, +0.0872] | 0.1043 |
+| p21 | pass | 0.9999 | qt-a | +0.0440 | [+0.0284, +0.0628] | 0.0015 |
+| p21 | pass | 0.9999 | qt-b | +0.0684 | [+0.0352, +0.1076] | 0.0844 |
+
+Half a's convention, `if (`, is the one Qt's coding style requires, so the plant rewrites between
+0.0007 and 0.0053 of half a's examples, where it rewrites between 0.0844 and 0.1158 of half b's;
+partition 13's half a has the fewest rewritten (3 of 4,492). Half a's estimate is not ordered by
+that share across the ten (partition 12 rewrites 0.0013 and reads +0.0341), so the share alone
+does not say why partition 13 fails, and no reading here is taken to say it. Under item 4 nothing
+is registered as Qt's check 5 until a decision is recorded here, and the code's registration of
+the plant for Qt is withdrawn before the change is merged.
+
+### Decided: Qt's check 5 keeps the end-of-line marker; δ's plant is check 5 on OpenStack and Wikimedia (2026-11-17)
+
+`# research(2026-11)`. AJ's decision on the entry above (2026-11-17, his words: "1, go with your
+web researched recommendations for Qt"). This is a disclosed deviation from the 2026-11-16 plan,
+which meant one plant for every organization's check 5. No pass rule changes: item 4's rule stands,
+and each organization's check 5 is a plant that passed it.
+
+- OpenStack and Wikimedia: check 5 is δ's plant, the code-level plant at f = 1.0, registered by
+  item 4 on the runs above.
+- Qt: check 5 is each half's own end-of-line marker (`# reviewed` or `# approved`, a comment in
+  Python and a bare token in C++) in half its refinements, the deliberately artificial ceiling
+  case (`planted.append_marker`), the plant Qt's check 5 was read on before (2026-10-18; TIGRIS 299002 to 299031). Those ten runs, read now by
+  `planted_check.py` under the same rule, give `planted-check-qt-marker0.5.json`: 10 of 10 pass on
+  s, projected pass min 1.0000. The code plant's reading on Qt (`planted-check-qt-code1.0.json`, 9
+  of 10) is kept as the record of why.
+
+Why Qt and not the rule: half a's C++ convention, `if (`, is the one Qt's coding style requires, so
+the code plant rewrites between 0.0007 and 0.0053 of half a's examples. That is a difference of
+degree: Wikimedia's half a, the quote style MediaWiki prefers, was rewritten in 0.0161 to 0.0320 of
+its examples and passed. The share does not say why partition 13 failed (the entry above); it is
+why no second code plant was tried on Qt. Qt's choice was made after δ's plant was read there, and
+the marker's 10 of 10 on Qt was already known. Reading 9 of 10 as a pass would change the rule after
+its result, the move a registration exists to prevent. A deviation stays legitimate when it is
+disclosed and keeps the test's validity (Lakens, "When and how to deviate from a preregistration",
+Collabra: Psychology 10(1), 2024; Willroth and Atherton, "Best laid plans: a guide to reporting
+preregistration deviations", AMPPS 7(1), 2024). Stage 2 reviewers check that the outcome-neutral
+conditions held and that deviations are reported (TU Delft Registered Reports guidelines; PCI RR
+policies, rr.peercommunityin.org/about/full_policies). A new C++ plant in which neither half is
+Qt's own was weighed and set aside: it would still not be δ's convention on C++, and no pair of
+conventions Qt writes in neither form was found.
+
+So on Qt the instrument that shows detection is not the one that sets δ, only that s sees an easy
+artificial convention, and δ is carried furthest there (OpenStack's Python to Qt's C++); the Stage 1 report says so. The code registers
+the plant per organization (`cells.registered_plant`: `PLANT_BY_ORG` holds Qt's marker at 0.5),
+and `require_test_read` and `neutral.planted_convention` read each organization's own. Item 4
+registers a plant only on an organization's own ten runs, so one never read under it (a GitHub
+member; Chromium is a pool, never split) has none: `registered_plant` refuses it, and its test read with it, until its runs
+are read and the decision recorded here (review round 2). So that decision leaves nothing open,
+the order is fixed now, before any member's runs are read (review round 3): a GitHub replication
+member, mostly Java or C#, where keyword spacing stands in for δ's quote style, takes δ's plant if
+its ten runs meet item 4's rule; otherwise each half's end-of-line marker at 0.5 if its ten runs
+meet the same rule; otherwise it is withdrawn as an apparatus failure, as a failed check 5
+withdraws any organization; it applies to any organization not yet read. Qt's decision took this
+order, though on Qt it was made after both plants had been read.

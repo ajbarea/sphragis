@@ -129,7 +129,7 @@ parser.add_argument(
 # The per-example score H1 is read on: greedy exact match, or the reference's mean log-probability
 # per token from `likelihood_score.py` (research log, 2026-10-09), or one token class's
 # contribution to it (`likelihood.COMPONENT_METRICS`), which has no SESOI and sizes nothing but
-# the non-identifier part, H1's co-primary (`decomposition.COPRIMARY_METRIC`).
+# the non-identifier part, H1's and H2's co-primary (`decomposition.COPRIMARY_METRIC`).
 parser.add_argument(
     "--metric",
     choices=("exact_match", "logprob_per_token", "logprob", *COMPONENT_METRICS),
@@ -375,13 +375,6 @@ def main() -> None:
         raise SystemExit(f"runs read on {sorted(windows)}, not one of the two windows")
     if h2 and args.exploratory and window != "development":
         raise SystemExit("H2's exploratory arm is read on the development window only")
-    # H2's confirmatory read is on the whole score; its s' reading at its s level is a secondary
-    # analysis (Stage 1 report, Analysis), which no registered test read here takes.
-    if h2 and args.metric == COPRIMARY_METRIC and window == "test":
-        raise SystemExit(
-            "H2's test read is on the whole score; its s' reading at its s level is secondary "
-            "and takes no registered test read"
-        )
     lexer_dropped = None
     if args.lexer_sure:
         if window != "development":
@@ -400,7 +393,8 @@ def main() -> None:
             expected = registered_read(args.org, hypothesis=args.hypothesis)
         except ValueError as error:
             raise SystemExit(f"not read: {error}") from error
-        # A Gerrit H1 cell is read on each co-primary score, its registration otherwise the same.
+        # A Gerrit H1 or H2 cell is read on each co-primary score, its registration otherwise the
+        # same (research log, 2026-10-30, 2026-11-13).
         if args.org not in REPLICATION_FAMILY and args.metric == COPRIMARY_METRIC:
             expected = coprimary_read(expected)
         # A test read is of the registered rank, or of the rerun at 256 that reads beside it.
@@ -469,7 +463,10 @@ def main() -> None:
             raise SystemExit(
                 f"{args.planted} is scored on {planted_run.get('metric', 'exact_match')}"
             )
-        check = planted_convention(planted_run, org=args.org, train_size=train_size)
+        try:
+            check = planted_convention(planted_run, org=args.org, train_size=train_size)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
         planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
         if not apparatus_holds([check]):
             raise SystemExit(
@@ -500,6 +497,9 @@ def main() -> None:
             "file": str(args.sizing),
             "org": sizing_artifact.get("org"),
             "runs": runs_fixed,
+            # Set where the coverage rule was read at a registered K (`k_coverage.py
+            # --registered-runs`), which a co-primary or H2 test read requires.
+            "registered_runs": sizing_artifact.get("registered_runs"),
             "metric": sizing_artifact.get("metric", "exact_match"),
             "kind": sizing_artifact.get("kind", "pilot"),
             "cluster_unit": recorded_cluster(sizing_artifact, args.sizing),
@@ -630,33 +630,12 @@ def main() -> None:
         critical=calibrated,
         **contrast,
     )
-    # Beside H2's registered cell, binding no verdict: H1 and H2 on the same C++ examples and
-    # draws over H2's K runs, and H2 on s' at its s levels (Stage 1 report, "Verdicts and
-    # Readings"; Analysis, "Secondary and exploratory analyses").
-    joint = on_s_prime = None
+    # Beside H2's registered cell on s, binding no verdict: H1 and H2 on the same C++ examples and
+    # draws over H2's K runs (Stage 1 report, "Verdicts and Readings"). H2's s' cell, which the
+    # gate binds, is its own test read (`--metric logprob_per_token:other`), at its own K source's
+    # critical p.
+    joint = None
     if h2 and not args.exploratory and args.metric == REGISTERED_METRIC:
-        if not carries(runs[:runs_fixed], COPRIMARY_METRIC):
-            if window == "test":
-                raise SystemExit(f"not read: H2's runs carry no {COPRIMARY_METRIC} for its s' read")
-        else:
-            secondary = h1_over_partitions(
-                runs,
-                org=args.org,
-                runs_fixed=runs_fixed,
-                levels=levels,
-                bounds=None,
-                bootstrap_seed=args.bootstrap_seed,
-                resamples=args.resamples,
-                metric=COPRIMARY_METRIC,
-                sesoi=metric_sesoi(COPRIMARY_METRIC) or SESOI,
-                change_averaged=False,
-                **contrast,
-            )
-            on_s_prime = {
-                "metric": COPRIMARY_METRIC,
-                "runs": secondary["runs"],
-                **{k: secondary[k] for k in ("estimate", "intervals", "verdicts", "p_one_sided")},
-            }
         joint = joint_over_partitions(
             runs,
             org=args.org,
@@ -761,7 +740,6 @@ def main() -> None:
         "provenance",
         "positive_control",
         "joint",
-        "on_s_prime",
     }
     if head & set(cell):
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
@@ -789,7 +767,6 @@ def main() -> None:
         "cluster_unit": cluster_unit,
         "positive_control": positive_control,
         "joint": joint,
-        "on_s_prime": on_s_prime,
         "provenance": provenance_header(),
     }
     if window == "test":

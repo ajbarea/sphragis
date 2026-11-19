@@ -1,0 +1,190 @@
+"""Check 5's runs read under the rule that registers the plant (research log, 2026-11-16)."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import math
+import sys
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+_spec = importlib.util.spec_from_file_location(
+    "planted_check", ROOT / "scripts" / "planted_check.py"
+)
+assert _spec is not None and _spec.loader is not None
+planted_check = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(planted_check)
+
+
+def _run(
+    tmp_path: Path,
+    name: str,
+    verdict: str,
+    low: float,
+    tag: str = "-plantcode1.0",
+    high: float | None = None,
+    metric: str | None = "logprob_per_token",
+    partition: int = 4,
+    seed: str = "",
+) -> Path:
+    root = f"/data/corpus-partition-qt-p{partition}{seed}-n1850{tag}"
+    binding = {
+        f"qt-{h}": {"estimate": 0.1, "low": low, "high": 0.2 - low if high is None else high}
+        for h in ("a", "b")
+    }
+    rows = [{"id": f"x{i}", "change_id": f"c{i}", "exact_match": float(i % 2)} for i in range(4)]
+    run = {
+        "corpora": {
+            h: {"source": f"train -> dev windows under {root}/{h}/refined"}
+            for h in ("qt-a", "qt-b")
+        },
+        "train_size": 1850,
+        **({} if metric is None else {"metric": metric}),
+        "verdict": {"verdict": verdict, "binding": binding},
+        "results": {f"adapter:qt-{o}|qt-{h}|s1": rows for o in "ab" for h in "ab"},
+    }
+    path = tmp_path / name
+    path.write_text(json.dumps(run))
+    return path
+
+
+def _main(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    runs: list[Path],
+    plant: tuple[str, ...] = ("--convention", "code", "--fraction", "1.0"),
+) -> dict[str, Any]:
+    """The code plant read on Qt as a candidate, as the 2026-11-16 runs were, unless `plant`."""
+    out = tmp_path / "out.json"
+    argv = [
+        "planted_check.py",
+        "--org",
+        "qt",
+        *plant,
+        *[a for r in runs for a in ("--run", str(r))],
+    ]
+    monkeypatch.setattr(sys, "argv", [*argv, "--out", str(out)])
+    planted_check.main()
+    return json.loads(out.read_text())
+
+
+def test_the_projection_is_the_rule_logged_for_check_5() -> None:
+    """Normal per half, the half-width over 1.96 its standard error, the product over halves."""
+    half = {"estimate": 0.05, "low": 0.01, "high": 0.09}
+    se = 0.04 / 1.959963984540054
+    expected = (0.5 * (1 + math.erf(0.05 / se / math.sqrt(2)))) ** 2
+    assert planted_check.projected_pass({"a": half, "b": half}) == pytest.approx(expected)
+
+
+def test_the_rule_is_met_only_when_every_run_passes_well_above_the_floor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
+    out = _main(monkeypatch, tmp_path, passing)
+    assert (out["runs"], out["passed"], out["rule_met"]) == (10, 10, True)
+    assert (out["convention"], out["fraction"], out["metric"]) == ("code", 1.0, "logprob_per_token")
+    # One run in ten mixed, or planted with anything but the registered plant, or read on exact
+    # match, registers nothing.
+    for bad in (
+        _run(tmp_path, "mixed.json", "mixed", 0.05, partition=19),
+        _run(tmp_path, "marker.json", "pass", 0.05, tag="-plant0.5", partition=19),
+        _run(tmp_path, "em.json", "pass", 0.05, metric="exact_match", partition=19),
+        # A run file recording no metric was read on exact match.
+        _run(tmp_path, "unnamed.json", "pass", 0.05, metric=None, partition=19),
+        # A run of a corpus already counted, under another name; one partition at another seed.
+        _run(tmp_path, "copy.json", "pass", 0.05, partition=10),
+        _run(tmp_path, "reseeded.json", "pass", 0.05, partition=10, seed="-s2"),
+    ):
+        out = _main(monkeypatch, tmp_path, [*passing[:9], bad])
+        assert out["runs"] == 10 and not out["rule_met"]
+    # Fewer than ten runs, or one run given twice, registers nothing.
+    assert not _main(monkeypatch, tmp_path, passing[:9])["rule_met"]
+    assert not _main(monkeypatch, tmp_path, [*passing[:9], passing[0]])["rule_met"]
+    # Every run passing, one projected below the floor. A symmetric interval that clears zero
+    # projects at least 0.975 a half, so only a long upper tail can fall below it.
+    thin = _run(tmp_path, "thin.json", "pass", 0.0001, high=0.5, partition=19)
+    out = _main(monkeypatch, tmp_path, [*passing[:9], thin])
+    assert out["passed"] == 10 and out["projected_pass_min"] < 0.95 and not out["rule_met"]
+
+
+def test_a_point_interval_projects_its_estimates_side() -> None:
+    assert planted_check.projected_pass({"a": {"estimate": -0.1, "low": -0.1, "high": -0.1}}) == 0
+    assert planted_check.projected_pass({"a": {"estimate": 0.1, "low": 0.1, "high": 0.1}}) == 1
+    assert planted_check.projected_pass({"a": {"estimate": 0.0, "low": 0.0, "high": 0.0}}) == 0
+
+
+def test_a_run_of_another_organization_counts_as_no_partition() -> None:
+    assert planted_check._partition("corpus-partition-qt-p21-s10-n1850-plantcode1.0", "qt") == 21
+    assert planted_check._partition("corpus-partition-qt-p4-n1850-plantcode1.0", "qt") == 4
+    assert planted_check._partition("corpus-partition-wikimedia-p4-n1850", "qt") is None
+
+
+def test_a_run_whose_halves_name_two_corpora_counts_as_no_partition(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    passing = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(9)]
+    split = _run(tmp_path, "split.json", "pass", 0.05, partition=19)
+    run = json.loads(split.read_text())
+    half = run["corpora"]["qt-b"]
+    half["source"] = half["source"].replace("-p19-", "-p18-")
+    split.write_text(json.dumps(run))
+    out = _main(monkeypatch, tmp_path, [*passing, split])
+    assert out["by_run"][-1]["partition"] is None and not out["rule_met"]
+
+
+def test_a_run_projected_exactly_at_the_floor_registers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    runs = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
+    floor = planted_check.projected_pass(json.loads(runs[0].read_text())["verdict"]["binding"])
+    monkeypatch.setattr(planted_check, "PROJECTED_FLOOR", floor)
+    assert _main(monkeypatch, tmp_path, runs)["rule_met"]
+
+
+def test_an_organization_is_read_on_its_registered_plant_unless_a_candidate_is_named(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Qt's check 5 is the marker in half its refinements (research log, 2026-11-17)."""
+    marker = [
+        _run(tmp_path, f"m{i}.json", "pass", 0.05, tag="-plant0.5", partition=10 + i)
+        for i in range(10)
+    ]
+    out = _main(monkeypatch, tmp_path, marker, plant=())
+    assert (out["convention"], out["fraction"], out["rule_met"]) == ("marker", 0.5, True)
+    assert out["registered_plant"] == ["marker", 0.5]
+    code = [_run(tmp_path, f"c{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
+    out = _main(monkeypatch, tmp_path, code, plant=())
+    assert out["passed"] == 0 and not out["rule_met"]
+    out = _main(monkeypatch, tmp_path, code)
+    assert out["rule_met"] and out["registered_plant"] == ["marker", 0.5]
+
+
+@pytest.mark.parametrize("half", [("--convention", "code"), ("--fraction", "1.0")])
+def test_a_candidate_names_its_convention_and_fraction_together(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, half: tuple[str, str]
+) -> None:
+    runs = [_run(tmp_path, "r.json", "pass", 0.05)]
+    with pytest.raises(SystemExit):
+        _main(monkeypatch, tmp_path, runs, plant=half)
+
+
+def test_an_unread_organization_is_read_only_on_a_named_candidate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An organization with no registered check 5 has no default plant: a candidate is named, and
+    the artifact records that none is registered yet."""
+    runs = [_run(tmp_path, f"r{i}.json", "pass", 0.05, partition=10 + i) for i in range(10)]
+    monkeypatch.setattr(planted_check, "registered_plant", _refuse)
+    with pytest.raises(SystemExit):
+        _main(monkeypatch, tmp_path, runs, plant=())
+    monkeypatch.setattr(planted_check, "PLANT_BY_ORG", {})
+    out = _main(monkeypatch, tmp_path, runs)
+    assert out["rule_met"] and out["registered_plant"] is None
+
+
+def _refuse(org: str) -> tuple[str, float]:
+    raise ValueError(f"{org}: no plant is registered as its check 5")

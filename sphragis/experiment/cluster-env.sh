@@ -265,7 +265,8 @@ tag_result_suffix() {
       PLANT) [ -z "${PLANT:-}" ] || case "${PLANT_CONVENTION:-marker}" in
           marker) RESULT_SUFFIX="$RESULT_SUFFIX-plant$PLANT" ;;
           quotes) RESULT_SUFFIX="$RESULT_SUFFIX-plantquotes$PLANT" ;;
-          *) echo "PLANT_CONVENTION must be marker or quotes, not $PLANT_CONVENTION" >&2; return 1 ;;
+          code) RESULT_SUFFIX="$RESULT_SUFFIX-plantcode$PLANT" ;;
+          *) echo "PLANT_CONVENTION must be marker, quotes or code, not $PLANT_CONVENTION" >&2; return 1 ;;
         esac ;;
       *) echo "tag_result_suffix: no tag for $name" >&2; return 1 ;;
     esac

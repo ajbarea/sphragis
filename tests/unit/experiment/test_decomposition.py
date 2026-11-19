@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 from sphragis.corpus.github import GITHUB_ORGS
-from sphragis.experiment import decomposition
+from sphragis.experiment import cells, decomposition
 from sphragis.experiment.cells import (
     REGISTERED_METRIC,
     REGISTERED_SENSITIVITIES,
@@ -615,6 +615,22 @@ _CALIBRATION = {
 }
 
 
+#: The GitHub family's fixtures stand for members whose check 5 would be registered by their own ten
+#: runs; none is yet (`cells.registered_plant` refuses them), so the tests register the code plant.
+_FIXTURE_PLANTS = {
+    org: (cells.PLANT_CONVENTION, cells.PLANT_FRACTION) for org in ("apache", "llvm", "dotnet", "o")
+}
+
+
+def _plant(org: str) -> tuple[str, float]:
+    return {**cells.PLANT_BY_ORG, **_FIXTURE_PLANTS}[org]
+
+
+@pytest.fixture(autouse=True)
+def _fixture_members_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cells, "PLANT_BY_ORG", {**cells.PLANT_BY_ORG, **_FIXTURE_PLANTS})
+
+
 def _replication_cell(
     low: float,
     high: float,
@@ -639,7 +655,10 @@ def _replication_cell(
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
         "lora_rank": 32,
-        "planted_convention": {"passed": True},
+        "planted_convention": {
+            "passed": True,
+            **dict(zip(("convention", "fraction"), _plant(org), strict=True)),
+        },
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
@@ -870,6 +889,24 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: bounds:"),
         ({"apache": _GOOD | {"window": "development"}}, _SIM, "development window"),
         ({"apache": _GOOD | {"planted_convention": {"passed": False}}}, _SIM, "check 5"),
+        # Check 5 is the code-level plant at f = 1.0 (registered 2026-11-16), not the marker,
+        # outside Qt (`test_qt_check_5_is_the_marker_plant`).
+        (
+            {
+                "apache": _GOOD
+                | {"planted_convention": {"passed": True, "convention": "marker", "fraction": 0.5}}
+            },
+            _SIM,
+            "check 5 planted 'marker' at 0.5, registered 'code' at 1.0",
+        ),
+        (
+            {
+                "apache": _GOOD
+                | {"planted_convention": {"passed": True, "convention": "code", "fraction": 0.5}}
+            },
+            _SIM,
+            "check 5 planted 'code' at 0.5",
+        ),
         ({"apache": _GOOD | {"planted_convention": None}}, _SIM, "check 5 did not pass"),
         (
             {"apache": _GOOD | {"outcome_neutral_runs": [{"file": "run-1.json", "holds": False}]}},
@@ -1757,6 +1794,10 @@ def _on_other(record: dict) -> dict:
     """`record`, a report or simulation, as the co-primary score's: the same runs and numbers, its K
     source, bounds and calibration its own pilot's, whose spread differs from the whole score's."""
     other = copy.deepcopy(record)
+    # Its K source is the coverage rule read at the whole score's K (`k_coverage.py
+    # --registered-runs`).
+    if isinstance(other.get("k_from"), dict):
+        other["k_from"]["registered_runs"] = other["k_from"].get("runs")
     for source in (other, other.get("k_from"), other.get("sensitivity")):
         if isinstance(source, dict) and "metric" in source:
             source["metric"] = COPRIMARY_METRIC
@@ -2101,6 +2142,7 @@ def test_the_confirmatory_gate_reports_its_registered_companions(admitted) -> No
         "H1": {o: {0.95: 0.03} for o in reports},
         f"H1:{COPRIMARY_METRIC}": {o: {0.95: 0.03} for o in reports},
         "H2": {},
+        f"H2:{COPRIMARY_METRIC}": {},
     }
     assert out["coprimary_metric"] == COPRIMARY_METRIC
     assert out["coprimary_below_projection"] == ["openstack"]
@@ -3005,12 +3047,20 @@ _H2_CRITICAL = {"0.975": 0.0121, "0.95": 0.0255}
 
 
 def _h2_pair(low: float, high: float, p: float, **kwargs: Any) -> tuple[dict, dict]:
-    """Qt's H2 test read against Chromium and its simulation: one cell at Holm's two levels, its K
-    and bounds calibrated at the registered K (`partitions.registered_coverage`)."""
+    """Qt's H2 test read on s against Chromium and its simulation: its s cell at Holm's two levels,
+    sized at H2's two cells (s and s'), its K and bounds calibrated at the registered K
+    (`partitions.registered_coverage`)."""
     report, sim = _two_levels("qt", low, high, p, **kwargs)
     cell = {"hypothesis": "H2", "foreign_source": "chromium"}
     report |= cell
-    # Beside the cell, binding nothing: the joint reading over its K runs and H2 on s'.
+    # At H2's registered K, its K source the coverage rule read there (`k_coverage.py
+    # --registered-runs`).
+    for record in (report, report["k_from"], report["sensitivity"], sim):
+        record["runs"] = decomposition.H2_RUNS
+    report["k_from"]["registered_runs"] = decomposition.H2_RUNS
+    if isinstance(report.get("positive_control"), dict):
+        report["positive_control"]["evidence"]["runs"] = decomposition.H2_RUNS
+    # Beside the cell, binding nothing: the joint reading over its K runs.
     report["joint"] = {
         "runs": report["runs"],
         "metric": "logprob_per_token",
@@ -3018,22 +3068,48 @@ def _h2_pair(low: float, high: float, p: float, **kwargs: Any) -> tuple[dict, di
         "summed": {"estimate": 0.04, "low": 0.02, "high": 0.06, "confidence": 0.95},
         "h2": {"foreign": "chromium", "role": "confirmatory"},
     }
-    report["on_s_prime"] = {
-        "metric": COPRIMARY_METRIC,
-        "runs": report["runs"],
-        "verdicts": {"0.975": "inconclusive", "0.95": "supported"},
-        "intervals": {"0.975": {"low": -0.001, "high": 0.03}, "0.95": {"low": 0.001, "high": 0.03}},
-    }
     report["k_from"] |= {"cell": ["H2", "chromium"], "calibrated": True, "critical_p": _H2_CRITICAL}
-    report["sensitivity"] |= {"cell": ["H2", "chromium"], "cells": 1, "calibrated": True}
+    report["sensitivity"] |= {"cell": ["H2", "chromium"], "cells": 2, "calibrated": True}
     bound = report["bounds"][0.95]
-    at = {"by_cells": {"1": {"minimum_detectable_effect": bound}}}
+    at = {"by_cells": {"2": {"minimum_detectable_effect": bound}}}
     sim |= cell | {"calibrated": True}
     sim["by_target"]["sizing_bound_90"] |= {
         "by_level": {"0.975": at, "0.95": at},
         "critical_p": _H2_CRITICAL,
     }
     return report, sim
+
+
+# H2's s' cell's own critical p, calibrated from its own null at K = 40 (research log, 2026-11-13).
+_H2_PRIME_CRITICAL = {"0.975": 0.0148, "0.95": 0.0241}
+
+
+def _h2_prime(report: dict, sim: dict) -> tuple[dict, dict]:
+    """H2's s' read twinned from an s read `report` and its simulation `sim` (`_h2_pair`): the same
+    runs, changes and numbers, its K source, bounds and critical p its own s' pilot's."""
+    prime, prime_sim = _on_other(report), _on_other(sim)
+    prime.pop("joint", None)
+    prime["k_from"]["critical_p"] = _H2_PRIME_CRITICAL
+    prime_sim["by_target"]["sizing_bound_90"]["critical_p"] = _H2_PRIME_CRITICAL
+    return prime, prime_sim
+
+
+def _h2_reads(
+    report: dict, sim: dict, prime: tuple[dict, dict] | None = None, **kwargs: Any
+) -> dict:
+    """`confirmatory_gate`'s H2 arguments: Qt's s read and its s' twin (`_h2_prime`) unless given;
+    `kwargs` maps an H2 argument's suffix (`powers`, `spreads`) to its s cell's and s' cell's."""
+    prime_report, prime_sim = _h2_prime(report, sim) if prime is None else prime
+    out = {
+        "h2": {"qt": report},
+        "h2_simulations": {"qt": sim},
+        "h2_coprimary": {"qt": prime_report},
+        "h2_coprimary_simulations": {"qt": prime_sim},
+    }
+    for suffix, (on_s, on_prime) in kwargs.items():
+        out[f"h2_{suffix}"] = on_s
+        out[f"h2_coprimary_{suffix}"] = on_prime
+    return out
 
 
 def _full(
@@ -3049,8 +3125,7 @@ def _full(
         simulations=sims,
         coprimary={o: _on_other(r) for o, r in reports.items()},
         coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
-        h2={"qt": h2_report},
-        h2_simulations={"qt": h2_sim},
+        **_h2_reads(h2_report, h2_sim),
         **kwargs,
     )
 
@@ -3123,6 +3198,15 @@ def test_the_gate_needs_h2s_read_exactly_when_the_design_has_its_cell(admitted) 
             h2_simulations={"qt": h2_sim},
             withdrawn={"qt": _failed_battery("leakage:qt-a")},
         )
+    # Its s' read alone is refused the same way.
+    prime, _ = _h2_prime(h2_report, h2_sim)
+    with pytest.raises(ValueError, match="the design has no confirmatory H2 cell"):
+        confirmatory_gate(
+            rest,
+            **rest_kwargs,
+            h2_coprimary={"qt": prime},
+            withdrawn={"qt": _failed_battery("leakage:qt-a")},
+        )
 
 
 def test_an_h1_read_given_as_h2s_is_refused(admitted) -> None:
@@ -3134,7 +3218,11 @@ def test_an_h1_read_given_as_h2s_is_refused(admitted) -> None:
         _full_with(h2_report, h2_sim)
 
 
-def _full_with(h2_report: dict, h2_sim: dict) -> dict:
+def _full_with(
+    h2_report: dict, h2_sim: dict, prime: tuple[dict, dict] | None = None, **kwargs: Any
+) -> dict:
+    """The gate over every H1 cell passing, with H2's s read given and its s' read `prime` (the
+    s read's twin unless given)."""
     pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
     reports = {o: r for o, (r, _) in pairs.items()}
     sims = {o: s for o, (_, s) in pairs.items()}
@@ -3143,8 +3231,8 @@ def _full_with(h2_report: dict, h2_sim: dict) -> dict:
         simulations=sims,
         coprimary={o: _on_other(r) for o, r in reports.items()},
         coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
-        h2={"qt": h2_report},
-        h2_simulations={"qt": h2_sim},
+        **_h2_reads(h2_report, h2_sim, prime),
+        **kwargs,
     )
 
 
@@ -3153,7 +3241,7 @@ def test_an_h2_cell_that_cannot_detect_delta_leaves_h1_alone_at_95(admitted) -> 
     95% of the family that remains, where a 97.5%-only shortfall decides nothing."""
     admitted(*_THREE)
     entry = {"lift": 0.05, "bound": 0.03, "power": 0.93, "mc_se": _SE_93}
-    h2_power = _power("qt", cells=1) | {
+    h2_power = _power("qt", cells=2) | {
         "by_level": {
             "0.975": entry | {"detectable": 0.02},
             "0.95": entry | {"detectable": 0.012},
@@ -3170,11 +3258,9 @@ def test_an_h2_cell_that_cannot_detect_delta_leaves_h1_alone_at_95(admitted) -> 
         simulations=sims,
         coprimary={o: _on_other(r) for o, r in reports.items()},
         coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
-        h2={"qt": h2_report},
-        h2_simulations={"qt": h2_sim},
+        **_h2_reads(h2_report, h2_sim, powers=({"qt": h2_power}, {"qt": h2_power})),
         powers={"openstack": h1_power},
         coprimary_powers={"openstack": h1_power},
-        h2_powers={"qt": h2_power},
     )
     assert "H2:qt" in out["exploratory"] and "H1:openstack" not in out["exploratory"]
     assert out["holm_levels"] == [0.95]
@@ -3281,6 +3367,16 @@ def test_spread_simulations_for_cells_not_read_are_refused(admitted) -> None:
         )
 
 
+@pytest.mark.parametrize("given", ["h2_spreads", "h2_coprimary_spreads"])
+def test_h2_spread_simulations_for_an_organization_without_an_h2_cell_are_refused(
+    admitted, given: str
+) -> None:
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    with pytest.raises(ValueError, match=r"H2 spread simulations for \['openstack'\]"):
+        _full_with(h2_report, h2_sim, None, **{given: {"openstack": {}}})
+
+
 def test_an_s_cell_supported_where_its_s_prime_is_not_reads_as_names(admitted) -> None:
     admitted("openstack", "wikimedia")
     reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
@@ -3334,6 +3430,7 @@ def test_a_cell_calibrated_at_its_k_and_its_spread_reads_the_smaller_critical_p(
     """H2's K calibrates 0.0121 at 97.5%; its test spread calibrates 0.02 there: 0.0121 is read."""
     admitted(*_THREE)
     h2_report, h2_sim = _h2_pair(*_PASS)
+    prime = _h2_prime(h2_report, h2_sim)
     h2_report["per_run"] = [0.0, 0.03, 0.06]
     null = {
         "null_false_positive": {"0.975": 0.03, "0.95": 0.03},
@@ -3348,8 +3445,7 @@ def test_a_cell_calibrated_at_its_k_and_its_spread_reads_the_smaller_critical_p(
         simulations=sims,
         coprimary={o: _on_other(r) for o, r in reports.items()},
         coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
-        h2={"qt": h2_report},
-        h2_simulations={"qt": h2_sim},
+        **_h2_reads(h2_report, h2_sim, prime),
         h2_spreads={"qt": _spread_sim_for(h2_report, null)},
     )
     assert out["h2_cells"]["qt"]["critical_p"] == {0.975: 0.0121, 0.95: 0.02}
@@ -3440,22 +3536,229 @@ def test_a_small_window_cell_stays_in_the_readings_across(admitted) -> None:
     assert out["across"]["random_effects"]["organizations"] == ["openstack", "wikimedia"]
 
 
-def test_qt_s_cell_supported_where_its_s_prime_reading_is_not_reads_as_vocabulary(
-    admitted,
-) -> None:
-    """Stage 1 report, "Verdicts and Readings": for H2, an s cell supported where its s' reading
-    at the same level is not reads as Qt's vocabulary; binding no verdict."""
+def test_an_h2_s_cell_supported_where_its_s_prime_cell_is_not_reads_as_names(admitted) -> None:
+    """Stage 1 report, "Verdicts and Readings": an s cell supported where its s' cell is not reads
+    as carried by names, H2's as H1's; binding no verdict."""
     admitted(*_THREE)
-    out = _full(dict.fromkeys(_THREE, _PASS), _PASS)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    # s': p 0.02, above 0.0125 and below its own 0.0241: inconclusive at 97.5%, supported at 95%.
+    prime = _h2_prime(*_h2_pair(0.001, 0.05, 0.02))
+    prime[0]["intervals"][0.975]["low"] = -0.001
+    out = _full_with(h2_report, h2_sim, prime)
     qt = out["h2_cells"]["qt"]
     assert qt["verdicts"] == {0.975: "supported", 0.95: "supported"}
-    # The fixture's s' reading: inconclusive at 97.5%, supported at 95%.
-    assert out["vocabulary"] == {"qt": {0.975: True, 0.95: False}}
-    assert out["verdicts"]["H2"] == "pass"
+    assert out["h2_coprimary_cells"]["qt"]["verdicts"] == {
+        0.975: "inconclusive",
+        0.95: "supported",
+    }
+    assert out["h2_names"] == {"qt": {0.975: True, 0.95: False}}
+    # Holm: H1 passes at 97.5%, where s' keeps H2 from passing; read again at 95%, both cells are.
+    assert out["verdicts"] == {"H1": "pass", "H2": "pass"}
+    assert out["passed_at"] == {"H1": 0.975, "H2": 0.95}
     # The readings beside the verdicts are carried, binding none.
     assert qt["joint"]["summed"]["confidence"] == 0.95
     assert out["cells"]["openstack"]["positive_control"]["passed"] is True
     assert "change_averaged" in out["cells"]["openstack"]
+
+
+def test_an_h2_s_reads_uncalibrated_s_prime_reading_is_not_carried(admitted) -> None:
+    """The Stage 1 report (papers 2f77b02) no longer registers H2 on s' at its s levels: an s read
+    written before it was dropped (the development pilots carry `on_s_prime`) leaves it out of the
+    gate, where it could read supported beside an s' cell that is not."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    h2_report["on_s_prime"] = {
+        "metric": COPRIMARY_METRIC,
+        "runs": h2_report["runs"],
+        "verdicts": {"0.975": "supported", "0.95": "supported"},
+    }
+    out = _full_with(h2_report, h2_sim, _h2_prime(*_h2_pair(*_INCONCLUSIVE)))
+    qt = out["h2_cells"]["qt"]
+    assert "on_s_prime" not in qt and "joint" in qt
+    assert out["verdicts"]["H2"] == "inconclusive"
+
+
+_INCONCLUSIVE = (-0.004, 0.03, 0.3)
+
+
+def test_h2_is_registered_as_two_cells_one_per_score(admitted) -> None:
+    """Stage 1 report, "Sample size": H2's two cells, s and s', each sized at 0.95^(1/2)."""
+    admitted(*_THREE)
+    read = registered_read("qt", hypothesis="H2")
+    assert read["cells"] == 2 and read["metric"] == "logprob_per_token"
+    assert read["cell"] == ["H2", "chromium"] and read["levels"] == [0.975, 0.95]
+    assert decomposition.coprimary_read(read) == read | {"metric": COPRIMARY_METRIC}
+
+
+def test_h2_with_qt_and_chromium_both_admitted_is_two_cells_per_pair_direction(admitted) -> None:
+    """Protocol: H2 is confirmatory for Qt against Chromium and Chromium against Qt when both are
+    admitted, each direction on s and s', so each of its four cells is sized at four."""
+    admitted("openstack", "qt", "chromium")
+    for org, foreign in (("qt", "chromium"), ("chromium", "qt")):
+        read = registered_read(org, hypothesis="H2")
+        assert read["cells"] == 4 and read["cell"] == ["H2", foreign]
+        assert decomposition.coprimary_read(read)["cells"] == 4
+
+
+@pytest.mark.parametrize(
+    ("on_s", "on_other", "verdict"),
+    [
+        (_PASS, _PASS, "pass"),
+        (_PASS, _INCONCLUSIVE, "inconclusive"),
+        (_INCONCLUSIVE, _PASS, "inconclusive"),
+        (_INCONCLUSIVE, _INCONCLUSIVE, "inconclusive"),
+    ],
+)
+def test_h2_passes_only_when_its_s_and_s_prime_cells_both_do(
+    admitted, on_s: tuple, on_other: tuple, verdict: str
+) -> None:
+    """Stage 1 report, "Gate": a hypothesis passes only when every confirmatory cell does; H2's
+    are its s and s' cells, each at its Holm level."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*on_s)
+    out = _full_with(h2_report, h2_sim, _h2_prime(*_h2_pair(*on_other)))
+    assert out["verdicts"] == {"H1": "pass", "H2": verdict}
+    assert out["detectable"]["H2"] == {"qt": {0.975: 0.03, 0.95: 0.03}}
+    assert out["detectable"][f"H2:{COPRIMARY_METRIC}"] == {"qt": {0.975: 0.03, 0.95: 0.03}}
+
+
+def test_h2s_s_prime_cell_reads_its_own_calibrated_critical_p(admitted) -> None:
+    """At 95% the s' cell's p 0.0245 lies below s's critical 0.0255 and above its own 0.0241, so
+    it is not supported: read at s's it would be, and H2 would pass at 95%."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    prime = _h2_prime(*_h2_pair(0.001, 0.05, 0.0245))
+    prime[0]["intervals"][0.975]["low"] = -0.001
+    out = _full_with(h2_report, h2_sim, prime)
+    cell = out["h2_coprimary_cells"]["qt"]
+    assert cell["critical_p"] == {0.975: 0.0148, 0.95: 0.0241}
+    assert out["h2_cells"]["qt"]["critical_p"] == {0.975: 0.0121, 0.95: 0.0255}
+    assert cell["verdicts"] == {0.975: "inconclusive", 0.95: "inconclusive"}
+    assert out["verdicts"] == {"H1": "pass", "H2": "inconclusive"}
+
+
+def test_h2s_s_prime_cell_takes_its_k_source_and_bounds_from_its_own_score(admitted) -> None:
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    prime, prime_sim = _h2_prime(h2_report, h2_sim)
+    on_s = copy.deepcopy(prime) | {"k_from": copy.deepcopy(h2_report["k_from"])}
+    with pytest.raises(
+        ValueError, match=f"qt: k_from is on logprob_per_token, registered {COPRIMARY_METRIC}"
+    ):
+        _full_with(h2_report, h2_sim, (on_s, prime_sim))
+    # Bounds sized for H2 alone on s, one cell, are not the registration's two.
+    one = copy.deepcopy(prime) | {"sensitivity": prime["sensitivity"] | {"cells": 1}}
+    with pytest.raises(ValueError, match="qt: bounds at cells 1, registered 2"):
+        _full_with(h2_report, h2_sim, (one, prime_sim))
+
+
+def test_h2_is_read_at_its_registered_k(admitted) -> None:
+    """H2's K is registered at `H2_RUNS`, not found by the coverage rule (registered-decisions.md,
+    "H2's K"): a read at another K, its K source, bounds and s' twin all at that K, is refused."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    off = decomposition.H2_RUNS - 10
+    for record in (h2_report, h2_report["k_from"], h2_report["sensitivity"], h2_sim):
+        record["runs"] = off
+    h2_report["k_from"]["registered_runs"] = off
+    h2_report["positive_control"]["evidence"]["runs"] = off
+    h2_report["joint"]["runs"] = off
+    with pytest.raises(
+        ValueError, match=f"qt: read at K = {off}, registered at {decomposition.H2_RUNS}"
+    ):
+        _full_with(h2_report, h2_sim)
+
+
+def test_a_k_source_not_the_coverage_rule_read_at_its_k_is_refused(admitted) -> None:
+    """H2's two cells and every co-primary cell take K from the coverage rule read at the read's K
+    (`k_coverage.py --registered-runs`), whose null was simulated at that K on the cell's own
+    score; a K source the grid found (no `registered_runs`), or read at another K, is refused. An
+    H1 cell on s takes the grid's K."""
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    prime, prime_sim = _h2_prime(h2_report, h2_sim)
+    refused = f"qt: its K source is not the coverage rule read at K = {decomposition.H2_RUNS}"
+    for registered in (None, decomposition.H2_RUNS - 10):
+        on_s = copy.deepcopy(h2_report)
+        on_s["k_from"]["registered_runs"] = registered
+        with pytest.raises(ValueError, match=refused):
+            _full_with(on_s, h2_sim, (prime, prime_sim))
+        on_prime = copy.deepcopy(prime)
+        on_prime["k_from"]["registered_runs"] = registered
+        with pytest.raises(ValueError, match=refused):
+            _full_with(h2_report, h2_sim, (on_prime, prime_sim))
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    coprimary = {o: _on_other(r) for o, r in reports.items()}
+    coprimary["openstack"]["k_from"].pop("registered_runs")
+    with pytest.raises(
+        ValueError,
+        match=f"openstack: its K source is not the coverage rule read at K = "
+        f"{reports['openstack']['runs']}",
+    ):
+        confirmatory_gate(
+            reports,
+            simulations=sims,
+            coprimary=coprimary,
+            coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+            **_h2_reads(h2_report, h2_sim),
+        )
+    assert all("registered_runs" not in r["k_from"] for r in reports.values())
+    _full_with(h2_report, h2_sim)
+
+
+def test_the_gate_needs_h2s_s_prime_read_beside_its_s_read(admitted) -> None:
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    reads = _h2_reads(h2_report, h2_sim)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    reports = {o: r for o, (r, _) in pairs.items()}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    h1: dict[str, Any] = {
+        "simulations": sims,
+        "coprimary": {o: _on_other(r) for o, r in reports.items()},
+        "coprimary_simulations": {o: _on_other(s) for o, s in sims.items()},
+    }
+    for name, what in (
+        ("h2_coprimary", "H2 co-primary reports"),
+        ("h2_coprimary_simulations", "H2 co-primary simulations"),
+    ):
+        given: dict[str, Any] = {k: v for k, v in reads.items() if k != name}
+        with pytest.raises(ValueError, match=f"{what} must map"):
+            confirmatory_gate(reports, **h1, **given)
+    # The two reads score the same runs and changes, as H1's co-primary pair does.
+    prime, prime_sim = _h2_prime(h2_report, h2_sim)
+    for field, value in (("runs", 41), ("changes", 1), ("run_files", ["x"])):
+        with pytest.raises(ValueError, match=f"qt: the co-primary read has {field} unlike"):
+            _full_with(h2_report, h2_sim, (prime | {field: value}, prime_sim))
+    # Its own check 2 too, as every test read carries.
+    with pytest.raises(ValueError, match="qt: the read carries no crossed check 2"):
+        _full_with(h2_report, h2_sim, (_without(prime, "positive_control"), prime_sim))
+
+
+def test_an_exploratory_h2_s_prime_cell_leaves_h2_read_on_s_and_says_so(admitted) -> None:
+    """A cell below its projection that cannot detect δ leaves its hypothesis (`small_window`);
+    H2 is then read on its s cell, and the reading names the score left untested."""
+    admitted(*_THREE)
+    # Both read below their projection; at 97.5% s detects 0.012, below δ, and s' 0.02, above.
+    h2_report, h2_sim = _h2_pair(*_PASS, changes=1_999)
+    entry = {"lift": 0.05, "bound": 0.03, "power": 0.93, "mc_se": _SE_93}
+
+    def power(detects: float) -> dict:
+        at = entry | {"detectable": detects}
+        return _power("qt", cells=2) | {"by_level": {"0.975": at, "0.95": at}}
+
+    out = _full_with(
+        h2_report,
+        h2_sim,
+        h2_powers={"qt": power(0.012)},
+        h2_coprimary_powers={"qt": power(0.02)},
+    )
+    assert out["exploratory"] == [f"H2:qt:{COPRIMARY_METRIC}"]
+    assert out["verdicts"] == {"H1": "pass", "H2": "pass"}
+    assert out["reading"] == f"nested; H2 on {COPRIMARY_METRIC} not tested (its cell exploratory)"
+    assert out["h2_below_projection"] == out["h2_coprimary_below_projection"] == ["qt"]
 
 
 def _without(record: dict, key: str) -> dict:
@@ -3561,46 +3864,11 @@ def _without(record: dict, key: str) -> dict:
             lambda r: r | {"joint": r["joint"] | {"summed": {"confidence": 0.95, "low": None}}},
             "no joint reading with H1",
         ),
-        (
-            None,
-            lambda r: (
-                r
-                | {
-                    "on_s_prime": r["on_s_prime"]
-                    | {"verdicts": {"0.975": "supported", "0.95": "supported"}}
-                }
-            ),
-            "do not follow from its intervals",
-        ),
         (None, lambda r: r | {"joint": r["joint"] | {"runs": 10}}, "no joint reading with H1"),
         (
             None,
             lambda r: r | {"joint": r["joint"] | {"population": "all"}},
             "no joint reading with H1",
-        ),
-        (None, lambda r: _without(r, "on_s_prime"), "carries no s' reading"),
-        (
-            None,
-            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"metric": "logprob_per_token"}},
-            "carries no s' reading",
-        ),
-        (
-            None,
-            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"runs": 10}},
-            "not over its 24 runs",
-        ),
-        (
-            None,
-            lambda r: r | {"on_s_prime": r["on_s_prime"] | {"verdicts": {"0.95": "supported"}}},
-            "not at its s levels",
-        ),
-        (
-            None,
-            lambda r: (
-                r
-                | {"on_s_prime": r["on_s_prime"] | {"verdicts": {"0.975": "bounded", "0.95": "x"}}}
-            ),
-            "are not readings",
         ),
     ],
 )
@@ -3623,8 +3891,7 @@ def test_a_test_read_without_its_registered_analyses_is_refused(
             simulations=sims,
             coprimary=coprimary,
             coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
-            h2={"qt": h2_report},
-            h2_simulations={"qt": h2_sim},
+            **_h2_reads(h2_report, h2_sim),
         )
 
 
@@ -3673,8 +3940,7 @@ def test_a_coprimary_test_read_without_its_crossed_check_2_is_refused(admitted) 
             simulations=sims,
             coprimary=coprimary,
             coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
-            h2={"qt": h2_report},
-            h2_simulations={"qt": h2_sim},
+            **_h2_reads(h2_report, h2_sim),
         )
 
 
@@ -3693,8 +3959,7 @@ def test_a_test_read_is_held_to_its_rank(admitted) -> None:
             simulations=sims,
             coprimary={o: _on_other(r) for o, r in reports.items()},
             coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
-            h2={"qt": h2},
-            h2_simulations={"qt": h2_sim},
+            **_h2_reads(h2, h2_sim),
             **kwargs,
         )
 
@@ -3725,6 +3990,7 @@ def _ranked(rank: int, h1: dict, h2: dict | None = None) -> dict:
     }
     if h2 is not None:
         out["h2_cells"] = {o: {"verdicts": v} for o, v in h2.items()}
+        out["h2_coprimary_cells"] = {o: {"verdicts": v} for o, v in h2.items()}
     return decomposition._marked_by_rank(out)
 
 
@@ -3759,6 +4025,8 @@ def test_the_rank_256_rerun_reads_capacity_and_bounded_cells_beside_the_verdicts
         0.95: "bounded at 32 only",
         0.975: "capacity-limited",
     }
+    # H2's s' cell is read at both ranks as its s cell is.
+    assert out["readings"]["h2_coprimary_cells"] == out["readings"]["h2_cells"]
     # Supplementary: the verdicts are the registered gate's, whatever the rerun read.
     assert out["verdicts"] == {"H1": "inconclusive"}
     with pytest.raises(ValueError, match="ranks 256 and 32"):
@@ -3813,3 +4081,36 @@ def test_a_replication_members_rerun_is_read_on_its_one_verdict() -> None:
     )
     with pytest.raises(ValueError, match="replication gate's output"):
         rank_reading(family(32, "inconclusive"), _ranked(256, {}, None))
+
+
+def test_qt_check_5_is_the_marker_plant(admitted) -> None:
+    """Qt's check 5 keeps the end-of-line marker in half its refinements (research log, 2026-11-17):
+    the code plant failed item 4's rule there, so a Qt read on it is refused, as is a marker read
+    elsewhere."""
+    assert cells.registered_plant("qt") == ("marker", 0.5)
+    assert cells.registered_plant("openstack") == ("code", 1.0)
+    assert cells.registered_plant("wikimedia") == ("code", 1.0)
+    admitted(*_THREE)
+    h2_report, h2_sim = _h2_pair(*_PASS)
+    pairs = {o: _two_levels(o, *_PASS) for o in _THREE}
+    sims = {o: s for o, (_, s) in pairs.items()}
+    for org, planted, refused in (
+        ("qt", ("code", 1.0), "qt: check 5 planted 'code' at 1.0, registered 'marker' at 0.5"),
+        (
+            "openstack",
+            ("marker", 0.5),
+            "openstack: check 5 planted 'marker' at 0.5, registered 'code' at 1.0",
+        ),
+    ):
+        reports = copy.deepcopy({o: r for o, (r, _) in pairs.items()})
+        reports[org]["planted_convention"] |= dict(
+            zip(("convention", "fraction"), planted, strict=True)
+        )
+        with pytest.raises(ValueError, match=refused):
+            confirmatory_gate(
+                reports,
+                simulations=sims,
+                coprimary={o: _on_other(r) for o, r in reports.items()},
+                coprimary_simulations={o: _on_other(s) for o, s in sims.items()},
+                **_h2_reads(h2_report, h2_sim),
+            )

@@ -623,6 +623,7 @@ def test_a_run_tag_names_the_results(tmp_path: Path) -> None:
         ({"PLANT": "0.5", "PLANT_CONVENTION": "marker"}, "[-plant0.5]"),
         ({"PLANT": "0.5", "PLANT_CONVENTION": "quotes"}, "[-plantquotes0.5]"),
         ({"PLANT_CONVENTION": "quotes"}, "[]"),
+        ({"PLANT": "1.0", "PLANT_CONVENTION": "code"}, "[-plantcode1.0]"),
     ],
 )
 def test_another_seed_or_training_size_never_takes_the_default_name(

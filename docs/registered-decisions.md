@@ -61,8 +61,9 @@ below the SESOI δ (a one-sided equivalence test; research log, 2026-10-14), and
 otherwise, reported as "not detected above" its upper bound. A cell is read bounded only once its
 sensitivity simulation, its power, is registered.
 The margin moved to δ after the development pilots were read (research log, 2026-10-14).
-A cell whose critical p is calibrated (H2's, H2's K; a co-primary cell whose null missed at its
-K, Number of runs; any cell calibrated at its test spread, The test window's per-run spread)
+A cell whose critical p is calibrated (H2's on either score, H2's K; a co-primary cell whose null
+missed at its K, Number of runs; any cell calibrated at its test spread, The test window's per-run
+spread)
 reads supported only where its one-sided
 p, the share of draws at or below zero, is also below that critical p, and bounded only where its
 bounded-test p, the share of draws at or above δ, is below it too (Stage 1 report, "Verdicts";
@@ -83,6 +84,21 @@ score takes δ unchanged: its parts are in the whole score's units, and the plan
 convention δ was carried at sits in string delimiters, which the lexer classes as other. The
 whole score passing where the non-identifier score does not is read as "within-half on the whole
 score alone". The GitHub family reads the whole score only.
+
+**H2 on both scores (registered 2026-11-13).** H2's cell is read on the same two scores, each a
+cell, and H2 passes only when both do, each at its Holm level: an intersection-union test, as H1's
+is, so each H2 cell is sized at power 0.95^(1/2). A cell left exploratory, by a small window or a
+refused spread calibration, leaves its hypothesis under the general rule (Reading the test
+window; The test window's per-run spread), so H2 reads on s alone when its s′ cell is
+exploratory. The non-identifier cell is the same cell scored
+again, at H2's K = 40 and over the same runs and changes as the whole score's
+(`decomposition.coprimary_read` of `registered_read(org, hypothesis="H2")`), with its own K source
+and its own critical p calibrated from its own simulated null (H2's K, below). It was registered
+after H2's s′ development contrast and its simulation were read, on the rule that s′ binds H2 only
+if its cell detects below δ at two cells and its null holds or calibrates; both held (research log,
+2026-11-13). Adding a cell to an intersection-union test can only make the hypothesis harder to
+pass. `confirmatory_gate` takes the s′ read as `h2_coprimary` and refuses a design with an H2 cell
+read without it (research log, 2026-11-14).
 
 **Four outcomes per cell, beside the verdict (registered 2026-10-30).** A test against zero and
 an equivalence test against δ together give four outcomes (Lakens, *SPPS* 2017, "four possible
@@ -111,8 +127,9 @@ Chromium is not admitted (no split qualifies) and supplies H2's foreign pool. H1
 intersection-union over its cells, sized as Power states; with three organizations a
 between-organization variance is not estimable with useful precision, so heterogeneity is read
 beside the rule, not in it (below). With the co-primary scores (below) H1 has two cells per
-organization, so every H1 cell's simulation is read at six cells, and H2's cell is simulated from
-its own development runs before the seal.
+organization, so every H1 cell's simulation is read at six cells, and H2's two cells per pair
+direction, s and s′, are each simulated at two cells from their own development runs before the
+seal (and read at four, should Qt and Chromium both be admitted and the pair read both ways).
 
 ### GitHub organizations: a registered replication on a second platform (2026-10-04)
 
@@ -313,13 +330,10 @@ hypothesis the gate reads, on the same draws, at the same levels:
   with shared reviewers rather than the organization as a whole. Reviewers are read from
   attention sets, per change, not per comment.
 
-- **Reads as names.** Per H1 cell and level, an s cell supported where its s′ reading at the
-  same level is not reads as names: within-half on s alone (Stage 1 report, "Verdicts and
-  Readings"; `confirmatory_gate`'s `names`). For H2 the same reading, Qt's vocabulary, takes H2's
-  s′ read at its s level, a secondary analysis on the same runs and levels, with no bound or
-  calibrated p (the H2 read's `on_s_prime`; `confirmatory_gate`'s `vocabulary`). Read on its
-  interval alone, s′ reads supported at least as often as a calibrated read would, so the
-  vocabulary reading can only be rarer for it.
+- **Reads as names.** Per cell and level, an s cell supported where its s′ cell at the same level
+  is not reads as carried by names: convention or vocabulary, which no score here separates
+  (Stage 1 report, "Verdicts and Readings"; `confirmatory_gate`'s `names` for H1 and `h2_names`
+  for H2). For H2 the s′ side is its confirmatory s′ cell, read at its own calibrated critical p.
 - **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
   and GitHub, each weighted by its bootstrap standard error: REML for the between-organization
   variance, the modified Hartung-Knapp-Sidik-Jonkman interval (scale held at one or above; Röver,
@@ -385,6 +399,32 @@ reading against a SESOI uses the metric's own (`decomposition.metric_sesoi`). Th
 K and power figures in the sections below are measured on the registered metric; the exact-match
 figures they replace are in the research log.
 
+### Outcome-neutral check 5: δ's plant on OpenStack and Wikimedia, Qt's end-of-line marker (registered 2026-11-16 and 2026-11-17)
+
+Decided by each plant's own runs, under a rule fixed before any was read: item 4 of the
+2026-11-16 plan for δ's plant, the same rule fixed on 2026-09-30 (registered 2026-10-01) for the marker. An organization's runs on its first ten admissible partitions must all pass on
+s on both halves, each projected to pass with probability at least 0.95. The plant is δ's: each
+half's own quote style on Python, PHP and JavaScript literals, with a space or none between a
+control keyword and its parenthesis standing in on C++, Java and C#, in every refinement it can
+change (f = 1.0, the dose δ's rate was read at). On Python rows it is the plant δ's exchange rate
+was read on, so on OpenStack's Python one instrument both shows that s detects a convention and
+sets δ. It passed 10 of 10 on OpenStack and on Wikimedia, and is their check 5. On Qt it passed 9 of
+10. Qt's coding style already requires half a's spacing, so the plant rewrote almost none of half
+a's rows; Wikimedia's half a was lightly rewritten too and passed, so the share is a difference of
+degree, and the reason no second code plant was tried on Qt rather than the cause of the failed
+run. Qt's check 5 is each half's own end-of-line marker in half its refinements, whose runs passed
+the same rule, 10 of 10: the easy, deliberately artificial ceiling case, so on Qt detection is
+shown for a convention that strong, not δ's. Qt's plant was chosen after δ's plant was read there.
+This is a disclosed deviation from the plan and changes no pass rule (AJ's decision; research log,
+2026-11-17). The code reads each organization's own (`cells.registered_plant`), and
+`planted_check.py` writes `planted-check-<org>-<plant>.json`. An organization whose ten runs were
+never read under the rule, such as a GitHub member, has no registered plant: its check 5, and
+so its test read, is refused until its runs are read and the decision recorded. That decision is
+fixed in advance: an organization not yet read, such as a GitHub member (mostly Java or C#, where
+keyword spacing stands in), takes δ's
+plant if its ten runs meet the rule, otherwise the end-of-line marker at 0.5 if its ten runs meet
+it, otherwise it is withdrawn as an apparatus failure.
+
 ### Interval the gate reads: the crossed run-by-cluster bootstrap
 
 Decided by the coverage study and the fixed-K simulation. A Gerrit read's cluster is a relation
@@ -437,36 +477,46 @@ a K made in the other unit; research log, 2026-10-22).
 The co-primary score (Pass rule) is the same cell scored again, so it is read at the cell's K and
 after the cell's check 5 (`decomposition.coprimary_read`). Its K source reads its own pilot's
 simulated null at that K (`k_coverage.py --registered-runs`); should the null exceed nominal at
-either level, its critical value is calibrated from it as H2's is (below), and the H1 gate reads
-the cell with it. Every H1 cell's K is thus the one the coverage rule gave its whole score. This
-rule is the implementation's of the co-primary decision, registered with it (2026-10-30).
+either level, its critical value is calibrated from it as H2's is (below), and the H1 gate reads the
+cell with it. Every H1 cell's K is thus the one the coverage rule gave its whole score. This rule is
+the implementation's of the co-primary decision, registered with it (2026-10-30). A test read on the
+co-primary score refuses a K source that does not record the rule read at its own K
+(`registered_runs`), so a K the grid found for that score cannot stand in
+(`cells.require_test_read`).
 
-### H2's K = 40, its critical value calibrated from its simulated null (registered 2026-10-30)
+### H2's K = 40, each cell's critical value calibrated from its own simulated null (registered 2026-10-30)
 
 On H2's development runs no K in the grid holds the simulated null at both levels (research log,
 2026-10-29), a case the coverage rule did not name. "Kept within 10 to 40" is read as a clamp at 40,
-as the reproducibility K is clamped at 10: **H2's K is 40** (`decomposition.H2_RUNS`). This
-reading was chosen after the grid was read and is declared as a deviation from the rule's letter.
-At K = 40 the null's one-sided rate is 0.01325 against 0.0125 at the stricter level, under half
-its Monte Carlo standard error at 4,000 null studies, sqrt(p(1 - p) / n) (Morris, White and
-Crowther 2019, Table 6), and 0.0245 against 0.025 at 95%; every K from 15 is inside Bradley's
-liberal band, 0.5α to 1.5α (Bradley 1978). That band describes a test as robust; the coverage rule
-asks for nominal, so the band shows the excess is small and selects no K. The excess is not
-accepted: H2's cell reads supported when its interval does and its one-sided bootstrap p-value is
-below its simulated null's α-quantile at the sizing bound, so the calibration can only tighten the
-test (Loh 1987, a nominal level calibrated by its estimated coverage; `partition_sensitivity.py
---calibrate`). The critical p reads at most α on the null studies it was set on by construction,
-so a second, independent set of 4,000 null studies measures the calibrated rate, itself carrying
-Monte Carlo error. The K source records that rate and refuses the simulation if it exceeds
-Bradley's liberal bound, 1.5α, at either level (`partitions.BRADLEY_LIBERAL`), since the
-calibration would then not carry over; the gate refuses bounds powered at another critical p
-than the one its K applies. Its K source is that simulation read at K = 40 (`k_coverage.py
---registered-runs`), which carries the critical p. H2's test read over partitions
-(`partition_pilot.py --hypothesis H2` on the test window, at `registered_read(org,
-hypothesis="H2")`) and the gate that reads it beside H1 under Holm (`confirmatory_gate`) are
-built. Its detectable effects are those of
-that calibrated simulation, +0.0109 and +0.0103 nats per token at the two levels (research log,
-2026-11-02), below δ.
+as the reproducibility K is clamped at 10: **H2's K is 40** (`decomposition.H2_RUNS`). This reading
+was chosen after the grid was read and is declared as a deviation from the rule's letter. At K = 40
+the null's one-sided rate is 0.01325 against 0.0125 at the stricter level, under half its Monte
+Carlo standard error at 4,000 null studies, sqrt(p(1 - p) / n) (Morris, White and Crowther 2019,
+Table 6), and 0.0245 against 0.025 at 95%; every K from 15 is inside Bradley's liberal band, 0.5α to
+1.5α (Bradley 1978). That band describes a test as robust; the coverage rule asks for nominal, so
+the band shows the excess is small and selects no K. The excess is not accepted: an H2 cell reads
+supported when its interval does and its one-sided bootstrap p-value is below its own simulated
+null's α-quantile at the sizing bound, so the calibration can only tighten the test (Loh 1987, a
+nominal level calibrated by its estimated coverage; `partition_sensitivity.py --calibrate`). The
+critical p reads at most α on the null studies it was set on by construction, so a second,
+independent set of 4,000 null studies measures the calibrated rate, itself carrying Monte Carlo
+error. The K source records that rate and refuses the simulation if it exceeds Bradley's liberal
+bound, 1.5α, at either level (`partitions.BRADLEY_LIBERAL`), since the calibration would then not
+carry over; the gate refuses bounds powered at another critical p than the one its K applies. Its K
+source is that simulation read at K = 40 (`k_coverage.py --registered-runs`), which carries the
+critical p; a test read of H2 on either score is refused at any other K, or with a K source that
+does not record the rule read at K = 40 (`cells.require_test_read`, held by `partition_pilot.py` and
+the gate alike). H2's s′ cell, registered later (Pass rule), takes the same rule on its own pilot
+and simulation at K = 40: its K source
+(`k-coverage-qt-foreignchromium-likelihood-split-other-chains.json`) carries critical p 0.0148 and
+0.0241 at the two levels, its null holding at 97.5% and calibrated at 95%, beside the s cell's own
+(research log, 2026-11-13 and 2026-11-14). H2's test reads over partitions (`partition_pilot.py
+--hypothesis H2` on the test window, on each score, at `registered_read(org, hypothesis="H2")` and
+its `coprimary_read`) and the gate that reads them beside H1 under Holm (`confirmatory_gate`) are
+built. As one cell, its detectable effects in that calibrated simulation were +0.0109 and +0.0103
+nats per token at the two levels (research log, 2026-11-02); at H2's two cells per pair direction, s
+detects +0.0118 and s′ +0.0070 on the 97.5% interval, and +0.0110 and +0.0065 on the 95% one
+(research log, 2026-11-13 and 2026-11-14), all below δ.
 
 ### The test window's per-run spread: simulated above the sizing bound
 
@@ -486,22 +536,24 @@ and the GitHub family's too, since the family is read with the Gerrit cells' rul
 
 ### Stated power: sensitivity, not power at an observed effect
 
-H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1/6) = 0.9915, so all six
-pass together at 0.95 or more (the product understates it, Power above), and H2's one cell at 0.95. Each cell is simulated at that power, its
-projected test size and its registered K, read under relation chains at the 90% upper bound of
-its own development pilot's per-run spread: s at six cells (`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`),
-s′ at its s cell's K
-(`...-logprob_per_token-other-chains-k<K>[-calibrated].json`), H2 at K = 40 calibrated. At the
-two Holm levels, H1 on s detects a half-split contrast of +0.0124 and +0.0115 nats per token on
-OpenStack, +0.0080 and +0.0074 on Wikimedia and +0.0085 and +0.0079 on Qt; on s′, +0.0096 and
-+0.0090, +0.0078 and +0.0073 (calibrated) and +0.0054 and +0.0050; H2's are under H2's K, above
-(research log, 2026-11-02, printed by `scripts/log_tables.py sizing`). Each is below the SESOI, the margin a bounded reading is judged
-against (Pass rule), and under a true null every simulated interval lies inside the SESOI band at
-both levels. Wikimedia's s′ null exceeded nominal at K = 20, so its cell, like H2's, takes a
-critical p calibrated to its simulated null (H2's K, above); OpenStack's and Qt's s′ nulls hold
-nominal. Wikimedia's test size is a lower bound if test-window arrivals hold at the
-training rate (checked at fetch), and its bounds are then conservative. Power from a pilot's own
-estimate is biased upward, so no power at an observed effect is stated.
+H1's six cells (three organizations, s and s′) are each sized at power 0.95^(1/6) = 0.9915, so all
+six pass together at 0.95 or more (the product understates it, Power above), and H2's cells, two per
+pair direction (s and s′), each at 0.95^(1/k) over its k cells: 0.95^(1/2) against Chromium's pool.
+Each cell is simulated at that power, its projected test size and its registered K, read under
+relation chains at the 90% upper bound of its own development pilot's per-run spread: s at six cells
+(`partition-sensitivity-<org>-rp1.0-cells6-logprob_per_token-chains-k<K>.json`), s′ at its s cell's
+K (`...-logprob_per_token-other-chains-k<K>[-calibrated].json`), H2 on both scores at K = 40
+calibrated. At the two Holm levels, H1 on s detects a half-split contrast of +0.0124 and +0.0115
+nats per token on OpenStack, +0.0080 and +0.0074 on Wikimedia and +0.0085 and +0.0079 on Qt; on s′,
++0.0096 and +0.0090, +0.0078 and +0.0073 (calibrated) and +0.0054 and +0.0050; H2's are under H2's
+K, above (research log, 2026-11-02, printed by `scripts/log_tables.py sizing`). Each is below the
+SESOI, the margin a bounded reading is judged against (Pass rule), and under a true null every
+simulated interval lies inside the SESOI band at both levels. Wikimedia's s′ null exceeded nominal
+at K = 20, so its cell, like H2's, takes a critical p calibrated to its simulated null (H2's K,
+above); OpenStack's and Qt's s′ nulls hold nominal. Wikimedia's test size is a lower bound if
+test-window arrivals hold at the training rate (checked at fetch), and its bounds are then
+conservative. Power from a pilot's own estimate is biased upward, so no power at an observed effect
+is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
 
@@ -533,7 +585,9 @@ Qt's foreign organization (V8, AOSP, Fuchsia).
 | Relation chains replaced changes as the cluster unit after those readings and before any chain was read. No verdict moved, and Qt's K fell. | 2026-10-21, "Relation chains registered as H1's cluster unit" and "Relation chains read on the development window"; 2026-10-22, "Relation chains simulated" |
 | Chromium is the first of Chromium, Fuchsia and AOSP, in that fixed order, whose pool covers every matched draw. Chromium's pool rule widened from capped V8 to every code project after the V8 and AOSP pools were sized. Fuchsia's listings had run by then; its coverage had not been read. | 2026-10-16, "Chromium's V8 pool, read within its grant, cannot cover a matched draw"; 2026-10-19, "AOSP's pool, read over six months of listings, cannot cover every matched draw" and "Chromium re-read as a rate grant"; 2026-10-20, "Fuchsia's pool covers every matched draw with its first project"; 2026-10-27, "Chromium's pool covers every matched draw with its first project" |
 | Exploratory comparators read sibling minus foreign across languages on OpenStack and Wikimedia before H2's language matching was fixed. | 2026-10-06, "The retrieval comparator read"; 2026-10-07, "The rules-file comparator read"; 2026-10-14, "Planned before any adapter d_org on s is read" |
-| After development readings on s′ (by token class, before it was a co-primary), on H2's contrast (inconclusive) and on its simulation, s′ became co-primary, H2's K the cap, and Fuchsia an exploratory arm. Fuchsia's development contrast, read after, is supported. | 2026-10-15, "s split by token class"; 2026-10-18, "s split by token class on Qt"; 2026-10-29, "H2's development pilot is inconclusive"; 2026-10-30, "Five design decisions before the seal"; 2026-11-01, "Fuchsia's exploratory arm read beside Chromium's" |
+| After development readings on s′ (by token class, before it was a co-primary), on H2's contrast (inconclusive) and on its simulation, s′ became co-primary for H1, H2's K the cap, and Fuchsia an exploratory arm. Fuchsia's development contrast, read after, is supported. | 2026-10-15, "s split by token class"; 2026-10-18, "s split by token class on Qt"; 2026-10-29, "H2's development pilot is inconclusive"; 2026-10-30, "Five design decisions before the seal"; 2026-11-01, "Fuchsia's exploratory arm read beside Chromium's" |
+| After H2's s′ development contrast (inconclusive) and its simulation at K = 40, s′ bound H2 too, which can only tighten H2. | 2026-11-11, "The development pilots carry the readings registered beside the cells"; 2026-11-13, "H2 on s′ at K = 40 calibrated" |
+| Check 5's plant became δ's after the Stage 1 review, under a rule fixed before its runs. It held on OpenStack and Wikimedia; Qt, where it did not, kept the end-of-line marker, which had passed the same rule, a choice made after that reading. No pass rule changed. | 2026-11-16, "Planned before any run: check 5 on δ's plant"; 2026-11-17, "Check 5 on δ's plant" and "Decided: Qt's check 5 keeps the end-of-line marker" |
 | Qt and AOSP were first fetched over REST before their grants. Both REST fetches stopped with the collection stop, recorded on 2026-09-22 and carried out on 2026-09-23, when the hosts' robots.txt was read. Qt's pre-grant build ran faster than its crawl delay and was then blocked for about thirty-three hours, which the log reads as a firewall ban. AOSP's records were then fetched over its git host on 2026-09-23 and 2026-09-25, and Chromium's git host was used three times (two ref listings and one fetch of a single commit), all before their grants. Chromium's review host was queried before its grant as well: comments read on a sample of changes, a scoping pass, and a test that reached it in two local runs after the stop, which the log records as a breach of it; a guard test also opened one connection to a Google address and a review step tried one to the review host, sending no request. Nothing from those Chromium contacts is in the corpus. OpenStack's held corpus was collected faster than the crawl delay its robots.txt asks for, throughout. Host checks on 2026-09-29 sent about fifteen requests to TYPO3's disallowed `/changes/` and spaced OpenDev's size queries a second and a half apart, against the two seconds its robots.txt asks. | 2026-09-15, "Collection: our own volume got connections to opendev dropped"; 2026-09-16, "Qt's ban lifts"; 2026-09-21, "Chromium yields reviewer comments at Qt's rate"; 2026-09-22, "RQ1 re-registered around granularity" and "Chromium scoped"; 2026-09-23, "A rebased test reached chromium-review" and "The review UIs are closed to crawlers and the git hosts are not"; 2026-09-29, "Candidate organizations beyond Qt and Chromium"; 2026-10-14, "Google's git hosts need their maintainers' written permission"; 2026-10-18, "Qt's development pilot on its granted corpus" |
 | A pilot on Qt's data led to the bot filter and to testing two boundaries. Source-attribution pilots on Qt's and AOSP's data set AOSP last in the order. None of these pilots is in a figure in the report. | 2026-09-18, "How long each client trains decides which altitude leaks" and "Composition, not coherence, was the confound worth testing"; 2026-09-22, "RQ1 re-registered around granularity"; 2026-09-23, "A data audit"; 2026-10-14, "Planned before any adapter d_org on s is read" |
 | LineageOS was read and kept out of the confirmatory cells: its training window is too small for an H1 cell. | 2026-09-29, "Candidate organizations beyond Qt and Chromium"; 2026-09-30, "Wikimedia meets the split criteria and is admissible at N = 1,850" |
