@@ -11541,3 +11541,56 @@ its ten runs meet item 4's rule; otherwise each half's end-of-line marker at 0.5
 meet the same rule; otherwise it is withdrawn as an apparatus failure, as a failed check 5
 withdraws any organization; it applies to any organization not yet read. Qt's decision took this
 order, though on Qt it was made after both plants had been read.
+
+### SEELE panel on the MSR v4 hypotheses and abstract (2026-11-18)
+
+A blind model panel read the v4 H1/H2 wording and the abstract; this is its record, moved from the
+private fleet briefing. 3 seats voted, from 2 model families (anthropic, google). SOUND ONLY: the seat answered. NO SIGNAL: it did not, and the table says why. No seat saw another seat's answer or knew who wrote a candidate, and neither did the chair.
+
+#### The chair's ruling
+
+**Recommendation: make the listed changes, 3 of 3.** The chair: make the listed changes.
+
+**G. In the Section III hypothesis block, replace "H2 (organization beyond its projects): dorg (O) > 0" with "H2 (Qt beyond its projects, against Chromium): dorg (Qt) > 0". The "(Qt carries style beyond its projects)" in the abstract and the RQ1 wording stay as they are. The words added to the display line are offset by dropping "organization" and "O", so the net length is about the same. If a line runs over, cut "each on s and on s′" to "on s and s′".**
+
+Amended by the chair (the seats did not vote on this wording): **In the Section III hypothesis block, replace "H2 (organization beyond its projects): dorg (O) > 0" with "H2 (Qt beyond its projects): dorg (Qt) > 0". Nothing else in the block, the abstract or RQ1 changes; ", against Chromium" is left out because RQ1 two lines above ("Qt, against Chromium") and the paragraph after the block ("P is Chromium") already name the foreign pool, and the shorter label makes the line shorter than the current one, so no cut elsewhere is needed.**
+
+The chair's pick is also the vote's winner.
+
+Why: The brief itself checks lead 2 and finds it partly real: the RQ, abstract, following paragraph, Table II and the external-validity threat all scope H2 to Qt against Chromium, while the one display line a PC member scores under "clearly stated hypotheses" and "tests that can test the stated hypotheses" reads a generic O. G is the only candidate that fixes a visible inconsistency rather than polishing an already-conventional text, and all three ballots placed it first. The candidate's own length fallback does not work (shortening the separate "each on s and on s′" line frees no space if the H2 line itself wraps), and SEELE 02 and SEELE 03 both named the wrap as their objection, so the amendment drops ", against Chromium" to make the fix length-negative while matching the abstract's existing label "Qt carries style beyond its projects".
+
+#### The vote
+
+| | Candidate | Points | First choice | Rejected by | Average from other seats | Proposed by |
+|---|---|---|---|---|---|---|
+| G | In the Section III hypothesis block, replace "H2 (organization beyond its projects): dorg (O) > 0" with "H2 (Qt beyond its projects, against Chromium): dorg (Qt) > 0". The "(Qt carries style beyond its projects)" in the abstract and the RQ1 wording stay as they are. The words added to the display line are offset by dropping "organization" and "O", so the net length is about the same. If a line runs over, cut "each on s and on s′" to "on s and s′". | 18 | 3 | 0 | - | SEELE 03, SEELE 04, SEELE 02 |
+| F | In the abstract's Objective, replace "splitting each organization's projects in half many times" with "splitting each organization's projects in half 10 to 40 times" (same length). | 11 | 0 | 0 | 4 | SEELE 02 |
+| I | In Section III, replace "Rationale for H1 : Conventions are kept by the people who work on the same code, so style should stay with the code it was learned on." with "Rationale for H1 : Conventions are local to a codebase [1], so style should stay with the code it was learned on." (shorter, so it frees space; [1] is already cited). | 11 | 0 | 0 | 3 | SEELE 02 |
+| A | In Section IV-B (Sample size), replace "for 95% jointly" with "for at least 95% jointly". | 7 | 0 | 1 | 2 | SEELE 03 |
+| C | In Section III, replace "H1 (half-split): dproj (O) > 0" with "H1 (half-split, each admitted O): dproj (O) > 0". | 7 | 0 | 0 | 3 | SEELE 04 |
+| D | In the abstract, replace "Whether an organization, a set of repositories under one review culture, carries learnable conventions beyond its projects is untested." with "Whether learned conventions attach to a project group, extend across an organization, or transfer at all is untested.". | 7 | 0 | 2 | 1 | SEELE 04 |
+| H | In Section III, replace "Rationale for H1 : Conventions are kept by the people who work on the same code, so style should stay with the code it was learned on." with "Rationale for H1 : Developers on the same code share review conventions [1], [5], so style stays with the code it was learned on.". | 2 | 0 | 2 | 0 | SEELE 04 |
+
+Points are Borda points (a first place among k candidates is worth k-1, a last place 0). "Average from other seats" leaves out the ballot of each candidate's own author.
+
+- Agreement among the seats (Kendall's W, 0 to 1): 0.60 (partial agreement).
+- The clerk merged B into G before the vote: In Section III, replace "H2 (organization beyond its projects): dorg (O) > 0" with "H2 (organization beyond its projects, Qt): dorg (Qt) > 0".
+- The clerk merged E into G before the vote: In the displayed hypothesis block (Section III), replace "H2 (organization beyond its projects): dorg (O) > 0" with "H2 (Qt beyond its projects): dorg (Qt) > 0, P = Chromium" (keep the subscript as typeset; the line stays no longer, so no page cost).
+
+#### Proposed changes (no seat rejected these)
+
+| | Change | Raised by | Points | Why it helps |
+|---|---|---|---|---|
+| G | In the Section III hypothesis block, replace "H2 (organization beyond its projects): dorg (O) > 0" with "H2 (Qt beyond its projects, against Chromium): dorg (Qt) > 0". The "(Qt carries style beyond its projects)" in the abstract and the RQ1 wording stay as they are. The words added to the display line are offset by dropping "organization" and "O", so the net length is about the same. If a line runs over, cut "each on s and on s′" to "on s and s′". | 3 of 4 | 18 | This serves the call's criterion that hypotheses be clearly stated and logically matched to the test. The displayed H2 is generic, but the study tests it only on Qt's C++ against Chromium, and every other organization's dorg is exploratory. A PC member checking the statement against the design would otherwise see a mismatch. The change makes the statement agree with the text that follows it and alters nothing that is tested. |
+| F | In the abstract's Objective, replace "splitting each organization's projects in half many times" with "splitting each organization's projects in half 10 to 40 times" (same length). | SEELE 02 | 11 | "Many times" is the only vague quantity in a confirmatory abstract, while K is fixed in advance at 10 to 40 runs per cell (Table II, Section V-A); the concrete range tells a PC member at once that run-to-run variation is planned and bounded, which supports the soundness and replicability criteria and states no result or pass rule. |
+| I | In Section III, replace "Rationale for H1 : Conventions are kept by the people who work on the same code, so style should stay with the code it was learned on." with "Rationale for H1 : Conventions are local to a codebase [1], so style should stay with the code it was learned on." (shorter, so it frees space; [1] is already cited). | SEELE 02 | 11 | The current people-based rationale clashes with Section VII's report that 97% of OpenStack's and 93% of Wikimedia's development examples share a reviewer with the sibling half, and it is the only rationale with no evidence behind it; a code-based, cited rationale fits that overlap and the H2 rationale (shared reviewers and tooling), which serves "the logic, rationale, and plausibility of the proposed hypotheses". |
+| C | In Section III, replace "H1 (half-split): dproj (O) > 0" with "H1 (half-split, each admitted O): dproj (O) > 0". | SEELE 04 | 7 | This serves the methodological clarity and replication criteria by explicitly identifying H1 as an intersection-union test across all admitted organizations rather than an aggregate pooled contrast, aligning the hypothesis with the pre-specified family-wise pass rule. |
+
+#### Your call (the seats split)
+
+- **A.** In Section IV-B (Sample size), replace "for 95% jointly" with "for at least 95% jointly". Raised by SEELE 03; rejected by 1 of 3. SEELE 04: Provides a technically precise power lower bound under positive correlation, but falls outside the brief's scope of Section III and the abstract while consuming space for an inconsequential nuance.
+
+#### Declined (a majority rejected these)
+
+- **D.** In the abstract, replace "Whether an organization, a set of repositories under one review culture, carries learnable conventions beyond its projects is untested." with "Whether learned conventions attach to a project group, extend across an organization, or transfer at all is untested.". Raised by SEELE 04; rejected by 2 of 3. SEELE 02: Strength: it mirrors the title's three-way question and is shorter. Weakness: it drops the abstract's only definition of "organization", which the gap statement needs, and "transfer at all" blurs the construct. It reads as different, not better. SEELE 03: Shorter and echoes the RQ's three-way framing; it drops the in-line definition of "organization", so the abstract stops being self-contained, and "transfer at all" adds a vague claim.
+- **H.** In Section III, replace "Rationale for H1 : Conventions are kept by the people who work on the same code, so style should stay with the code it was learned on." with "Rationale for H1 : Developers on the same code share review conventions [1], [5], so style stays with the code it was learned on.". Raised by SEELE 04; rejected by 2 of 3. SEELE 02: Strength: it tries to ground H1's rationale in citations. Weakness: citing [5] contradicts Section II, which says [5] shows conventions "by example, not measurement". "stays" also states the expected finding as fact, and the change lengthens a full page. SEELE 03: Adds a citation to the rationale line; the added [5] (Code2LoRA) does not plainly support "developers share review conventions", so it risks a miscitation flag, and it is longer.
