@@ -94,14 +94,14 @@ class DurableLog(Path):
     """
 
     # Narrower than PurePath's on purpose: derived paths are plain, not logs.
-    def with_segments(self, *pathsegments: str | os.PathLike[str]) -> Path:  # ty: ignore[invalid-method-override]
+    def with_segments(self, *pathsegments: str | os.PathLike[str]) -> Path:  # ty: ignore[incompatible-method-override]
         return Path(*pathsegments)
 
     def read_text(self, *args: Any, **kwargs: Any) -> str:
         read_records(self)
         return super().read_text(*args, **kwargs)
 
-    def open(self, mode: str = "r", *args: Any, **kwargs: Any) -> IO[Any]:  # ty: ignore[invalid-method-override]
+    def open(self, mode: str = "r", *args: Any, **kwargs: Any) -> IO[Any]:  # ty: ignore[incompatible-method-override]
         if "a" not in mode:
             return super().open(mode, *args, **kwargs)
         if self.is_file():

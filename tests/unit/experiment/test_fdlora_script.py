@@ -122,20 +122,20 @@ def fake_stack(monkeypatch: pytest.MonkeyPatch) -> None:
     """Install fake `peft` and `sphragis.experiment.model` modules for a script to import."""
     TRAIN_CALLS.clear()
     peft = types.ModuleType("peft")
-    peft.get_peft_model_state_dict = _get_peft_model_state_dict  # ty: ignore[unresolved-attribute]
-    peft.set_peft_model_state_dict = _set_peft_model_state_dict  # ty: ignore[unresolved-attribute]
+    peft.get_peft_model_state_dict = _get_peft_model_state_dict  # ty: ignore[missing-attribute]
+    peft.set_peft_model_state_dict = _set_peft_model_state_dict  # ty: ignore[missing-attribute]
     monkeypatch.setitem(sys.modules, "peft", peft)
 
     model_module = types.ModuleType("sphragis.experiment.model")
-    model_module.LORA = object()  # ty: ignore[unresolved-attribute]
-    model_module.MODEL_ID = "fake-model"  # ty: ignore[unresolved-attribute]
-    model_module.TRAINING = _TRAINING  # ty: ignore[unresolved-attribute]
-    model_module._require_tokenizer = lambda model_id: _Tok()  # ty: ignore[unresolved-attribute]
-    model_module.attach_adapter = (  # ty: ignore[unresolved-attribute]
+    model_module.LORA = object()  # ty: ignore[missing-attribute]
+    model_module.MODEL_ID = "fake-model"  # ty: ignore[missing-attribute]
+    model_module.TRAINING = _TRAINING  # ty: ignore[missing-attribute]
+    model_module._require_tokenizer = lambda model_id: _Tok()  # ty: ignore[missing-attribute]
+    model_module.attach_adapter = (  # ty: ignore[missing-attribute]
         lambda model_id, seed, device: (_FakeModel(), _Tok())
     )
-    model_module.run_provenance = lambda: {}  # ty: ignore[unresolved-attribute]
-    model_module.train_adapter = _train_adapter  # ty: ignore[unresolved-attribute]
+    model_module.run_provenance = lambda: {}  # ty: ignore[missing-attribute]
+    model_module.train_adapter = _train_adapter  # ty: ignore[missing-attribute]
     monkeypatch.setitem(sys.modules, "sphragis.experiment.model", model_module)
 
 
@@ -144,7 +144,7 @@ def _load(script: Path) -> types.ModuleType:
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    mod.build_supervised = (  # ty: ignore[unresolved-attribute]
+    mod.build_supervised = (  # ty: ignore[missing-attribute]
         lambda tok, row, prompt_builder, max_length: {"signal": row["signal"]}
     )
     return mod
