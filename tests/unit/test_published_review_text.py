@@ -74,7 +74,7 @@ def _tracked() -> list[Path]:
 
 def _zstd() -> Any:
     try:
-        from compression import zstd  # ty: ignore[unresolved-import]
+        from compression import zstd  # ty: ignore[import-not-found]
     except ImportError as error:
         raise AssertionError("a zstd file is tracked: read it on Python 3.14") from error
     return zstd
